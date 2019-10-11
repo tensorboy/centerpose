@@ -31,6 +31,7 @@ All models and details are available in our [Model zoo](readme/MODEL_ZOO.md).
 
 ## Installation
 
+git submodule init&git submodule update
 Please refer to [INSTALL.md](readme/INSTALL.md) for installation instructions.
 
 ## Use CenterNet
