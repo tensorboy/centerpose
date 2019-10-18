@@ -17,7 +17,7 @@
 |[multi\_pose\_hg_3x](../experiments/multi_pose_hg_3x.sh)    |   5  |188          | 151            | 64.0        | [model](https://drive.google.com/open?id=1n6EvwhTbz7LglVXXlL9irJia7YuakHdB) |
 |[multi\_pose\_dla_1x](../experiments/multi_pose_dla_1x.sh)   |   8  |30           | 44             | 54.7        | [model](https://drive.google.com/open?id=1VeiRtuXfCbmhQNGV-XWL6elUzpuWN-4K) |
 |[multi\_pose\_dla_3x](../experiments/multi_pose_dla_3x.sh)   |   8  |70           | 44             | 58.9        | [model](https://drive.google.com/open?id=1PO1Ax_GDtjiemEmDVD7oPWwqQkUu28PI) |
-|[resnet_50](../experiments/multi_pose_dla_3x.sh)   |   8  |70           | 44             | 58.9        | [model](https://drive.google.com/open?id=1P2Hub3g9I-w43hDXffxJ9PBwfl0k14Te) |
+|[resnet_50](../experiments/multi_pose_dla_3x.sh)   |   4  |70           | 44             |  47.3 | [model](https://drive.google.com/open?id=1P2Hub3g9I-w43hDXffxJ9PBwfl0k14Te) |
 
 #### Notes
 - All models are trained on keypoint train 2017 images which contains at least one human with keypoint annotations (64115 images).

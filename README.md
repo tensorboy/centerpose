@@ -25,6 +25,7 @@ Detection identifies objects as axis-aligned boxes in an image. Most successful 
 |--------------|-----------|--------------|
 |Hourglass-104 | 64.0      |    6.6       |
 |DLA-34        | 58.9      |    23        |
+|Resnet-50     | 33.5      |    40        |
 
 
 All models and details are available in our [Model zoo](readme/MODEL_ZOO.md).
