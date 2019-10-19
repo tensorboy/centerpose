@@ -1,10 +1,10 @@
 SAMPLE_METHOD: 'coco_hp'
-DATA_DIR: '/data'
+DATA_DIR: '/media/tensorboy/74DC8ED7DC8E9352/data'
 EXP_ID: 'coco_pose_dla_34'
 DEBUG: 0
 DEBUG_THEME: 'white'
 SEED: 317
-OUTPUT_DIR: '/data/centerpose/multi_pose'
+OUTPUT_DIR: '/media/tensorboy/74DC8ED7DC8E9352/data/centerpose/multi_pose'
 LOG_DIR: ''
 EXPERIMENT_NAME: ''
 GPUS: [0, 1, 2, 3]
@@ -20,6 +20,7 @@ CUDNN:
 MODEL:
   LOAD_MODEL: ''
   CENTER_THRESH: 0.1
+  NUM_CLASSES: 1
   NAME: 'dla_34'
   HEADS_NAME: ['hm', 'wh', 'hps', 'reg', 'hm_hp', 'hp_offset']
   HEADS_NUM: [1, 2, 34, 2, 17, 2]
@@ -106,13 +107,13 @@ TRAIN:
 
   CHECKPOINT: ''
   SHUFFLE: true
-  VAL_INTERVALS: 5
+  VAL_INTERVALS: 1
   TRAINVAL: false
  
-  
-  
 TEST:
   # Test Model Epoch
+  MODEL_PATH: '/home/tensorboy/Documents/multi_pose/model_last.pth'
+  TASK: 'multi_pose'
   FLIP_TEST: false
 
   DEMO_DIR: ''

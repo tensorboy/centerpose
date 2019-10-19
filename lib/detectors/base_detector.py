@@ -14,37 +14,34 @@ from utils.debugger import Debugger
 
 
 class BaseDetector(object):
-  def __init__(self, opt):
-    if opt.gpus[0] >= 0:
-      opt.device = torch.device('cuda')
-    else:
-      opt.device = torch.device('cpu')
+  def __init__(self, cfg):
     
     print('Creating model...')
-    self.model = create_model(opt.arch, opt.heads, opt.head_conv)
-    self.model = load_model(self.model, opt.load_model)
-    self.model = self.model.to(opt.device)
+    HEADS = dict(zip(cfg.MODEL.HEADS_NAME, cfg.MODEL.HEADS_NUM))
+    self.model = create_model(cfg.MODEL.NAME, HEADS, cfg.MODEL.HEAD_CONV)
+    self.model = load_model(self.model, cfg.TEST.MODEL_PATH)
+    self.model = self.model.to(torch.device('cuda'))
     self.model.eval()
 
-    self.mean = np.array(opt.mean, dtype=np.float32).reshape(1, 1, 3)
-    self.std = np.array(opt.std, dtype=np.float32).reshape(1, 1, 3)
+    self.mean = np.array(cfg.DATASET.MEAN, dtype=np.float32).reshape(1, 1, 3)
+    self.std = np.array(cfg.DATASET.STD, dtype=np.float32).reshape(1, 1, 3)
     self.max_per_image = 100
-    self.num_classes = opt.num_classes
-    self.scales = opt.test_scales
-    self.opt = opt
+    self.num_classes = cfg.MODEL.NUM_CLASSES
+    self.scales = cfg.TEST.TEST_SCALES
+    self.cfg = cfg
     self.pause = True
 
   def pre_process(self, image, scale, meta=None):
     height, width = image.shape[0:2]
     new_height = int(height * scale)
     new_width  = int(width * scale)
-    if self.opt.fix_res:
-      inp_height, inp_width = self.opt.input_h, self.opt.input_w
+    if self.cfg.TEST.FIX_RES:
+      inp_height, inp_width = self.cfg.MODEL.INPUT_H, self.cfg.MODEL.INPUT_W
       c = np.array([new_width / 2., new_height / 2.], dtype=np.float32)
       s = max(height, width) * 1.0
     else:
-      inp_height = (new_height | self.opt.pad) + 1
-      inp_width = (new_width | self.opt.pad) + 1
+      inp_height = (new_height | self.cfg.MODEL.PAD) + 1
+      inp_width = (new_width | self.cfg.MODEL.PAD) + 1
       c = np.array([new_width // 2, new_height // 2], dtype=np.float32)
       s = np.array([inp_width, inp_height], dtype=np.float32)
 
@@ -56,12 +53,12 @@ class BaseDetector(object):
     inp_image = ((inp_image / 255. - self.mean) / self.std).astype(np.float32)
 
     images = inp_image.transpose(2, 0, 1).reshape(1, 3, inp_height, inp_width)
-    if self.opt.flip_test:
+    if self.cfg.TEST.FLIP_TEST:
       images = np.concatenate((images, images[:, :, :, ::-1]), axis=0)
     images = torch.from_numpy(images)
     meta = {'c': c, 's': s, 
-            'out_height': inp_height // self.opt.down_ratio, 
-            'out_width': inp_width // self.opt.down_ratio}
+            'out_height': inp_height // self.cfg.MODEL.DOWN_RATIO, 
+            'out_width': inp_width // self.cfg.MODEL.DOWN_RATIO}
     return images, meta
 
   def process(self, images, return_time=False):
@@ -82,8 +79,8 @@ class BaseDetector(object):
   def run(self, image_or_path_or_tensor, meta=None):
     load_time, pre_time, net_time, dec_time, post_time = 0, 0, 0, 0, 0
     merge_time, tot_time = 0, 0
-    debugger = Debugger(dataset=self.opt.dataset, ipynb=(self.opt.debug==3),
-                        theme=self.opt.debugger_theme)
+    debugger = Debugger((self.cfg.DEBUG==3), theme=self.cfg.DEBUG_THEME, 
+               num_classes=self.cfg.MODEL.NUM_CLASSES, dataset=self.cfg.SAMPLE_METHOD, down_ratio=self.cfg.MODEL.DOWN_RATIO)
     start_time = time.time()
     pre_processed = False
     if isinstance(image_or_path_or_tensor, np.ndarray):
@@ -108,7 +105,7 @@ class BaseDetector(object):
         images = pre_processed_images['images'][scale][0]
         meta = pre_processed_images['meta'][scale]
         meta = {k: v.numpy()[0] for k, v in meta.items()}
-      images = images.to(self.opt.device)
+      images = images.to(torch.device('cuda'))
       torch.cuda.synchronize()
       pre_process_time = time.time()
       pre_time += pre_process_time - scale_start_time
@@ -120,7 +117,7 @@ class BaseDetector(object):
       decode_time = time.time()
       dec_time += decode_time - forward_time
       
-      if self.opt.debug >= 2:
+      if self.cfg.DEBUG >= 2:
         self.debug(debugger, images, dets, output, scale)
       
       dets = self.post_process(dets, meta, scale)
@@ -136,7 +133,7 @@ class BaseDetector(object):
     merge_time += end_time - post_process_time
     tot_time += end_time - start_time
 
-    if self.opt.debug >= 1:
+    if self.cfg.DEBUG >= 1:
       self.show_results(debugger, image, results)
     
     return {'results': results, 'tot': tot_time, 'load': load_time,

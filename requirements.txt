@@ -5,3 +5,5 @@ progress
 matplotlib
 easydict
 scipy
+pycocotools
+yacs

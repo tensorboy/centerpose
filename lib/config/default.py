@@ -45,12 +45,13 @@ _C.MODEL.OUTPUT_RES = 128
 _C.MODEL.INPUT_H = 512
 _C.MODEL.INPUT_W = 512
 _C.MODEL.PAD = 31
+_C.MODEL.NUM_CLASSES = 1
 _C.MODEL.NUM_KEYPOINTS = 17
 _C.MODEL.TAG_PER_JOINT = True
 _C.MODEL.TARGET_TYPE = 'gaussian'
 _C.MODEL.SIGMA = 2
 _C.MODEL.CENTER_THRESH = 0.1
-  
+
 
 _C.LOSS = CN()
 _C.LOSS.METRIC = 'loss'
@@ -84,7 +85,6 @@ _C.DATASET.TRAIN_IMAGE_DIR = 'images/train2017'
 _C.DATASET.TRAIN_ANNOTATIONS = ['person_keypoints_train2017.json']
 _C.DATASET.VAL_IMAGE_DIR = 'images/val2017'
 _C.DATASET.VAL_ANNOTATIONS = 'person_keypoints_val2017.json'
-
 # training data augmentation
 _C.DATASET.MEAN = [0.408, 0.447, 0.470]
 _C.DATASET.STD = [0.289, 0.274, 0.278]
@@ -96,7 +96,6 @@ _C.DATASET.ROTATE = 0.
 _C.DATASET.AUG_ROT = 0.
 _C.DATASET.FLIP = 0.5
 _C.DATASET.NO_COLOR_AUG = False
-
 _C.DATASET.ROT_FACTOR = 30
 _C.DATASET.SCALE_MIN = 0.5
 _C.DATASET.SCALE_MAX = 1.1
@@ -136,12 +135,12 @@ _C.TRAIN.TRAINVAL = False
 
 # testing
 _C.TEST = CN()
-
 # size of images for each device
 _C.TEST.BATCH_SIZE_PER_GPU = 32
 # Test Model Epoch
 _C.TEST.FLIP_TEST = False
-
+_C.TEST.TASK = 'multi_pose'
+_C.TEST.MODEL_PATH = ''
 _C.TEST.DEMO_DIR = ''
 _C.TEST.MODEL_FILE = ''
 _C.TEST.TEST_SCALES = [1]
