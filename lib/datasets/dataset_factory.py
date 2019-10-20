@@ -2,8 +2,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from .sample.multi_pose import MultiPoseDataset
-from .dataset.coco_hp import COCOHP
+from .multi_pose import MultiPoseDataset
+from .coco_hp import COCOHP
 
 
 dataset_factory = {

@@ -60,29 +60,6 @@ The result for the example images should look like:
 
 <p align="center">  <img src='readme/pose1.png' align="center" height="200px"> <img src='readme/pose2.png' align="center" height="200px"> <img src='readme/pose3.png' align="center" height="200px">  </p>
 
-You can add `--debug 2` to visualize the heatmap outputs.
-You can add `--flip_test` for flip test.
-
-To use this CenterNet in your own project, you can 
-
-~~~
-import sys
-CENTERNET_PATH = /path/to/CenterNet/src/lib/
-sys.path.insert(0, CENTERNET_PATH)
-
-from detectors.detector_factory import detector_factory
-from opts import opts
-
-MODEL_PATH = /path/to/model
-TASK = 'ctdet' # or 'multi_pose' for human pose estimation
-opt = opts().init('{} --load_model {}'.format(TASK, MODEL_PATH).split(' '))
-detector = detector_factory[opt.task](opt)
-
-img = image/or/path/to/your/image/
-ret = detector.run(img)['results']
-~~~
-`ret` will be a python dict: `{category_id : [[x1, y1, x2, y2, score], ...], }`
-
 ## Benchmark Evaluation and Training
 
 After [installation](readme/INSTALL.md), follow the instructions in [DATA.md](readme/DATA.md) to setup the datasets. Then check [GETTING_STARTED.md](readme/GETTING_STARTED.md) to reproduce the results in the paper.
