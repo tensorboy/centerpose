@@ -97,7 +97,7 @@ class MultiPoseDetector(BaseDetector):
   def show_results(self, debugger, image, results):
     debugger.add_img(image, img_id='multi_pose')
     for bbox in results[1]:
-      if bbox[4] > self.TEST.VIS_THRESH:
+      if bbox[4] > self.cfg.TEST.VIS_THRESH:
         debugger.add_coco_bbox(bbox[:4], 0, bbox[4], img_id='multi_pose')
         debugger.add_coco_hp(bbox[5:39], img_id='multi_pose')
     debugger.show_all_imgs(pause=self.pause)
