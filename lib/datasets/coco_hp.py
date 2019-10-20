@@ -71,30 +71,29 @@ class COCOHP(data.Dataset):
         return float("{:.2f}".format(x))
 
     def convert_eval_format(self, all_bboxes):
-        # import pdb; pdb.set_trace()
         detections = []
         for image_id in all_bboxes:
-        for cls_ind in all_bboxes[image_id]:
-            category_id = 1
-            for dets in all_bboxes[image_id][cls_ind]:
-                bbox = dets[:4]
-                bbox[2] -= bbox[0]
-                bbox[3] -= bbox[1]
-                score = dets[4]
-                bbox_out  = list(map(self._to_float, bbox))
-                keypoints = np.concatenate([
-                np.array(dets[5:39], dtype=np.float32).reshape(-1, 2), 
-                np.ones((17, 1), dtype=np.float32)], axis=1).reshape(51).tolist()
-                keypoints  = list(map(self._to_float, keypoints))
+            for cls_ind in all_bboxes[image_id]:
+                category_id = 1
+                for dets in all_bboxes[image_id][cls_ind]:
+                    bbox = dets[:4]
+                    bbox[2] -= bbox[0]
+                    bbox[3] -= bbox[1]
+                    score = dets[4]
+                    bbox_out  = list(map(self._to_float, bbox))
+                    keypoints = np.concatenate([
+                    np.array(dets[5:39], dtype=np.float32).reshape(-1, 2), 
+                    np.ones((17, 1), dtype=np.float32)], axis=1).reshape(51).tolist()
+                    keypoints  = list(map(self._to_float, keypoints))
 
-                detection = {
-                  "image_id": int(image_id),
-                  "category_id": int(category_id),
-                  "bbox": bbox_out,
-                  "score": float("{:.2f}".format(score)),
-                  "keypoints": keypoints
-                }
-                detections.append(detection)
+                    detection = {
+                      "image_id": int(image_id),
+                      "category_id": int(category_id),
+                      "bbox": bbox_out,
+                      "score": float("{:.2f}".format(score)),
+                      "keypoints": keypoints
+                    }
+                    detections.append(detection)
         return detections
 
     def __len__(self):

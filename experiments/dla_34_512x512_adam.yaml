@@ -1,7 +1,7 @@
 SAMPLE_METHOD: 'coco_hp'
 DATA_DIR: '/media/tensorboy/74DC8ED7DC8E9352/data'
 EXP_ID: 'coco_pose_dla_34'
-DEBUG: 1
+DEBUG: 0
 DEBUG_THEME: 'white'
 SEED: 317
 OUTPUT_DIR: '/media/tensorboy/74DC8ED7DC8E9352/data/centerpose/multi_pose'
