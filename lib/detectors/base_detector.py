@@ -14,128 +14,127 @@ from utils.debugger import Debugger
 
 
 class BaseDetector(object):
-  def __init__(self, cfg):
+    def __init__(self, cfg):
     
-    print('Creating model...')
-    HEADS = dict(zip(cfg.MODEL.HEADS_NAME, cfg.MODEL.HEADS_NUM))
-    self.model = create_model(cfg.MODEL.NAME, HEADS, cfg.MODEL.HEAD_CONV)
-    self.model = load_model(self.model, cfg.TEST.MODEL_PATH)
-    self.model = self.model.to(torch.device('cuda'))
-    self.model.eval()
+        print('Creating model...')
+        HEADS = dict(zip(cfg.MODEL.HEADS_NAME, cfg.MODEL.HEADS_NUM))
+        self.model = create_model(cfg.MODEL.NAME, HEADS, cfg.MODEL.HEAD_CONV)
+        self.model = load_model(self.model, cfg.TEST.MODEL_PATH)
+        self.model = self.model.to(torch.device('cuda'))
+        self.model.eval()
 
-    self.mean = np.array(cfg.DATASET.MEAN, dtype=np.float32).reshape(1, 1, 3)
-    self.std = np.array(cfg.DATASET.STD, dtype=np.float32).reshape(1, 1, 3)
-    self.max_per_image = 100
-    self.num_classes = cfg.MODEL.NUM_CLASSES
-    self.scales = cfg.TEST.TEST_SCALES
-    self.cfg = cfg
-    self.pause = True
+        self.mean = np.array(cfg.DATASET.MEAN, dtype=np.float32).reshape(1, 1, 3)
+        self.std = np.array(cfg.DATASET.STD, dtype=np.float32).reshape(1, 1, 3)
+        self.max_per_image = 100
+        self.num_classes = cfg.MODEL.NUM_CLASSES
+        self.scales = cfg.TEST.TEST_SCALES
+        self.cfg = cfg
+        self.pause = True
 
-  def pre_process(self, image, scale, meta=None):
-    height, width = image.shape[0:2]
-    new_height = int(height * scale)
-    new_width  = int(width * scale)
-    if self.cfg.TEST.FIX_RES:
-      inp_height, inp_width = self.cfg.MODEL.INPUT_H, self.cfg.MODEL.INPUT_W
-      c = np.array([new_width / 2., new_height / 2.], dtype=np.float32)
-      s = max(height, width) * 1.0
-    else:
-      inp_height = (new_height | self.cfg.MODEL.PAD) + 1
-      inp_width = (new_width | self.cfg.MODEL.PAD) + 1
-      c = np.array([new_width // 2, new_height // 2], dtype=np.float32)
-      s = np.array([inp_width, inp_height], dtype=np.float32)
+    def pre_process(self, image, scale, meta=None):
+        height, width = image.shape[0:2]
+        new_height = int(height * scale)
+        new_width  = int(width * scale)
+        if self.cfg.TEST.FIX_RES:
+            inp_height, inp_width = self.cfg.MODEL.INPUT_H, self.cfg.MODEL.INPUT_W
+            c = np.array([new_width / 2., new_height / 2.], dtype=np.float32)
+            s = max(height, width) * 1.0
+        else:
+            inp_height = (new_height | self.cfg.MODEL.PAD) + 1
+            inp_width = (new_width | self.cfg.MODEL.PAD) + 1
+            c = np.array([new_width // 2, new_height // 2], dtype=np.float32)
+            s = np.array([inp_width, inp_height], dtype=np.float32)
 
-    trans_input = get_affine_transform(c, s, 0, [inp_width, inp_height])
-    resized_image = cv2.resize(image, (new_width, new_height))
-    inp_image = cv2.warpAffine(
-      resized_image, trans_input, (inp_width, inp_height),
-      flags=cv2.INTER_LINEAR)
-    inp_image = ((inp_image / 255. - self.mean) / self.std).astype(np.float32)
+        trans_input = get_affine_transform(c, s, 0, [inp_width, inp_height])
+        resized_image = cv2.resize(image, (new_width, new_height))
+        inp_image = cv2.warpAffine(
+            resized_image, trans_input, (inp_width, inp_height),
+            flags=cv2.INTER_LINEAR)
+        inp_image = ((inp_image / 255. - self.mean) / self.std).astype(np.float32)
 
-    images = inp_image.transpose(2, 0, 1).reshape(1, 3, inp_height, inp_width)
-    if self.cfg.TEST.FLIP_TEST:
-      images = np.concatenate((images, images[:, :, :, ::-1]), axis=0)
-    images = torch.from_numpy(images)
-    meta = {'c': c, 's': s, 
-            'out_height': inp_height // self.cfg.MODEL.DOWN_RATIO, 
-            'out_width': inp_width // self.cfg.MODEL.DOWN_RATIO}
-    return images, meta
+        images = inp_image.transpose(2, 0, 1).reshape(1, 3, inp_height, inp_width)
+        if self.cfg.TEST.FLIP_TEST:
+            images = np.concatenate((images, images[:, :, :, ::-1]), axis=0)
+        images = torch.from_numpy(images)
+        meta = {'c': c, 's': s, 
+                'out_height': inp_height // self.cfg.MODEL.DOWN_RATIO, 
+                'out_width': inp_width // self.cfg.MODEL.DOWN_RATIO}
+        return images, meta
 
-  def process(self, images, return_time=False):
-    raise NotImplementedError
+    def process(self, images, return_time=False):
+        raise NotImplementedError
 
-  def post_process(self, dets, meta, scale=1):
-    raise NotImplementedError
+    def post_process(self, dets, meta, scale=1):
+        raise NotImplementedError
 
-  def merge_outputs(self, detections):
-    raise NotImplementedError
+    def merge_outputs(self, detections):
+        raise NotImplementedError
 
-  def debug(self, debugger, images, dets, output, scale=1):
-    raise NotImplementedError
+    def debug(self, debugger, images, dets, output, scale=1):
+        raise NotImplementedError
 
-  def show_results(self, debugger, image, results):
-   raise NotImplementedError
+    def show_results(self, debugger, image, results):
+        raise NotImplementedError
 
-  def run(self, image_or_path_or_tensor, meta=None):
-    load_time, pre_time, net_time, dec_time, post_time = 0, 0, 0, 0, 0
-    merge_time, tot_time = 0, 0
-    debugger = Debugger((self.cfg.DEBUG==3), theme=self.cfg.DEBUG_THEME, 
-               num_classes=self.cfg.MODEL.NUM_CLASSES, dataset=self.cfg.SAMPLE_METHOD, down_ratio=self.cfg.MODEL.DOWN_RATIO)
-    start_time = time.time()
-    pre_processed = False
-    if isinstance(image_or_path_or_tensor, np.ndarray):
-      image = image_or_path_or_tensor
-    elif type(image_or_path_or_tensor) == type (''): 
-      image = cv2.imread(image_or_path_or_tensor)
-    else:
-      image = image_or_path_or_tensor['image'][0].numpy()
-      pre_processed_images = image_or_path_or_tensor
-      pre_processed = True
+    def run(self, image_or_path_or_tensor, meta=None):
+        load_time, pre_time, net_time, dec_time, post_time = 0, 0, 0, 0, 0
+        merge_time, tot_time = 0, 0
+        debugger = Debugger((self.cfg.DEBUG==3), theme=self.cfg.DEBUG_THEME, 
+                   num_classes=self.cfg.MODEL.NUM_CLASSES, dataset=self.cfg.SAMPLE_METHOD, down_ratio=self.cfg.MODEL.DOWN_RATIO)
+        start_time = time.time()
+        pre_processed = False
+        if isinstance(image_or_path_or_tensor, np.ndarray):
+            image = image_or_path_or_tensor
+        elif type(image_or_path_or_tensor) == type (''): 
+            image = cv2.imread(image_or_path_or_tensor)
+        else:
+            image = image_or_path_or_tensor['image'][0].numpy()
+            pre_processed_images = image_or_path_or_tensor
+            pre_processed = True
+
+        loaded_time = time.time()
+        load_time += (loaded_time - start_time)
+
+        detections = []
+        for scale in self.scales:
+            scale_start_time = time.time()
+            if not pre_processed:
+                images, meta = self.pre_process(image, scale, meta)
+            else:
+                images = pre_processed_images['images'][scale][0]
+                meta = pre_processed_images['meta'][scale]
+                meta = {k: v.numpy()[0] for k, v in meta.items()}
+            images = images.to(torch.device('cuda'))
+            torch.cuda.synchronize()
+            pre_process_time = time.time()
+            pre_time += pre_process_time - scale_start_time
+
+            output, dets, forward_time = self.process(images, return_time=True)
+
+            torch.cuda.synchronize()
+            net_time += forward_time - pre_process_time
+            decode_time = time.time()
+            dec_time += decode_time - forward_time
+
+            if self.cfg.DEBUG >= 2:
+                self.debug(debugger, images, dets, output, scale)
+
+            dets = self.post_process(dets, meta, scale)
+            torch.cuda.synchronize()
+            post_process_time = time.time()
+            post_time += post_process_time - decode_time
+
+            detections.append(dets)
     
-    loaded_time = time.time()
-    load_time += (loaded_time - start_time)
-    
-    detections = []
-    for scale in self.scales:
-      scale_start_time = time.time()
-      if not pre_processed:
-        images, meta = self.pre_process(image, scale, meta)
-      else:
-        # import pdb; pdb.set_trace()
-        images = pre_processed_images['images'][scale][0]
-        meta = pre_processed_images['meta'][scale]
-        meta = {k: v.numpy()[0] for k, v in meta.items()}
-      images = images.to(torch.device('cuda'))
-      torch.cuda.synchronize()
-      pre_process_time = time.time()
-      pre_time += pre_process_time - scale_start_time
-      
-      output, dets, forward_time = self.process(images, return_time=True)
+        results = self.merge_outputs(detections)
+        torch.cuda.synchronize()
+        end_time = time.time()
+        merge_time += end_time - post_process_time
+        tot_time += end_time - start_time
 
-      torch.cuda.synchronize()
-      net_time += forward_time - pre_process_time
-      decode_time = time.time()
-      dec_time += decode_time - forward_time
-      
-      if self.cfg.DEBUG >= 2:
-        self.debug(debugger, images, dets, output, scale)
-      
-      dets = self.post_process(dets, meta, scale)
-      torch.cuda.synchronize()
-      post_process_time = time.time()
-      post_time += post_process_time - decode_time
+        if self.cfg.DEBUG >= 1:
+            self.show_results(debugger, image, results)
 
-      detections.append(dets)
-    
-    results = self.merge_outputs(detections)
-    torch.cuda.synchronize()
-    end_time = time.time()
-    merge_time += end_time - post_process_time
-    tot_time += end_time - start_time
-
-    if self.cfg.DEBUG >= 1:
-      self.show_results(debugger, image, results)
-    
-    return {'results': results, 'tot': tot_time, 'load': load_time,
-            'pre': pre_time, 'net': net_time, 'dec': dec_time,
-            'post': post_time, 'merge': merge_time}
+        return {'results': results, 'tot': tot_time, 'load': load_time,
+                'pre': pre_time, 'net': net_time, 'dec': dec_time,
+                'post': post_time, 'merge': merge_time}
