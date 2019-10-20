@@ -203,7 +203,7 @@ class CenterNetTensorRTEngine(TensorRTEngine):
 
         wh, kps, reg, hp_offset, heat, hm_hp, hmax, hm_hp_max = output
 
-        num_joints = kps.shape[1] // 2
+        num_joints = cfg.MODEL.NUM_KEYPOINTS
         batch, cat, height, width = heat.shape
 
         keep = heat == hmax

@@ -215,7 +215,7 @@ def main(cfg):
     
     heat, hmax, hm_hp, hm_hp_max, kps, reg, hp_offset, wh = output_onnx
     
-    num_joints = kps.shape[1] // 2
+    num_joints = cfg.MODEL.NUM_KEYPOINTS
     batch, cat, height, width = heat.shape
     
     keep = heat==hmax
