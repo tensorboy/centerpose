@@ -45,6 +45,7 @@ def demo(cfg):
       image_names = [cfg.TEST.DEMO_FILE]
     
     for (image_name) in image_names:
+      print(image_name)
       ret = detector.run(image_name)
       time_str = ''
       for stat in time_stats:

@@ -9,7 +9,7 @@ multi person pose estimation using center point detection:
 | Backbone     |  AP       |  FPS         |
 |--------------|-----------|--------------|
 |Hourglass-104 | 64.0      |    6.6       |
-|DLA-34        | 58.9      |    23        |
+|DLA-34        | 59.8      |    23        |
 |Resnet-50     | 33.5      |    40        |
 
 

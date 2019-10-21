@@ -1,13 +1,13 @@
 SAMPLE_METHOD: 'coco_hp'
-DATA_DIR: '/media/tensorboy/74DC8ED7DC8E9352/data'
+DATA_DIR: '/data'
 EXP_ID: 'coco_pose_dla_34'
 DEBUG: 0
 DEBUG_THEME: 'white'
 SEED: 317
-OUTPUT_DIR: '/media/tensorboy/74DC8ED7DC8E9352/data/centerpose/multi_pose'
+OUTPUT_DIR: '/data/centerpose/multi_pose_3x'
 LOG_DIR: ''
 EXPERIMENT_NAME: ''
-GPUS: [0, 1, 2, 3]
+GPUS: [0, 1, 2, 3, 4, 5, 6]
 WORKERS: 8
 PRINT_FREQ: 0
 PIN_MEMORY: true
@@ -88,12 +88,12 @@ TRAIN:
   SAVE_ALL_MODEL: false
   RESUME: false
   LR_FACTOR: 0.1
-  LR_STEP: [90, 120]
-  EPOCHS: 140
+  LR_STEP: [270, 300]
+  EPOCHS: 320
   NUM_ITERS: -1
-  LR: 2.421875e-4
-  BATCH_SIZE: 62
-  MASTER_BATCH_SIZE: 14
+  LR: 4.3359375e-4
+  BATCH_SIZE: 111
+  MASTER_BATCH_SIZE: 15
 
   OPTIMIZER: 'adam'
   MOMENTUM: 0.9
@@ -112,11 +112,11 @@ TRAIN:
  
 TEST:
   # Test Model Epoch
-  MODEL_PATH: '/home/tensorboy/Documents/multi_pose/model_last.pth'
+  MODEL_PATH: '/data/centerpose/multi_pose/coco_pose_dla_34/model_last.pth'
   TASK: 'multi_pose'
-  FLIP_TEST: false
+  FLIP_TEST: true
 
-  DEMO_FILE: 'webcam'
+  DEMO_FILE: '../images/33823288584_1d21cf0a26_k.jpg'
   MODEL_FILE: ''
   TEST_SCALES: [1]
   IMAGE_THRE: 0.1
@@ -124,7 +124,7 @@ TEST:
   NMS: false
   NMS_THRE: 0.5
   NOT_PREFETCH_TEST: false
-  FIX_RES: true
+  FIX_RES: false
   KEEP_RES: false
 
   SOFT_NMS: false
