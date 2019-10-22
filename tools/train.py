@@ -54,8 +54,9 @@ def main(cfg):
   trainer.set_device(cfg.GPUS, chunk_sizes, device)
 
   print('Setting up data...')
+  val_dataset = Dataset(cfg, 'val')
   val_loader = torch.utils.data.DataLoader(
-      Dataset(cfg, 'val'), 
+      val_dataset, 
       batch_size=1, 
       shuffle=False,
       num_workers=1,
@@ -72,7 +73,7 @@ def main(cfg):
   )
 
   print('Starting training...')
-  best = 1e10
+  best = 0.
   for epoch in range(start_epoch + 1, cfg.TRAIN.EPOCHS + 1):
     mark = epoch if cfg.TRAIN.SAVE_ALL_MODEL else 'last'
     log_dict_train, _ = trainer.train(epoch, train_loader)
@@ -85,11 +86,13 @@ def main(cfg):
                  epoch, model, optimizer)
       with torch.no_grad():
         log_dict_val, preds = trainer.val(epoch, val_loader)
+        mAP = val_dataset.run_eval(preds, cfg.OUTPUT_DIR)
+        print('mAP is: ', mAP)
       for k, v in log_dict_val.items():
         logger.scalar_summary('val_{}'.format(k), v, epoch)
         logger.write('{} {:8f} | '.format(k, v))
-      if log_dict_val[cfg.LOSS.METRIC] < best:
-        best = log_dict_val[cfg.LOSS.METRIC]
+      if mAP > best:
+        best = mAP
         save_model(os.path.join(cfg.OUTPUT_DIR, 'model_best.pth'), 
                    epoch, model)
     else:
@@ -106,6 +109,6 @@ def main(cfg):
   logger.close()
 
 if __name__ == '__main__':
-  config_name = '../experiments/dla_34_512x512_adam.yaml'
+  config_name = '../experiments/dla_34_512x512_sgd.yaml'
   update_config(cfg, config_name)
   main(cfg)

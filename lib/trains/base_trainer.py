@@ -10,15 +10,15 @@ from utils.utils import AverageMeter
 
 
 class ModleWithLoss(torch.nn.Module):
-  def __init__(self, model, loss):
-    super(ModleWithLoss, self).__init__()
-    self.model = model
-    self.loss = loss
-  
-  def forward(self, batch):
-    outputs = self.model(batch['input'])
-    loss, loss_stats = self.loss(outputs, batch)
-    return outputs[-1], loss, loss_stats
+    def __init__(self, model, loss):
+        super(ModleWithLoss, self).__init__()
+        self.model = model
+        self.loss = loss
+
+    def forward(self, batch):
+        outputs = self.model(batch['input'])
+        loss, loss_stats = self.loss(outputs, batch)
+        return outputs[-1], loss, loss_stats
 
 class BaseTrainer(object):
   def __init__(
@@ -94,7 +94,7 @@ class BaseTrainer(object):
       if cfg.DEBUG > 0:
         self.debug(batch, output, iter_id)
       
-      if cfg.SAVE_RESULTS:
+      if phase == 'val':
         self.save_result(output, batch, results)
       del output, loss, loss_stats
     

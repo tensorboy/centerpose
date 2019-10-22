@@ -92,7 +92,7 @@ class MultiPoseTrainer(BaseTrainer):
         loss_states = ['loss', 'hm_loss', 'hp_loss', 'hm_hp_loss', 
                        'hp_offset_loss', 'wh_loss', 'off_loss']
         loss = MultiPoseLoss(cfg)
-    return loss_states, loss
+        return loss_states, loss
 
     def debug(self, batch, output, iter_id):
         cfg = self.cfg
@@ -122,10 +122,10 @@ class MultiPoseTrainer(BaseTrainer):
 
             debugger.add_img(img, img_id='out_pred')
             for k in range(len(dets[i])):
-            if dets[i, k, 4] > cfg.MODEL.CENTER_THRESH:
-                debugger.add_coco_bbox(dets[i, k, :4], dets[i, k, -1],
-                                     dets[i, k, 4], img_id='out_pred')
-                debugger.add_coco_hp(dets[i, k, 5:39], img_id='out_pred')
+                if dets[i, k, 4] > cfg.MODEL.CENTER_THRESH:
+                    debugger.add_coco_bbox(dets[i, k, :4], dets[i, k, -1],
+                                         dets[i, k, 4], img_id='out_pred')
+                    debugger.add_coco_hp(dets[i, k, 5:39], img_id='out_pred')
 
         debugger.add_img(img, img_id='out_gt')
         for k in range(len(dets_gt[i])):
