@@ -207,9 +207,7 @@ class MobileNetV3(nn.Module):
         for head in self.heads:
             z[head] = self.__getattr__(head)(y[-1])
         return [z]
-
-class MobileNetV3(nn.Module):
-    def __init__(self, heads, final_kernel, head_conv)
+        
     
 def get_mobile_pose_net(num_layers, heads, head_conv):
 

@@ -34,47 +34,47 @@ class MultiPoseLoss(torch.nn.Module):
             if cfg.LOSS.HM_HP and not cfg.LOSS.MSE_LOSS:
                 output['hm_hp'] = _sigmoid(output['hm_hp'])
       
-        if cfg.TEST.EVAL_ORACLE_HMHP:
-            output['hm_hp'] = batch['hm_hp']
-        if cfg.TEST.EVAL_ORACLE_HM:
-            output['hm'] = batch['hm']
-        if cfg.TEST.EVAL_ORACLE_KPS:
+            if cfg.TEST.EVAL_ORACLE_HMHP:
+                output['hm_hp'] = batch['hm_hp']
+            if cfg.TEST.EVAL_ORACLE_HM:
+                output['hm'] = batch['hm']
+            if cfg.TEST.EVAL_ORACLE_KPS:
+                if cfg.LOSS.DENSE_HP:
+                    output['hps'] = batch['dense_hps']
+                else:
+                    output['hps'] = torch.from_numpy(gen_oracle_map(
+                    batch['hps'].detach().cpu().numpy(), 
+                    batch['ind'].detach().cpu().numpy(), 
+                    cfg.MODEL.OUTPUT_RES, cfg.MODEL.OUTPUT_RES)).to(torch.device('cuda'))
+            if cfg.TEST.EVAL_ORACLE_HP_OFFSET:
+                output['hp_offset'] = torch.from_numpy(gen_oracle_map(
+                batch['hp_offset'].detach().cpu().numpy(), 
+                batch['hp_ind'].detach().cpu().numpy(), 
+                cfg.MODEL.OUTPUT_RES, cfg.MODEL.OUTPUT_RES)).to(torch.device('cuda'))
+
+
+            hm_loss += self.crit(output['hm'], batch['hm']) / cfg.MODEL.NUM_STACKS
             if cfg.LOSS.DENSE_HP:
-                output['hps'] = batch['dense_hps']
-        else:
-            output['hps'] = torch.from_numpy(gen_oracle_map(
-            batch['hps'].detach().cpu().numpy(), 
-            batch['ind'].detach().cpu().numpy(), 
-            cfg.MODEL.OUTPUT_RES, cfg.MODEL.OUTPUT_RES)).to(torch.device('cuda'))
-        if cfg.TEST.EVAL_ORACLE_HP_OFFSET:
-            output['hp_offset'] = torch.from_numpy(gen_oracle_map(
-            batch['hp_offset'].detach().cpu().numpy(), 
-            batch['hp_ind'].detach().cpu().numpy(), 
-            cfg.MODEL.OUTPUT_RES, cfg.MODEL.OUTPUT_RES)).to(torch.device('cuda'))
-
-
-        hm_loss += self.crit(output['hm'], batch['hm']) / cfg.MODEL.NUM_STACKS
-        if cfg.LOSS.DENSE_HP:
-            mask_weight = batch['dense_hps_mask'].sum() + 1e-4
-            hp_loss += (self.crit_kp(output['hps'] * batch['dense_hps_mask'], 
-                                     batch['dense_hps'] * batch['dense_hps_mask']) / 
-                                     mask_weight) / cfg.MODEL.NUM_STACKS
-        else:
-            hp_loss += self.crit_kp(output['hps'], batch['hps_mask'], 
-                                batch['ind'], batch['hps']) / cfg.MODEL.NUM_STACKS
-        if cfg.LOSS.WH_WEIGHT > 0:
-            wh_loss += self.crit_reg(output['wh'], batch['reg_mask'],
-                                 batch['ind'], batch['wh']) / cfg.MODEL.NUM_STACKS
-        if cfg.LOSS.REG_OFFSET and cfg.LOSS.OFF_WEIGHT > 0:
-            off_loss += self.crit_reg(output['reg'], batch['reg_mask'],
-                                  batch['ind'], batch['reg']) / cfg.MODEL.NUM_STACKS
-        if cfg.LOSS.REG_HP_OFFSET and cfg.LOSS.OFF_WEIGHT > 0:
-            hp_offset_loss += self.crit_reg(
-            output['hp_offset'], batch['hp_mask'],
-            batch['hp_ind'], batch['hp_offset']) / cfg.MODEL.NUM_STACKS
-        if cfg.LOSS.HM_HP and cfg.LOSS.HM_HP_WEIGHT > 0:
-            hm_hp_loss += self.crit_hm_hp(
-            output['hm_hp'], batch['hm_hp']) / cfg.MODEL.NUM_STACKS
+                mask_weight = batch['dense_hps_mask'].sum() + 1e-4
+                hp_loss += (self.crit_kp(output['hps'] * batch['dense_hps_mask'], 
+                                         batch['dense_hps'] * batch['dense_hps_mask']) / 
+                                         mask_weight) / cfg.MODEL.NUM_STACKS
+            else:
+                hp_loss += self.crit_kp(output['hps'], batch['hps_mask'], 
+                                    batch['ind'], batch['hps']) / cfg.MODEL.NUM_STACKS
+            if cfg.LOSS.WH_WEIGHT > 0:
+                wh_loss += self.crit_reg(output['wh'], batch['reg_mask'],
+                                     batch['ind'], batch['wh']) / cfg.MODEL.NUM_STACKS
+            if cfg.LOSS.REG_OFFSET and cfg.LOSS.OFF_WEIGHT > 0:
+                off_loss += self.crit_reg(output['reg'], batch['reg_mask'],
+                                      batch['ind'], batch['reg']) / cfg.MODEL.NUM_STACKS
+            if cfg.LOSS.REG_HP_OFFSET and cfg.LOSS.OFF_WEIGHT > 0:
+                hp_offset_loss += self.crit_reg(
+                output['hp_offset'], batch['hp_mask'],
+                batch['hp_ind'], batch['hp_offset']) / cfg.MODEL.NUM_STACKS
+            if cfg.LOSS.HM_HP and cfg.LOSS.HM_HP_WEIGHT > 0:
+                hm_hp_loss += self.crit_hm_hp(
+                output['hm_hp'], batch['hm_hp']) / cfg.MODEL.NUM_STACKS
         loss = cfg.LOSS.HM_WEIGHT * hm_loss + cfg.LOSS.WH_WEIGHT * wh_loss + \
                cfg.LOSS.OFF_WEIGHT * off_loss + cfg.LOSS.HP_WEIGHT * hp_loss + \
                cfg.LOSS.HM_HP_WEIGHT * hm_hp_loss + cfg.LOSS.OFF_WEIGHT * hp_offset_loss
@@ -127,23 +127,23 @@ class MultiPoseTrainer(BaseTrainer):
                                          dets[i, k, 4], img_id='out_pred')
                     debugger.add_coco_hp(dets[i, k, 5:39], img_id='out_pred')
 
-        debugger.add_img(img, img_id='out_gt')
-        for k in range(len(dets_gt[i])):
-            if dets_gt[i, k, 4] > cfg.MODEL.CENTER_THRESH:
-                debugger.add_coco_bbox(dets_gt[i, k, :4], dets_gt[i, k, -1],
-                             dets_gt[i, k, 4], img_id='out_gt')
-                debugger.add_coco_hp(dets_gt[i, k, 5:39], img_id='out_gt')
+            debugger.add_img(img, img_id='out_gt')
+            for k in range(len(dets_gt[i])):
+                if dets_gt[i, k, 4] > cfg.MODEL.CENTER_THRESH:
+                    debugger.add_coco_bbox(dets_gt[i, k, :4], dets_gt[i, k, -1],
+                                 dets_gt[i, k, 4], img_id='out_gt')
+                    debugger.add_coco_hp(dets_gt[i, k, 5:39], img_id='out_gt')
 
-        if cfg.LOSS.HM_HP:
-            pred = debugger.gen_colormap_hp(output['hm_hp'][i].detach().cpu().numpy())
-            gt = debugger.gen_colormap_hp(batch['hm_hp'][i].detach().cpu().numpy())
-            debugger.add_blend_img(img, pred, 'pred_hmhp')
-            debugger.add_blend_img(img, gt, 'gt_hmhp')
+            if cfg.LOSS.HM_HP:
+                pred = debugger.gen_colormap_hp(output['hm_hp'][i].detach().cpu().numpy())
+                gt = debugger.gen_colormap_hp(batch['hm_hp'][i].detach().cpu().numpy())
+                debugger.add_blend_img(img, pred, 'pred_hmhp')
+                debugger.add_blend_img(img, gt, 'gt_hmhp')
 
-        if cfg.DEBUG == 4:
-            debugger.save_all_imgs(cfg.LOG_DIR, prefix='{}'.format(iter_id))
-        else:
-            debugger.show_all_imgs(pause=True)
+            if cfg.DEBUG == 4:
+                debugger.save_all_imgs(cfg.LOG_DIR, prefix='{}'.format(iter_id))
+            else:
+                debugger.show_all_imgs(pause=True)
 
     def save_result(self, output, batch, results):
         reg = output['reg'] if self.cfg.LOSS.REG_OFFSET else None

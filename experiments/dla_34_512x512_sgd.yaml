@@ -1,13 +1,13 @@
 SAMPLE_METHOD: 'coco_hp'
-DATA_DIR: '/home/tensorboy/data'
-EXP_ID: 'coco_pose_dla_34'
+DATA_DIR: '/data'
+EXP_ID: 'coco_pose_dla_34_sgd'
 DEBUG: 0
 DEBUG_THEME: 'white'
 SEED: 317
-OUTPUT_DIR: '/home/tensorboy/data/centerpose/multi_pose_3x_sgd'
+OUTPUT_DIR: '/data/centerpose/multi_pose_3x_sgd'
 LOG_DIR: ''
 EXPERIMENT_NAME: ''
-GPUS: [0, 1, 2, 3]
+GPUS: [0, 1, 2, 3, 4, 5, 6]
 WORKERS: 8
 PRINT_FREQ: 0
 PIN_MEMORY: true
@@ -57,7 +57,7 @@ LOSS:
   HM_HP_WEIGHT: 1.
   
 DATASET:
-  ROOT: '/home/tensorboy/data/coco'
+  ROOT: '/data/coco'
   DATASET: 'coco_hp'
   TRAIN_SET: 'train'
   TEST_SET: 'valid'
@@ -91,9 +91,9 @@ TRAIN:
   LR_STEP: [270, 300]
   EPOCHS: 320
   NUM_ITERS: -1
-  LR: 2.5e-4
-  BATCH_SIZE: 64
-  MASTER_BATCH_SIZE: 16
+  LR: 4.3359375e-4
+  BATCH_SIZE: 111
+  MASTER_BATCH_SIZE: 15
 
   MOMENTUM: 0.9
   WD: 0.0001
@@ -111,7 +111,7 @@ TRAIN:
  
 TEST:
   # Test Model Epoch
-  MODEL_PATH: '/home/tensorboy/multi_pose_dla_1x.pth'
+  MODEL_PATH: '/data/centerpose/multi_pose_3x_sgd/model_last.pth'
   TASK: 'multi_pose'
   FLIP_TEST: true
 
