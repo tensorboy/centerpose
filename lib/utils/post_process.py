@@ -106,6 +106,6 @@ def multi_pose_post_process(dets, c, s, h, w):
         pts = transform_preds(dets[i, :, 5:39].reshape(-1, 2), c[i], s[i], (w, h))
         top_preds = np.concatenate(
             [bbox.reshape(-1, 4), dets[i, :, 4:5], 
-            pts.reshape(-1, 34)], axis=1).astype(np.float32).tolist()
+            pts.reshape(-1, 34), dets[i, :, 39:56]], axis=1).astype(np.float32).tolist()
         ret.append({np.ones(1, dtype=np.int32)[0]: top_preds})
     return ret

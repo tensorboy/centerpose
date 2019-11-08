@@ -24,7 +24,7 @@ MODEL:
   NAME: 'mobilenetv3'
   HEADS_NAME: ['hm', 'wh', 'hps', 'reg', 'hm_hp', 'hp_offset']
   HEADS_NUM: [1, 2, 34, 2, 17, 2]
-  HEAD_CONV: 64
+  HEAD_CONV: 256
   DOWN_RATIO: 4
   NUM_STACKS: 1
   INPUT_RES: 512

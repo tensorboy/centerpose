@@ -114,7 +114,7 @@ class MultiPoseTrainer(BaseTrainer):
             dataset=cfg.SAMPLE_METHOD, ipynb=(cfg.DEBUG==3), theme=cfg.DEBUG_THEME)
             img = batch['input'][i].detach().cpu().numpy().transpose(1, 2, 0)
             img = np.clip(((
-            img * cfg.DATASET.STD + cfg.DATASET.MEAN) * 255.), 0, 255).astype(np.uint8)
+            img * np.array(cfg.DATASET.STD).reshape(1,1,3).astype(np.float32) + cfg.DATASET.MEAN) * 255.), 0, 255).astype(np.uint8)
             pred = debugger.gen_colormap(output['hm'][i].detach().cpu().numpy())
             gt = debugger.gen_colormap(batch['hm'][i].detach().cpu().numpy())
             debugger.add_blend_img(img, pred, 'pred_hm')

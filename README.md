@@ -10,7 +10,7 @@ multi person pose estimation using center point detection:
 |--------------|-----------|--------------|
 |Hourglass-104 | 64.0      |    6.6       |
 |DLA-34        | 60.2      |    23        |
-|Resnet-50     | 48.8      |    40        |
+|Resnet-50     | 52.7      |    40        |
 |MobilenetV3   | 40.0      |    40        |
 
 All models and details are available in our [Model zoo](readme/MODEL_ZOO.md).

@@ -5,6 +5,7 @@ from __future__ import print_function
 import _init_paths
 
 import os
+import argparse
 import json
 import cv2
 import numpy as np

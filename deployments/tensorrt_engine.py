@@ -3,10 +3,10 @@ import logging
 import numpy as np
 import pycuda.driver as cuda
 
-from .utils.config_parse import merge_cfg_from_file
-from .utils.trt_utils import allocate_buffers
-from .utils.gcp_utils import build_credentials_from_env
+from trt_utils import allocate_buffers
+from gcp_utils import build_credentials_from_env
 
+from config import update_config
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ class TensorRTEngine:
         """
         cfg = self._load_config()
         if config_file is not None:
-            merge_cfg_from_file(config_file, cfg)
+            update_config(cfg, config)
         self.cfg = cfg
 
     def _initialize_buffers(self):

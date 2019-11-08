@@ -1,10 +1,10 @@
 SAMPLE_METHOD: 'coco_hp'
-DATA_DIR: '/data'
+DATA_DIR: '/home/tensorboy/data'
 EXP_ID: 'coco_pose_res_50'
 DEBUG: 0
 DEBUG_THEME: 'white'
 SEED: 317
-OUTPUT_DIR: '/data/centerpose/res50_3x_sgd'
+OUTPUT_DIR: '/home/tensorboy/data/centerpose/res50_3x_sgd'
 LOG_DIR: ''
 EXPERIMENT_NAME: ''
 GPUS: [0, 1, 2, 3]
@@ -58,7 +58,6 @@ LOSS:
   HM_HP_WEIGHT: 1.
   
 DATASET:
-  ROOT: '/data/coco'
   DATASET: 'coco_hp'
   TRAIN_SET: 'train'
   TEST_SET: 'valid'
@@ -112,7 +111,7 @@ TRAIN:
  
 TEST:
   # Test Model Epoch
-  MODEL_PATH: '/home/tensorboy/data/centerpose/multi_pose/coco_pose_res_50/model_last.pth'
+  MODEL_PATH: '/home/tensorboy/data/centerpose/res50_3x_sgd/model_best.pth'
   TASK: 'multi_pose'
   FLIP_TEST: true
 
@@ -124,15 +123,14 @@ TEST:
   NMS: false
   NMS_THRE: 0.5
   NOT_PREFETCH_TEST: false
-  FIX_RES: false
-  KEEP_RES: false
+  FIX_RES: true
 
   SOFT_NMS: false
   OKS_THRE: 0.5
   VIS_THRESH: 0.3
   KEYPOINT_THRESH: 0.2
   NUM_MIN_KPT: 4
-  THRESH_HUMAN: 0.4
+  THRESH_HUMAN: 0.5
 
   EVAL_ORACLE_HM: false
   EVAL_ORACLE_WH: false
