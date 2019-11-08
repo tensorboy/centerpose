@@ -21,6 +21,19 @@ from detectors.detector_factory import detector_factory
 from config import cfg
 from config import update_config
 
+
+def parse_args():
+    parser = argparse.ArgumentParser(description='Train keypoints network')
+    # general
+    parser.add_argument('--cfg',
+                        help='experiment configure file name',
+                        required=True,
+                        type=str)
+    args = parser.parse_args()
+
+    return args
+    
+    
 def test(cfg):
 
     Dataset = dataset_factory[cfg.SAMPLE_METHOD]
@@ -56,6 +69,6 @@ def test(cfg):
     dataset.run_eval(results, cfg.OUTPUT_DIR)
 
 if __name__ == '__main__':
-    config_name = '../experiments/mobilenetv3_512x512_sgd.yaml'
-    update_config(cfg, config_name)
+    args = parse_args()
+    update_config(cfg, args.cfg)
     test(cfg)

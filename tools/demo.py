@@ -11,6 +11,19 @@ from config import cfg
 from config import update_config
 from detectors.detector_factory import detector_factory
 
+
+def parse_args():
+    parser = argparse.ArgumentParser(description='Train keypoints network')
+    # general
+    parser.add_argument('--cfg',
+                        help='experiment configure file name',
+                        required=True,
+                        type=str)
+    args = parser.parse_args()
+
+    return args
+
+    
 image_ext = ['jpg', 'jpeg', 'png', 'webp']
 video_ext = ['mp4', 'mov', 'avi', 'mkv']
 time_stats = ['tot', 'load', 'pre', 'net', 'dec', 'post', 'merge']
@@ -52,6 +65,6 @@ def demo(cfg):
                 time_str = time_str + '{} {:.3f}s |'.format(stat, ret[stat])
             print(time_str)
 if __name__ == '__main__':
-  config_name = '../experiments/dla_34_512x512_adam.yaml'
-  update_config(cfg, config_name)
-  demo(cfg)
+    args = parse_args()
+    update_config(cfg, args.cfg)
+    demo(cfg)

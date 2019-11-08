@@ -13,11 +13,6 @@ import torch.utils.data as data
 class COCOHP(data.Dataset):
     num_classes = 1
     num_joints = 17
-    default_resolution = [512, 512]
-    mean = np.array([0.40789654, 0.44719302, 0.47026115],
-                   dtype=np.float32).reshape(1, 1, 3)
-    std  = np.array([0.28863828, 0.27408164, 0.27809835],
-                   dtype=np.float32).reshape(1, 1, 3)
     flip_idx = [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], 
               [11, 12], [13, 14], [15, 16]]
               
@@ -101,13 +96,12 @@ class COCOHP(data.Dataset):
     def run_eval(self, results, save_dir):
         self.save_results(results, save_dir)
         coco_dets = self.coco.loadRes('{}/results.json'.format(save_dir))
+        coco_eval = COCOeval(self.coco, coco_dets, "bbox")
+        coco_eval.evaluate()
+        coco_eval.accumulate()
+   
         coco_eval = COCOeval(self.coco, coco_dets, "keypoints")
         coco_eval.evaluate()
         coco_eval.accumulate()
         coco_eval.summarize()
-
-        #coco_eval = COCOeval(self.coco, coco_dets, "bbox")
-        #coco_eval.evaluate()
-        #coco_eval.accumulate()
-        #mAP = coco_eval.summarize()
         return coco_eval.stats[0]

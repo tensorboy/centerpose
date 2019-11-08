@@ -5,6 +5,7 @@ from __future__ import print_function
 import _init_paths
 
 import os
+import argparse
 
 import torch
 import torch.utils.data
@@ -17,6 +18,17 @@ from trains.train_factory import train_factory
 from config import cfg
 from config import update_config
 
+def parse_args():
+    parser = argparse.ArgumentParser(description='Train keypoints network')
+    # general
+    parser.add_argument('--cfg',
+                        help='experiment configure file name',
+                        required=True,
+                        type=str)
+    args = parser.parse_args()
+
+    return args
+    
 def main(cfg):
     torch.manual_seed(cfg.SEED)
     torch.backends.cudnn.benchmark = cfg.CUDNN.BENCHMARK
@@ -28,8 +40,8 @@ def main(cfg):
     HEADS = dict(zip(cfg.MODEL.HEADS_NAME, cfg.MODEL.HEADS_NUM))
     print('Creating model...')
     model = create_model(cfg.MODEL.NAME, HEADS, cfg.MODEL.HEAD_CONV)
-    #optimizer = torch.optim.Adam(model.parameters(), cfg.TRAIN.LR)
-    optimizer = torch.optim.SGD(model.parameters(), lr=cfg.TRAIN.LR, momentum=0.9)    
+    optimizer = torch.optim.Adam(model.parameters(), cfg.TRAIN.LR)
+    #optimizer = torch.optim.SGD(model.parameters(), lr=cfg.TRAIN.LR, momentum=0.9)    
     start_epoch = 0
     if cfg.MODEL.LOAD_MODEL != '':
         model, optimizer, start_epoch = load_model(
@@ -110,6 +122,6 @@ def main(cfg):
     logger.close()
 
 if __name__ == '__main__':
-    config_name = '../experiments/mobilenetv3_512x512_sgd.yaml'
-    update_config(cfg, config_name)
+    args = parse_args()
+    update_config(cfg, args.cfg)
     main(cfg)
