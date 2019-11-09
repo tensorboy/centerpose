@@ -220,5 +220,5 @@ def multi_pose_decode(
         kps = (1 - mask) * hm_kps + mask * kps
         kps = kps.permute(0, 2, 1, 3).contiguous().view(
           batch, K, num_joints * 2)
-    detections = torch.cat([bboxes, scores, kps, clses], dim=2)
+    detections = torch.cat([bboxes, scores, kps, torch.transpose(hm_score.squeeze(dim=3), 1, 2)], dim=2)
     return detections
