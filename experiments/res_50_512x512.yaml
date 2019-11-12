@@ -113,7 +113,7 @@ TRAIN:
  
 TEST:
   # Test Model Epoch
-  MODEL_PATH: '/home/tensorboy/data/centerpose/res50_3x_sgd/model_best.pth'
+  MODEL_PATH: '/home/tensorboy/data/centerpose/trained_best_model/res_50_1x.pth'
   TASK: 'multi_pose'
   FLIP_TEST: true
 
@@ -125,7 +125,7 @@ TEST:
   NMS: false
   NMS_THRE: 0.5
   NOT_PREFETCH_TEST: false
-  FIX_RES: true
+  FIX_RES: false
 
   SOFT_NMS: false
   OKS_THRE: 0.5
