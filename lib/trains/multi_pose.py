@@ -14,7 +14,7 @@ from utils.oracle_utils import gen_oracle_map
 from .base_trainer import BaseTrainer
 
 class MultiPoseLoss(torch.nn.Module):
-    def __init__(self, cfg):
+    def __init__(self, cfg, local_rank):
         super(MultiPoseLoss, self).__init__()
         self.crit = FocalLoss()
         self.crit_hm_hp = torch.nn.MSELoss() if cfg.LOSS.MSE_LOSS else FocalLoss()
@@ -23,6 +23,7 @@ class MultiPoseLoss(torch.nn.Module):
         self.crit_reg = RegL1Loss() if cfg.LOSS.REG_LOSS == 'l1' else \
                         RegLoss() if cfg.LOSS.REG_LOSS == 'sl1' else None
         self.cfg = cfg
+        self.local_rank = local_rank
 
     def forward(self, outputs, batch):
         cfg = self.cfg
@@ -45,12 +46,12 @@ class MultiPoseLoss(torch.nn.Module):
                     output['hps'] = torch.from_numpy(gen_oracle_map(
                     batch['hps'].detach().cpu().numpy(), 
                     batch['ind'].detach().cpu().numpy(), 
-                    cfg.MODEL.OUTPUT_RES, cfg.MODEL.OUTPUT_RES)).to(torch.device('cuda'))
+                    cfg.MODEL.OUTPUT_RES, cfg.MODEL.OUTPUT_RES)).to(torch.device('cuda:%d'%self.local_rank))
             if cfg.TEST.EVAL_ORACLE_HP_OFFSET:
                 output['hp_offset'] = torch.from_numpy(gen_oracle_map(
                 batch['hp_offset'].detach().cpu().numpy(), 
                 batch['hp_ind'].detach().cpu().numpy(), 
-                cfg.MODEL.OUTPUT_RES, cfg.MODEL.OUTPUT_RES)).to(torch.device('cuda'))
+                cfg.MODEL.OUTPUT_RES, cfg.MODEL.OUTPUT_RES)).to(torch.device('cuda:%d'%self.local_rank))
 
 
             hm_loss += self.crit(output['hm'], batch['hm']) / cfg.MODEL.NUM_STACKS
@@ -85,13 +86,13 @@ class MultiPoseLoss(torch.nn.Module):
         return loss, loss_stats
 
 class MultiPoseTrainer(BaseTrainer):
-    def __init__(self, cfg, model, optimizer=None):
-        super(MultiPoseTrainer, self).__init__(cfg, model, optimizer=optimizer)
+    def __init__(self, cfg, local_rank, model, optimizer=None):
+        super(MultiPoseTrainer, self).__init__(cfg, local_rank, model, optimizer=optimizer)
 
-    def _get_losses(self, cfg):
+    def _get_losses(self, cfg, local_rank):
         loss_states = ['loss', 'hm_loss', 'hp_loss', 'hm_hp_loss', 
                        'hp_offset_loss', 'wh_loss', 'off_loss']
-        loss = MultiPoseLoss(cfg)
+        loss = MultiPoseLoss(cfg, local_rank)
         return loss_states, loss
 
     def debug(self, batch, output, iter_id):

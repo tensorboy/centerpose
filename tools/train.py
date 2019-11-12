@@ -9,7 +9,7 @@ import argparse
 
 import torch
 import torch.utils.data
-from models.data_parallel import DataParallel
+import torch.distributed as dist
 from models.model import create_model, load_model, save_model
 from logger import Logger
 from datasets.dataset_factory import get_dataset
@@ -25,30 +25,41 @@ def parse_args():
                         help='experiment configure file name',
                         required=True,
                         type=str)
+    parser.add_argument('--local_rank', type=int, default=0)                        
     args = parser.parse_args()
 
     return args
     
-def main(cfg):
+def main(cfg, local_rank):
     torch.manual_seed(cfg.SEED)
     torch.backends.cudnn.benchmark = cfg.CUDNN.BENCHMARK
     Dataset = get_dataset(cfg.SAMPLE_METHOD, cfg.TASK)
 
-    device = torch.device('cuda')
+    num_gpus = torch.cuda.device_count()
+
+    if cfg.TRAIN.DISTRIBUTE:
+        device = torch.device('cuda:%d'%local_rank)
+        torch.cuda.set_device(local_rank)
+        dist.init_process_group(backend='nccl', init_method='env://',
+                                world_size=num_gpus, rank=local_rank)
+    else:
+        device = torch.device('cuda')
+             
     logger = Logger(cfg)
 
     HEADS = dict(zip(cfg.MODEL.HEADS_NAME, cfg.MODEL.HEADS_NUM))
     print('Creating model...')
     model = create_model(cfg.MODEL.NAME, HEADS, cfg.MODEL.HEAD_CONV)
-    optimizer = torch.optim.Adam(model.parameters(), cfg.TRAIN.LR)
-    #optimizer = torch.optim.SGD(model.parameters(), lr=cfg.TRAIN.LR, momentum=0.9)    
+        
+    #optimizer = torch.optim.Adam(model.parameters(), cfg.TRAIN.LR)
+    optimizer = torch.optim.SGD(model.parameters(), lr=cfg.TRAIN.LR, momentum=0.9)    
     start_epoch = 0
     if cfg.MODEL.LOAD_MODEL != '':
         model, optimizer, start_epoch = load_model(
           model, cfg.MODEL.LOAD_MODEL, optimizer, cfg.TRAIN.RESUME, cfg.TRAIN.LR, cfg.TRAIN.LR_STEP)
 
     Trainer = train_factory[cfg.TASK]
-    trainer = Trainer(cfg, model, optimizer)
+    trainer = Trainer(cfg, local_rank, model, optimizer)
 
     cfg.TRAIN.MASTER_BATCH_SIZE
 
@@ -75,20 +86,26 @@ def main(cfg):
       num_workers=1,
       pin_memory=True
     )
-
+    
+    train_dataset = Dataset(cfg, 'train')
+    train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset,
+                                                                  num_replicas=num_gpus,
+                                                                  rank=local_rank)
     train_loader = torch.utils.data.DataLoader(
-      Dataset(cfg, 'train'), 
-      batch_size=cfg.TRAIN.BATCH_SIZE, 
-      shuffle=True,
+      train_dataset, 
+      batch_size=cfg.TRAIN.BATCH_SIZE//num_gpus if cfg.TRAIN.DISTRIBUTE else cfg.TRAIN.BATCH_SIZE, 
+      shuffle=not cfg.TRAIN.DISTRIBUTE,
       num_workers=cfg.WORKERS,
       pin_memory=True,
-      drop_last=True
+      drop_last=True,
+      sampler = train_sampler if cfg.TRAIN.DISTRIBUTE else None
     )
 
     print('Starting training...')
     best = 0.
     for epoch in range(start_epoch + 1, cfg.TRAIN.EPOCHS + 1):
         mark = epoch if cfg.TRAIN.SAVE_ALL_MODEL else 'last'
+        train_sampler.set_epoch(epoch)
         log_dict_train, _ = trainer.train(epoch, train_loader)
         logger.write('epoch: {} |'.format(epoch))
         for k, v in log_dict_train.items():
@@ -124,4 +141,5 @@ def main(cfg):
 if __name__ == '__main__':
     args = parse_args()
     update_config(cfg, args.cfg)
-    main(cfg)
+    local_rank = args.local_rank
+    main(cfg, local_rank)

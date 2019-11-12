@@ -36,9 +36,9 @@ class Logger(object):
       self.writer = tensorboardX.SummaryWriter(log_dir=log_dir)
     else:
       if not os.path.exists(os.path.dirname(log_dir)):
-        os.mkdir(os.path.dirname(log_dir))
+        os.makedirs(os.path.dirname(log_dir))
       if not os.path.exists(log_dir):
-        os.mkdir(log_dir)
+        os.makedirs(log_dir)
     self.log = open(log_dir + '/log.txt', 'w')
     try:
       os.system('cp {}/opt.txt {}/'.format(cfg.OUTPUT_DIR, log_dir))

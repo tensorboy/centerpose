@@ -9,8 +9,9 @@ multi person pose estimation using center point detection:
 | Backbone     |  AP       |  FPS         |
 |--------------|-----------|--------------|
 |Hourglass-104 | 64.0      |    6.6       |
-|DLA-34        | 60.2      |    23        |
-|Resnet-50     | 52.7      |    40        |
+|DLA-34        | 60.5      |    23        |
+|DLA-34-sgd    | 47.1      |    23        |
+|Resnet-50     | 53.0      |    40        |
 |MobilenetV3   | 40.0      |    40        |
 
 All models and details are available in our [Model zoo](readme/MODEL_ZOO.md).
@@ -49,6 +50,10 @@ The result for the example images should look like:
 
 After [installation](readme/INSTALL.md), follow the instructions in [DATA.md](readme/DATA.md) to setup the datasets. Then check [GETTING_STARTED.md](readme/GETTING_STARTED.md) to reproduce the results in the paper.
 We provide scripts for all the experiments in the [experiments](experiments) folder.
+
+```
+cd ./tools python -m torch.distributed.launch --nproc_per_node 4 train.py --cfg ../experiments/*yalm
+```
 
 ## Develop
 
