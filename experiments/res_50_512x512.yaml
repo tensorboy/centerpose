@@ -125,7 +125,7 @@ TEST:
   NMS: false
   NMS_THRE: 0.5
   NOT_PREFETCH_TEST: false
-  FIX_RES: false
+  FIX_RES: true
 
   SOFT_NMS: false
   OKS_THRE: 0.5

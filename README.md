@@ -10,11 +10,8 @@ multi person pose estimation using center point detection:
 |--------------|-----------|--------------|
 |Hourglass-104 | 64.0      |    6.6       |
 |DLA-34        | 60.5      |    23        |
-|DLA-34-sgd    | 47.1      |    23        |
 |Resnet-50     | 53.0      |    40        |
-|MobilenetV3   | 40.0      |    40        |
-
-All models and details are available in our [Model zoo](readme/MODEL_ZOO.md).
+|MobilenetV3   | 45.0      |    20        |
 
 ## Installation
 
@@ -25,8 +22,7 @@ Please refer to [INSTALL.md](readme/INSTALL.md) for installation instructions.
 
 We support demo for image/ image folder, video, and webcam. 
 
-First, download the models (By default, [ctdet_coco_dla_2x](https://drive.google.com/open?id=1pl_-ael8wERdUREEnaIfqOV_VF2bEVRT) for detection and 
-[multi_pose_dla_3x](https://drive.google.com/open?id=1PO1Ax_GDtjiemEmDVD7oPWwqQkUu28PI) for human pose estimation) 
+First, download the model [multi_pose_dla_3x](https://drive.google.com/open?id=1PO1Ax_GDtjiemEmDVD7oPWwqQkUu28PI) for human pose estimation) 
 from the [Model zoo](readme/MODEL_ZOO.md) and put them in `CenterNet_ROOT/models/`.
 
 For object detection on images/ video, run:

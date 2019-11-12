@@ -98,7 +98,7 @@ def post_process(dets, meta, scale=1):
         dets.copy(), [meta['c']], [meta['s']],
         meta['out_height'], meta['out_width'])
     for j in range(1, 1 + 1):
-        dets[0][j] = np.array(dets[0][j], dtype=np.float32).reshape(-1, 39)
+        dets[0][j] = np.array(dets[0][j], dtype=np.float32).reshape(-1, 56)
         dets[0][j][:, :4] /= scale
         dets[0][j][:, 5:] /= scale
     return dets[0]
@@ -185,7 +185,7 @@ def main(cfg):
     HEADS = dict(zip(cfg.MODEL.HEADS_NAME, cfg.MODEL.HEADS_NUM))
     model = create_model('restrt_50',  OrderedDict(HEADS), 64).cuda()
 
-    weight_path = '/home/tensorboy/data/centerpose/trained_best_model/res_50.pth'
+    weight_path = '/home/tensorboy/data/centerpose/trained_best_model/res_50_1x.pth'
     state_dict = torch.load(weight_path)['state_dict']
     model.load_state_dict(state_dict)
 
@@ -296,7 +296,8 @@ def main(cfg):
     kps = (1 - mask) * hm_kps + mask * kps
     kps = kps.transpose(0, 2, 1, 3).reshape(batch, cfg.TEST.TOPK, num_joints * 2)
 
-    dets = np.concatenate([bboxes, scores, kps, clses], axis=2)
+    #dets = np.concatenate([bboxes, scores, kps, clses], axis=2)
+    dets = np.concatenate([bboxes, scores, kps, hm_score.squeeze(axis=3).transpose(0, 2, 1)], axis=2)
 
     dets = post_process(dets, meta, 1)
 
@@ -331,7 +332,7 @@ def main(cfg):
 
   
 if __name__ == '__main__':
-    config_name = '../experiments/res_50_512x512_sgd.yaml'
+    config_name = '../experiments/res_50_512x512.yaml'
     update_config(cfg, config_name)
     main(cfg)
 
