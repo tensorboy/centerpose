@@ -85,6 +85,7 @@ DATASET:
   
 TRAIN:
   DISTRIBUTE: false
+  OPTIMIZER: 'adam'
   LOCAL_RANK: 0
   HIDE_DATA_TIME: false 
   SAVE_ALL_MODEL: false

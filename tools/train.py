@@ -51,8 +51,13 @@ def main(cfg, local_rank):
     print('Creating model...')
     model = create_model(cfg.MODEL.NAME, HEADS, cfg.MODEL.HEAD_CONV)
         
-    #optimizer = torch.optim.Adam(model.parameters(), cfg.TRAIN.LR)
-    optimizer = torch.optim.SGD(model.parameters(), lr=cfg.TRAIN.LR, momentum=0.9)    
+    if cfg.TRAIN.OPTIMIZER=='adam':
+        optimizer = torch.optim.Adam(model.parameters(), cfg.TRAIN.LR)
+    elif cfg.TRAIN.OPTIMIZER== 'sgd':
+        optimizer = torch.optim.SGD(model.parameters(), lr=cfg.TRAIN.LR, momentum=0.9)    
+    else:
+        NotImplementedError
+        
     start_epoch = 0
     if cfg.MODEL.LOAD_MODEL != '':
         model, optimizer, start_epoch = load_model(
