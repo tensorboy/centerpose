@@ -6,6 +6,7 @@ import _init_paths
 
 import os
 import cv2
+import argparse
 
 from config import cfg
 from config import update_config

@@ -1,7 +1,7 @@
 SAMPLE_METHOD: 'coco_hp'
 DATA_DIR: '/data'
 EXP_ID: 'coco_pose_dla_34_sgd'
-DEBUG: 0
+DEBUG: 1
 DEBUG_THEME: 'white'
 SEED: 317
 OUTPUT_DIR: '/data/centerpose/multi_pose_1x_sgd'

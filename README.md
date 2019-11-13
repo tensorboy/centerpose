@@ -6,12 +6,11 @@ multi person pose estimation using center point detection:
 
 ### Keypoint detection on COCO validation
 
-| Backbone     |  AP       |  FPS         |
-|--------------|-----------|--------------|
-|Hourglass-104 | 64.0      |    6.6       |
-|DLA-34        | 60.5      |    23        |
-|Resnet-50     | 53.0      |    40        |
-|MobilenetV3   | 45.0      |    20        |
+| Backbone     |  AP       |  FPS         | Download | 
+|--------------|-----------|--------------|----------|
+|DLA-34        | 60.5      |    23        |   [model](https://drive.google.com/open?id=151aD93nHG_oGju1xxOmwoDNjfeif6uGi)  |
+|Resnet-50     | 53.0      |    40        |   [model](https://drive.google.com/open?id=1k_kpn7tCpX4CHEEiCqdNxLRXZc-ky-uY)  |
+|MobilenetV3   | 45.1      |    20        |   [model](https://drive.google.com/open?id=1T8_YsPiW7EmLHQfh_Zk37hTsiJpdaAN1)  |
 
 ## Installation
 
@@ -22,10 +21,10 @@ Please refer to [INSTALL.md](readme/INSTALL.md) for installation instructions.
 
 We support demo for image/ image folder, video, and webcam. 
 
-First, download the model [multi_pose_dla_3x](https://drive.google.com/open?id=1PO1Ax_GDtjiemEmDVD7oPWwqQkUu28PI) for human pose estimation) 
-from the [Model zoo](readme/MODEL_ZOO.md) and put them in `CenterNet_ROOT/models/`.
+First, download the model [multi_pose_dla_1x](https://drive.google.com/open?id=151aD93nHG_oGju1xxOmwoDNjfeif6uGi) for human pose estimation) 
+from the [Model zoo](https://drive.google.com/open?id=1UG2l8XtjOfBtG_GLpSdxlWS2wxFR8hQF) and put them in anywhere.
 
-For object detection on images/ video, run:
+Run:
 
 ~~~
 python demo.py ctdet --demo /path/to/image/or/folder/or/video --load_model ../models/ctdet_coco_dla_2x.pth
@@ -44,8 +43,9 @@ The result for the example images should look like:
 
 ## Benchmark Evaluation and Training
 
-After [installation](readme/INSTALL.md), follow the instructions in [DATA.md](readme/DATA.md) to setup the datasets. Then check [GETTING_STARTED.md](readme/GETTING_STARTED.md) to reproduce the results in the paper.
-We provide scripts for all the experiments in the [experiments](experiments) folder.
+After [installation](readme/INSTALL.md), follow the instructions in [DATA.md](readme/DATA.md) to setup the datasets.
+
+We provide config files for all the experiments in the [experiments](experiments) folder.
 
 ```
 cd ./tools python -m torch.distributed.launch --nproc_per_node 4 train.py --cfg ../experiments/*yalm

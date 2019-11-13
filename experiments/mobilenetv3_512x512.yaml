@@ -113,7 +113,7 @@ TRAIN:
  
 TEST:
   # Test Model Epoch
-  MODEL_PATH: '/home/tensorboy/data/centerpose/mobilenetv3_3x_sgd/model_last.pth'
+  MODEL_PATH: '/home/tensorboy/data/centerpose/mobilenetv3_3x_sgd/model_best.pth'
   TASK: 'multi_pose'
   FLIP_TEST: true
 
