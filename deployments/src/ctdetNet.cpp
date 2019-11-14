@@ -1,7 +1,3 @@
-//
-// Created by cao on 19-10-26.
-//
-
 #include <ctdetNet.h>
 #include <ctdetLayer.h>
 #include <assert.h>

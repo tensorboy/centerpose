@@ -25,11 +25,11 @@ _model_factory = {
   'mobilenetv3': get_mobile_pose_net
 }
 
-def create_model(arch, heads, head_conv):
+def create_model(arch, head_conv, num_classes):
     num_layers = int(arch[arch.find('_') + 1:]) if '_' in arch else 0
     arch = arch[:arch.find('_')] if '_' in arch else arch
     get_model = _model_factory[arch]
-    model = get_model(num_layers=num_layers, heads=heads, head_conv=head_conv)
+    model = get_model(num_layers=num_layers, head_conv=head_conv, num_classes=num_classes)
     return model
 
 def load_model(model, model_path, optimizer=None, resume=False, 

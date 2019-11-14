@@ -10,36 +10,24 @@ from models.data_parallel import DataParallel
 from utils.utils import AverageMeter
 
 
-class ModleWithLoss(torch.nn.Module):
-    def __init__(self, model, loss):
-        super(ModleWithLoss, self).__init__()
-        self.model = model
-        self.loss = loss
-
-    def forward(self, batch):
-        outputs = self.model(batch['input'])
-        loss, loss_stats = self.loss(outputs, batch)
-        return outputs[-1], loss, loss_stats
-
-
 class BaseTrainer(object):
     def __init__(
         self, cfg, local_rank, model, optimizer=None):
         self.cfg = cfg
         self.optimizer = optimizer
         self.loss_stats, self.loss = self._get_losses(cfg, local_rank)
-        self.model_with_loss = ModleWithLoss(model, self.loss)
+        self.model = model
         self.local_rank = local_rank
 
     def set_device(self, gpus, chunk_sizes, device):
     
         if  self.cfg.TRAIN.DISTRIBUTE:
-            self.model_with_loss = self.model_with_loss.to(device)
-            self.model_with_loss = nn.parallel.DistributedDataParallel(self.model_with_loss,
+            self.model = self.model.to(device)
+            self.model = nn.parallel.DistributedDataParallel(self.model,
                                                         device_ids=[self.local_rank, ],
                                                         output_device=self.local_rank)
         else:
-            self.model_with_loss = nn.DataParallel(self.model_with_loss).to(device)
+            self.model = nn.DataParallel(self.model).to(device)
     
         for state in self.optimizer.state.values():
             for k, v in state.items():
@@ -47,14 +35,14 @@ class BaseTrainer(object):
                     state[k] = v.to(device=device, non_blocking=True)
 
     def run_epoch(self, phase, epoch, data_loader):
-        model_with_loss = self.model_with_loss
         if phase == 'train':
-            model_with_loss.train()
+            model = self.model
+            self.model.train()
             
         else:
             if len(self.cfg.GPUS) > 1:
-                model_with_loss = self.model_with_loss.module        
-            model_with_loss.eval()
+                model = self.model.module        
+            model.eval()
             torch.cuda.empty_cache()
 
         cfg = self.cfg
@@ -72,7 +60,11 @@ class BaseTrainer(object):
             for k in batch:
                 if k != 'meta':
                     batch[k] = batch[k].to(device=torch.device('cuda:%d'%self.local_rank), non_blocking=True)    
-            output, loss, loss_stats = model_with_loss(batch)
+            
+            outputs = model(batch['input'])
+            loss, loss_stats = self.loss(outputs, batch)
+            output = outputs[-1]
+            
             loss = loss.mean()
             if phase == 'train':
                 self.optimizer.zero_grad()

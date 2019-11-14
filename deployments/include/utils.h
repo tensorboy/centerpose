@@ -159,7 +159,7 @@ struct Detection{
     //x1 y1 x2 y2
     Box bbox;
     //float objectness;
-    landmarks marks[5];
+    landmarks marks[17];
     int classId;
     float prob;
 };

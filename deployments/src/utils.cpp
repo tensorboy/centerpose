@@ -38,7 +38,7 @@ std::vector<float> prepareImage(cv::Mat& img, const bool& forwardFace)
 
     cv::Mat img_float;
     if(forwardFace)
-        cropped.convertTo(img_float, CV_32FC3, 1.);
+        cropped.convertTo(img_float, CV_32FC3, 1./255.);
     else
         cropped.convertTo(img_float, CV_32FC3,1./255.);
 
@@ -82,7 +82,7 @@ void postProcess(std::vector<Detection> & result,const cv::Mat& img, const bool&
         item.bbox.y2  = y2 ;
         if(forwardFace){
             float x,y;
-            for(mark=0;mark<5; ++mark ){
+            for(mark=0;mark<17; ++mark ){
                  x = (item.marks[mark].x - dx) / scale ;
                  y = (item.marks[mark].y - dy) / scale ;
                  x = (x > 0 ) ? x : 0 ;
@@ -125,7 +125,7 @@ void drawImg(const std::vector<Detection> & result,cv::Mat& img,const std::vecto
         }
         if(forwardFace)
         {
-            for(mark=0;mark<5; ++mark )
+            for(mark=0;mark<17; ++mark )
             cv::circle(img, cv::Point(item.marks[mark].x, item.marks[mark].y), 2, cv::Scalar(255, 255, 0), 2);
         }
 

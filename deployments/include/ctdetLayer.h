@@ -1,7 +1,3 @@
-//
-// Created by cao on 19-10-25.
-//
-
 #ifndef CTDET_TRT_CTDETLAYER_H
 #define CTDET_TRT_CTDETLAYER_H
 

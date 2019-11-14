@@ -9,7 +9,7 @@ namespace ctdet{
 
 
 
-    constexpr static float visThresh = 0.3;
+    constexpr static float visThresh = 0.1;
 
     constexpr static int inputSize = 512 ;
     constexpr static int channel = 3 ;

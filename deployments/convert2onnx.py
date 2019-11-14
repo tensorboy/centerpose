@@ -189,7 +189,7 @@ def main(cfg):
     state_dict = torch.load(weight_path)['state_dict']
     model.load_state_dict(state_dict)
 
-    onnx_file_path = "ckpt1.onnx"
+    onnx_file_path = "./model/ckpt1.onnx"
     
     #img = cv2.imread('test_image.jpg')
     image = cv2.imread('../images/17790319373_bd19b24cfc_k.jpg')

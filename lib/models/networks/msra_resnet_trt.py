@@ -271,13 +271,13 @@ class PoseResNet(nn.Module):
         for head in self.heads:
             ret.append(self.__getattr__(head)(x))
 
-        ret[0] = torch.sigmoid(ret[0])        
-        ret[4] = torch.sigmoid(ret[4])
+        #ret[0] = torch.sigmoid(ret[0])        
+        #ret[4] = torch.sigmoid(ret[4])
 
-        hmax = self.maxpool2d(ret[0])
-        hm_hp_max = self.maxpool2d(ret[4])
-
-        return [ret[0], hmax, ret[4], hm_hp_max, ret[2], ret[3], ret[5], ret[1]]
+        #hmax = self.maxpool2d(ret[0])
+        #hm_hp_max = self.maxpool2d(ret[4])
+        return [ret[0], ret[3], ret[1], ret[2]] 
+        #return [ret[0], hmax, ret[4], hm_hp_max, ret[2], ret[3], ret[5], ret[1]]
     def init_weights(self, num_layers, pretrained=True):
         if pretrained:
             # print('=> init resnet deconv weights from normal distribution')

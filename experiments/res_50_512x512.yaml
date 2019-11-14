@@ -4,7 +4,7 @@ EXP_ID: 'coco_pose_res_50'
 DEBUG: 0
 DEBUG_THEME: 'white'
 SEED: 317
-OUTPUT_DIR: '/home/tensorboy/data/centerpose/res50_3x_sgd'
+OUTPUT_DIR: '/home/tensorboy/data/centerpose/res50_3x'
 LOG_DIR: ''
 EXPERIMENT_NAME: ''
 GPUS: [0, 1, 2, 3]
@@ -84,7 +84,7 @@ DATASET:
   RANDOM_CROP: true 
   
 TRAIN:
-  DISTRIBUTE: true
+  DISTRIBUTE: false
   LOCAL_RANK: 0
   HIDE_DATA_TIME: false 
   SAVE_ALL_MODEL: false
@@ -95,7 +95,7 @@ TRAIN:
   NUM_ITERS: -1
   LR: 2.5e-4
   BATCH_SIZE: 64
-  MASTER_BATCH_SIZE: 14
+  MASTER_BATCH_SIZE: 16
 
   MOMENTUM: 0.9
   WD: 0.0001

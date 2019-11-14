@@ -47,9 +47,8 @@ def main(cfg, local_rank):
              
     logger = Logger(cfg)
 
-    HEADS = dict(zip(cfg.MODEL.HEADS_NAME, cfg.MODEL.HEADS_NUM))
     print('Creating model...')
-    model = create_model(cfg.MODEL.NAME, HEADS, cfg.MODEL.HEAD_CONV)
+    model = create_model(cfg.MODEL.NAME, cfg.MODEL.HEAD_CONV, cfg.MODEL.NUM_CLASSES)
         
     if cfg.TRAIN.OPTIMIZER=='adam':
         optimizer = torch.optim.Adam(model.parameters(), cfg.TRAIN.LR)
