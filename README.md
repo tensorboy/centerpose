@@ -25,17 +25,9 @@ First, download the model [multi_pose_dla_1x](https://drive.google.com/open?id=1
 from the [Model zoo](https://drive.google.com/open?id=1UG2l8XtjOfBtG_GLpSdxlWS2wxFR8hQF) and put them in anywhere.
 
 Run:
-
+    
 ~~~
-python demo.py ctdet --demo /path/to/image/or/folder/or/video --load_model ../models/ctdet_coco_dla_2x.pth
-~~~
-We provide example images in `CenterNet_ROOT/images/` (from [Detectron](https://github.com/facebookresearch/Detectron/tree/master/demo)). If set up correctly, the output should look like
-
-<p align="center"> <img src='readme/det1.png' align="center" height="230px"> <img src='readme/det2.png' align="center" height="230px"> </p>
-
-For webcam demo, run     
-~~~
-python demo.py multi_pose --demo /path/to/image/or/folder/or/video/or/webcam --load_model ../models/multi_pose_dla_3x.pth
+python demo.py --cfg ../experiments/*yaml
 ~~~
 The result for the example images should look like:
 
