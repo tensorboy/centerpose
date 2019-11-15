@@ -5,8 +5,10 @@ from __future__ import print_function
 import pycocotools.coco as coco
 from pycocotools.cocoeval import COCOeval
 import numpy as np
+import time
 import json
 import os
+
 
 import torch.utils.data as data
 
@@ -94,11 +96,14 @@ class COCOHP(data.Dataset):
 
 
     def run_eval(self, results, save_dir):
-        self.save_results(results, save_dir)
-        coco_dets = self.coco.loadRes('{}/results.json'.format(save_dir))
-        coco_eval = COCOeval(self.coco, coco_dets, "bbox")
-        coco_eval.evaluate()
-        coco_eval.accumulate()
+        #self.save_results(results, save_dir)
+        #seconds = time.time()
+        #local_time = time.ctime(seconds).replace(' ', '_').replace(':','_')
+        #coco_dets = self.coco.loadRes('{}/{}_results.json'.format(save_dir, local_time))
+        coco_dets = self.coco.loadRes(self.convert_eval_format(results))        
+        #coco_eval = COCOeval(self.coco, coco_dets, "bbox")
+        #coco_eval.evaluate()
+        #coco_eval.accumulate()
    
         coco_eval = COCOeval(self.coco, coco_dets, "keypoints")
         coco_eval.evaluate()

@@ -28,7 +28,7 @@ class BaseTrainer(object):
                                                         output_device=self.local_rank)
         else:
             self.model = nn.DataParallel(self.model).to(device)
-    
+        self.loss.to(device)
         for state in self.optimizer.state.values():
             for k, v in state.items():
                 if isinstance(v, torch.Tensor):
@@ -63,7 +63,6 @@ class BaseTrainer(object):
             
             outputs = model(batch['input'])
             loss, loss_stats = self.loss(outputs, batch)
-            output = outputs[-1]
             
             loss = loss.mean()
             if phase == 'train':
@@ -90,11 +89,11 @@ class BaseTrainer(object):
                 bar.next()
       
             if cfg.DEBUG > 0:
-                self.debug(batch, output, iter_id)
+                self.debug(batch, outputs, iter_id)
       
             if phase == 'val':
-                self.save_result(output, batch, results)
-            del output, loss, loss_stats
+                self.save_result(outputs, batch, results)
+            del outputs, loss, loss_stats
     
         bar.finish()
         ret = {k: v.avg for k, v in avg_loss_stats.items()}
