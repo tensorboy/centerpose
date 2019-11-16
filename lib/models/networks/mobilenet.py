@@ -113,6 +113,15 @@ class Block(nn.Module):
         out = out + self.shortcut(x) if self.stride == 1 else out
         return out
 
+def fill_fc_weights(layers):
+  for m in layers.modules():
+    if isinstance(m, nn.Conv2d):
+      nn.init.normal_(m.weight, std=0.001)
+      # torch.nn.init.kaiming_normal_(m.weight.data, nonlinearity='relu')
+      # torch.nn.init.xavier_normal_(m.weight.data)
+      if m.bias is not None:
+        nn.init.constant_(m.bias, 0)
+        
 
 def fill_up_weights(up):
     w = up.weight.data
@@ -127,7 +136,7 @@ def fill_up_weights(up):
 
 
 class MobileNetV3(nn.Module):
-    def __init__(self, heads, final_kernel, head_conv):
+    def __init__(self, final_kernel, head_conv):
         super(MobileNetV3, self).__init__()
         self.conv1 = nn.Conv2d(3, 16, kernel_size=3, stride=2, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(16)
@@ -159,24 +168,57 @@ class MobileNetV3(nn.Module):
         self.conv2 = nn.Conv2d(160, 960, kernel_size=1, stride=1, padding=0, bias=False)
         self.bn2 = nn.BatchNorm2d(960)
         self.hs2 = hswish()
-        self.init_params()
+
 
         self.ida_up = IDAUp(24, [24, 40, 160, 960],
                             [2 ** i for i in range(4)])
 
-        self.heads = heads
-        for head in self.heads:
-            classes = self.heads[head]
-            fc = nn.Sequential(
+        self.hm = nn.Sequential(
                 nn.Conv2d(24, head_conv,
                           kernel_size=3, padding=1, bias=True),
                 nn.ReLU(inplace=True),
-                nn.Conv2d(head_conv, classes,
+                nn.Conv2d(head_conv, 1,
                           kernel_size=final_kernel, stride=1,
                           padding=final_kernel // 2, bias=True))
-            fc[-1].bias.data.fill_(-2.19)
-            self.__setattr__(head, fc)
 
+                          
+        self.wh = nn.Sequential(
+                nn.Conv2d(24, head_conv,
+                          kernel_size=3, padding=1, bias=True),
+                nn.ReLU(inplace=True),
+                nn.Conv2d(head_conv, 2,
+                          kernel_size=final_kernel, stride=1,
+                          padding=final_kernel // 2, bias=True))
+        self.hps = nn.Sequential(
+                nn.Conv2d(24, head_conv,
+                          kernel_size=3, padding=1, bias=True),
+                nn.ReLU(inplace=True),
+                nn.Conv2d(head_conv, 34,
+                          kernel_size=final_kernel, stride=1,
+                          padding=final_kernel // 2, bias=True))              
+        self.reg = nn.Sequential(
+                nn.Conv2d(24, head_conv,
+                          kernel_size=3, padding=1, bias=True),
+                nn.ReLU(inplace=True),
+                nn.Conv2d(head_conv, 2,
+                          kernel_size=final_kernel, stride=1,
+                          padding=final_kernel // 2, bias=True))       
+        self.hm_hp = nn.Sequential(
+                nn.Conv2d(24, head_conv,
+                          kernel_size=3, padding=1, bias=True),
+                nn.ReLU(inplace=True),
+                nn.Conv2d(head_conv, 17,
+                          kernel_size=final_kernel, stride=1,
+                          padding=final_kernel // 2, bias=True))                                         
+        self.hp_offset = nn.Sequential(
+                nn.Conv2d(24, head_conv,
+                          kernel_size=3, padding=1, bias=True),
+                nn.ReLU(inplace=True),
+                nn.Conv2d(head_conv, 2,
+                          kernel_size=final_kernel, stride=1,
+                          padding=final_kernel // 2, bias=True))
+
+        self.init_params()
     def init_params(self):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -190,7 +232,13 @@ class MobileNetV3(nn.Module):
                 init.normal_(m.weight, std=0.001)
                 if m.bias is not None:
                     init.constant_(m.bias, 0)
-
+        self.hm[-1].bias.data.fill_(-2.19)     
+        self.hm_hp[-1].bias.data.fill_(-2.19)                                    
+        fill_fc_weights(self.wh)
+        fill_fc_weights(self.hps)
+        fill_fc_weights(self.reg)
+        fill_fc_weights(self.hp_offset)
+            
     def forward(self, x):
         out = self.hs1(self.bn1(self.conv1(x)))
         out0 = self.bneck0(out)
@@ -203,14 +251,12 @@ class MobileNetV3(nn.Module):
         for i in range(4):
             y.append(out[i].clone())
         self.ida_up(y, 0, len(y))
-        z = {}
-        for head in self.heads:
-            z[head] = self.__getattr__(head)(y[-1])
-        return [z]
+
+        return [self.hm(y[-1]), self.wh(y[-1]), self.hps(y[-1]), self.reg(y[-1]), self.hm_hp(y[-1]), self.hp_offset(y[-1])]
         
     
-def get_mobile_pose_net(num_layers, heads, head_conv):
+def get_mobile_pose_net(num_layers, head_conv):
 
-  model = MobileNetV3(heads, final_kernel=1, head_conv=head_conv)
+  model = MobileNetV3(final_kernel=1, head_conv=head_conv)
   
   return model

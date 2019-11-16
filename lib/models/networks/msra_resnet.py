@@ -137,7 +137,7 @@ class PoseResNet(nn.Module):
             [256, 256, 256],
             [4, 4, 4],
         )
-        # self.final_layer = []
+
         self.hm = nn.Sequential(
                     nn.Conv2d(256, head_conv, kernel_size=3, padding=1, bias=True),
                     nn.ReLU(inplace=True),
@@ -164,7 +164,7 @@ class PoseResNet(nn.Module):
                         nn.Conv2d(256, head_conv, kernel_size=3, padding=1, bias=True),
                         nn.ReLU(inplace=True),
                         nn.Conv2d(head_conv, 2, kernel_size=1, stride=1, padding=0))                      
-        # self.final_layer = nn.ModuleList(self.final_layer)
+
 
     def _make_layer(self, block, planes, blocks, stride=1):
         downsample = None
