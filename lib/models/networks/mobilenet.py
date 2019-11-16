@@ -250,6 +250,7 @@ class MobileNetV3(nn.Module):
         y = []
         for i in range(4):
             y.append(out[i].clone())
+            print(out[i].clone().shape)
         self.ida_up(y, 0, len(y))
 
         return [self.hm(y[-1]), self.wh(y[-1]), self.hps(y[-1]), self.reg(y[-1]), self.hm_hp(y[-1]), self.hp_offset(y[-1])]

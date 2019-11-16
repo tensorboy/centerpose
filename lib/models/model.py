@@ -14,6 +14,7 @@ from .networks.resnet_dcn import get_pose_net as get_pose_net_dcn
 from .networks.large_hourglass import get_large_hourglass_net
 from .networks.msra_resnet_trt import get_pose_net_trt
 from .networks.mobilenet import get_mobile_pose_net
+from .networks.efficientnet_pytorch import EfficientNet 
 
 _model_factory = {
   'res': get_pose_net, # default Resnet with deconv
@@ -22,7 +23,8 @@ _model_factory = {
   'dla': get_dla_dcn,
   'resdcn': get_pose_net_dcn,
   'hourglass': get_large_hourglass_net,
-  'mobilenetv3': get_mobile_pose_net
+  'mobilenetv3': get_mobile_pose_net,
+  'efficientnet': get_efficient_pose_net
 }
 
 def create_model(arch, head_conv):
