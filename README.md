@@ -4,7 +4,7 @@ multi person pose estimation using center point detection:
 
 ## Main results
 
-### Keypoint detection on COCO validation
+### Keypoint detection on COCO validation 2017
 
 | Backbone     |  AP       |  FPS         |
 |--------------|-----------|--------------|
@@ -45,7 +45,7 @@ The result for the example images should look like:
 
 <p align="center">  <img src='readme/pose1.png' align="center" height="200px"> <img src='readme/pose2.png' align="center" height="200px"> <img src='readme/pose3.png' align="center" height="200px">  </p>
 
-## Benchmark Evaluation and Training
+## Training
 
 After [installation](readme/INSTALL.md), follow the instructions in [DATA.md](readme/DATA.md) to setup the datasets. Then check [GETTING_STARTED.md](readme/GETTING_STARTED.md) to reproduce the results in the paper.
 We provide scripts for all the experiments in the [experiments](experiments) folder.
