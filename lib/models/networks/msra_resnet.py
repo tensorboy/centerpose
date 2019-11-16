@@ -116,7 +116,7 @@ def fill_fc_weights(layers):
         
 class PoseResNet(nn.Module):
 
-    def __init__(self, block, layers, head_conv, num_classes, **kwargs):
+    def __init__(self, block, layers, head_conv, **kwargs):
         self.inplanes = 64
         self.deconv_with_bias = False
 
@@ -278,9 +278,9 @@ resnet_spec = {18: (BasicBlock, [2, 2, 2, 2]),
                152: (Bottleneck, [3, 8, 36, 3])}
 
 
-def get_pose_net(num_layers, head_conv, num_classes):
+def get_pose_net(num_layers, head_conv):
   block_class, layers = resnet_spec[num_layers]
 
-  model = PoseResNet(block_class, layers, head_conv, num_classes)
+  model = PoseResNet(block_class, layers, head_conv)
   model.init_weights(num_layers, pretrained=True)
   return model

@@ -27,7 +27,7 @@ from the [Model zoo](https://drive.google.com/open?id=1UG2l8XtjOfBtG_GLpSdxlWS2w
 Run:
     
 ~~~
-python demo.py --cfg ../experiments/*yaml
+python demo.py --cfg ../experiments/res_50_512x512.yaml --TESTMODEL /your/model/path/res_50_1x.pth --DEMOFILE ../images/33823288584_1d21cf0a26_k.jpg --DEBUG 1
 ~~~
 The result for the example images should look like:
 
@@ -42,10 +42,6 @@ We provide config files for all the experiments in the [experiments](experiments
 ```
 cd ./tools python -m torch.distributed.launch --nproc_per_node 4 train.py --cfg ../experiments/*yalm
 ```
-
-## Develop
-
-If you are interested in training CenterNet in a new dataset, use CenterNet in a new task, or use a new network architecture for CenterNet, please refer to [DEVELOP.md](readme/DEVELOP.md). Also feel free to send us emails for discussions or suggestions.
 
 ## License
 

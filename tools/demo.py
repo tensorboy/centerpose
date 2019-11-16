@@ -19,7 +19,21 @@ def parse_args():
     parser.add_argument('--cfg',
                         help='experiment configure file name',
                         required=True,
-                        type=str)
+                        type=str)                        
+    parser.add_argument('--TESTMODEL',
+                        help='model directory',
+                        type=str,
+                        default='')      
+    parser.add_argument('--DEMOFILE',
+                        help='source images or video',
+                        type=str,
+                        default='')                          
+    parser.add_argument('--DEBUG', type=int, default=0,
+                         help='level of visualization.'
+                              '1: only show the final detection results'
+                              '2: show the network output features'
+                              '3: use matplot to display' # useful when lunching training with ipython notebook
+                              '4: save all visualizations to disk')                                          
     args = parser.parse_args()
 
     return args
@@ -68,4 +82,9 @@ def demo(cfg):
 if __name__ == '__main__':
     args = parse_args()
     update_config(cfg, args.cfg)
+    cfg.defrost()
+    cfg.TEST.MODEL_PATH = args.TESTMODEL
+    cfg.TEST.DEMO_FILE = args.DEMOFILE
+    cfg.DEBUG = args.DEBUG
+    cfg.freeze()
     demo(cfg)
