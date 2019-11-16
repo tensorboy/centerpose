@@ -4,38 +4,30 @@ import os
 import cv2
 import sys
 import numpy as np
-from aifi_models.centernet.lib.centernet_utils.post_process import multi_pose_post_process
-from aifi_models.centernet.lib.config import _C as cfg
-from aifi_models.centernet.lib.centernet_utils.image import get_affine_transform
-from ..tensorrt_engine import TensorRTEngine
-from ..utils.gcp_utils import create_trt_context
+import _init_paths
+from config import cfg
+from utils.post_process import multi_pose_post_process
+from utils.image import get_affine_transform
+from tensorrt_engine import TensorRTEngine
+from gcp_utils import create_trt_context
 logger = logging.getLogger(__name__)
-
-
-def add_path(path):
-    if path not in sys.path:
-        sys.path.insert(0, path)
-
-
-this_dir = os.path.dirname(__file__)
-
-# Add lib to PYTHONPATH
-lib_path = os.path.join(this_dir, 'lib')
-add_path(lib_path)
-
-MEANS = np.array([0.485, 0.456, 0.406], dtype=np.float32) * 255
-STDS = np.array([0.229, 0.224, 0.225], dtype=np.float32) * 255
-
 
 def kp_connections(keypoints):
     kp_lines = [
-        [keypoints.index('neck'), keypoints.index('right_shoulder')],
+        [keypoints.index('nose'), keypoints.index('left_eye')],
+        [keypoints.index('left_eye'), keypoints.index('left_ear')],
+        [keypoints.index('nose'), keypoints.index('right_eye')],
+        [keypoints.index('right_eye'), keypoints.index('right_ear')],                 
         [keypoints.index('right_shoulder'), keypoints.index('right_elbow')],
         [keypoints.index('right_elbow'), keypoints.index('right_wrist')],
-        [keypoints.index('neck'), keypoints.index('left_shoulder')],
+        [keypoints.index('right_shoulder'), keypoints.index('right_hip')],
+        [keypoints.index('right_hip'), keypoints.index('right_knee')],                 
+        [keypoints.index('right_knee'), keypoints.index('right_ankle')], 
         [keypoints.index('left_shoulder'), keypoints.index('left_elbow')],
         [keypoints.index('left_elbow'), keypoints.index('left_wrist')],
-        [keypoints.index('neck'), keypoints.index('head')]
+        [keypoints.index('left_shoulder'), keypoints.index('left_hip')],
+        [keypoints.index('left_hip'), keypoints.index('left_knee')],  
+        [keypoints.index('left_knee'), keypoints.index('left_ankle')],           
     ]
     return kp_lines
 
@@ -43,15 +35,23 @@ def kp_connections(keypoints):
 def get_keypoints():
     """Get the COCO keypoints and their left/right flip coorespondence map."""
     keypoints = [
-        'head',
-        'neck',
-        'right_shoulder',
-        'right_elbow',
-        'right_wrist',
-        'left_shoulder',
-        'left_elbow',
-        'left_wrist'
-
+    'nose',            # 1
+    'left_eye',        # 2
+    'right_eye',       # 3
+    'left_ear',        # 4
+    'right_ear',       # 5
+    'left_shoulder',   # 6
+    'right_shoulder',  # 7
+    'left_elbow',      # 8
+    'right_elbow',     # 9
+    'left_wrist',      # 10
+    'right_wrist',     # 11
+    'left_hip',        # 12
+    'right_hip',       # 13
+    'left_knee',       # 14
+    'right_knee',      # 15
+    'left_ankle',      # 16
+    'right_ankle',     # 17
     ]
 
     return keypoints
@@ -81,11 +81,12 @@ def _tranpose_and_gather_feat(feat, ind):
 
 def post_process(dets, meta, scale=1):
     dets = dets.reshape(1, -1, dets.shape[2])
+
     dets = multi_pose_post_process(
         dets.copy(), [meta['c']], [meta['s']],
-        meta['out_height'], meta['out_width'])
+        meta['out_height'], meta['out_width'])       
     for j in range(1, 1 + 1):
-        dets[0][j] = np.array(dets[0][j], dtype=np.float32).reshape(-1, 29)
+        dets[0][j] = np.array(dets[0][j], dtype=np.float32).reshape(-1, 56)
         dets[0][j][:, :4] /= scale
         dets[0][j][:, 5:] /= scale
     return dets[0]
@@ -168,7 +169,7 @@ class CenterNetTensorRTEngine(TensorRTEngine):
         std = np.array(cfg.DATASET.STD, dtype=np.float32).reshape(1, 1, 3)
 
         if cfg.TEST.FIX_RES:
-            inp_height, inp_width = cfg.INPUT_H, cfg.INPUT_W
+            inp_height, inp_width = cfg.MODEL.INPUT_H, cfg.MODEL.INPUT_W
             c = np.array([new_width / 2., new_height / 2.], dtype=np.float32)
             s = max(height, width) * 1.0
         else:
@@ -291,11 +292,8 @@ class CenterNetTensorRTEngine(TensorRTEngine):
         dets = post_process(dets, meta, 1)
 
         results = merge_outputs([dets])
+        
 
-        result = []
-
-        all_joints = []
-        all_limbs = []
         all_bboxes = []
         all_keypoints = []
         all_bbox_scores = []
@@ -306,8 +304,8 @@ class CenterNetTensorRTEngine(TensorRTEngine):
             if bbox[4] > cfg.TEST.VIS_THRESH:
                 one_bbox = bbox[:4]
                 one_score = bbox[4]
-                eight_keypoints = np.array(bbox[5:21]).reshape(num_joints, 2)
-                keypoint_scores = bbox[21:29]
+                eight_keypoints = np.array(bbox[5:39]).reshape(num_joints, 2)
+                keypoint_scores = bbox[39:56]
 
                 one_joint = []
                 global_indices = []
@@ -321,40 +319,10 @@ class CenterNetTensorRTEngine(TensorRTEngine):
                         eight_keypoints[jj] = [0., 0.]
                         keypoint_scores[jj] = 0.
                         global_indices.append(-1)
-                all_joints += one_joint
-
-                one_connection = []
-                for ind_a, ind_b in _kp_connections:
-                    g_idx_a = global_indices[ind_a]
-                    g_idx_b = global_indices[ind_b]
-                    if g_idx_a >= 0 and g_idx_b >= 0:
-                        vis_a, vis_b = keypoint_scores[ind_a], keypoint_scores[ind_b]
-                        connection_score = (vis_a + vis_b) / 2.
-                        one_connection.append([g_idx_a, g_idx_b, connection_score])
-                all_limbs += one_connection
 
                 all_bbox_scores.append(one_score)
                 all_bboxes.append(one_bbox)
                 all_keypoints.append(eight_keypoints)
                 all_keypoint_scores.append(keypoint_scores)
 
-        batch_result = {
-            'all_joints': all_joints,
-            'all_limbs': all_limbs
-        }
-
-        people = []
-        for ii in range(len(all_bboxes)):
-            person = {
-                'bbox': all_bboxes[ii],
-                'bbox_score': all_bbox_scores[ii],
-                'score': all_bbox_scores[ii],
-                'keypoints': np.asarray(all_keypoints[ii], dtype=np.float32),
-                'keypoints_score': np.asarray(all_keypoint_scores[ii], dtype=np.float32).reshape(num_joints, 1)
-            }
-            people.append(person)
-
-        batch_result['people'] = people
-        result.append(batch_result)
-
-        return result
+        return all_bbox_scores, all_bboxes, all_keypoint_scores, all_keypoints

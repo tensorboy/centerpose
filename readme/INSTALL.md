@@ -47,7 +47,7 @@ After install Anaconda:
 
     ~~~
     CenterNet_ROOT=/path/to/clone/CenterNet
-    git clone https://github.com/xingyizhou/CenterNet $CenterNet_ROOT
+    git clone https://github.com/tensorboy/centerpose $CenterNet_ROOT
     ~~~
 
 
@@ -70,5 +70,3 @@ After install Anaconda:
     cd $CenterNet_ROOT/src/lib/external
     make
     ~~~
-
-7. Download pertained models for [detection]() or [pose estimation]() and move them to `$CenterNet_ROOT/models/`. More models can be found in [Model zoo](MODEL_ZOO.md).

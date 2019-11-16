@@ -104,12 +104,21 @@ class Bottleneck(nn.Module):
         return out
 
 
+def fill_fc_weights(layers):
+  for m in layers.modules():
+    if isinstance(m, nn.Conv2d):
+      nn.init.normal_(m.weight, std=0.001)
+      # torch.nn.init.kaiming_normal_(m.weight.data, nonlinearity='relu')
+      # torch.nn.init.xavier_normal_(m.weight.data)
+      if m.bias is not None:
+        nn.init.constant_(m.bias, 0)
+        
+        
 class PoseResNet(nn.Module):
 
-    def __init__(self, block, layers, heads, head_conv, **kwargs):
+    def __init__(self, block, layers, head_conv, **kwargs):
         self.inplanes = 64
         self.deconv_with_bias = False
-        self.heads = heads
 
         super(PoseResNet, self).__init__()
         self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3,
@@ -128,28 +137,34 @@ class PoseResNet(nn.Module):
             [256, 256, 256],
             [4, 4, 4],
         )
-        # self.final_layer = []
 
-        for head in sorted(self.heads):
-          num_output = self.heads[head]
-          if head_conv > 0:
-            fc = nn.Sequential(
-                nn.Conv2d(256, head_conv,
-                  kernel_size=3, padding=1, bias=True),
-                nn.ReLU(inplace=True),
-                nn.Conv2d(head_conv, num_output, 
-                  kernel_size=1, stride=1, padding=0))
-          else:
-            fc = nn.Conv2d(
-              in_channels=256,
-              out_channels=num_output,
-              kernel_size=1,
-              stride=1,
-              padding=0
-          )
-          self.__setattr__(head, fc)
+        self.hm = nn.Sequential(
+                    nn.Conv2d(256, head_conv, kernel_size=3, padding=1, bias=True),
+                    nn.ReLU(inplace=True),
+                    nn.Conv2d(head_conv, 1, kernel_size=1, stride=1, padding=0))
 
-        # self.final_layer = nn.ModuleList(self.final_layer)
+                          
+        self.wh = nn.Sequential(
+                    nn.Conv2d(256, head_conv, kernel_size=3, padding=1, bias=True),
+                    nn.ReLU(inplace=True),
+                    nn.Conv2d(head_conv, 2, kernel_size=1, stride=1, padding=0))
+        self.hps = nn.Sequential(
+                    nn.Conv2d(256, head_conv, kernel_size=3, padding=1, bias=True),
+                    nn.ReLU(inplace=True),
+                    nn.Conv2d(head_conv, 34, kernel_size=1, stride=1, padding=0))                  
+        self.reg = nn.Sequential(
+                    nn.Conv2d(256, head_conv, kernel_size=3, padding=1, bias=True),
+                    nn.ReLU(inplace=True),
+                    nn.Conv2d(head_conv, 2, kernel_size=1, stride=1, padding=0))        
+        self.hm_hp = nn.Sequential(
+                    nn.Conv2d(256, head_conv, kernel_size=3, padding=1, bias=True),
+                    nn.ReLU(inplace=True),
+                    nn.Conv2d(head_conv, 17, kernel_size=1, stride=1, padding=0))                                           
+        self.hp_offset = nn.Sequential(
+                        nn.Conv2d(256, head_conv, kernel_size=3, padding=1, bias=True),
+                        nn.ReLU(inplace=True),
+                        nn.Conv2d(head_conv, 2, kernel_size=1, stride=1, padding=0))                      
+
 
     def _make_layer(self, block, planes, blocks, stride=1):
         downsample = None
@@ -220,10 +235,8 @@ class PoseResNet(nn.Module):
         x = self.layer4(x)
 
         x = self.deconv_layers(x)
-        ret = {}
-        for head in self.heads:
-            ret[head] = self.__getattr__(head)(x)
-        return [ret]
+
+        return [self.hm(x), self.wh(x), self.hps(x), self.reg(x), self.hm_hp(x), self.hp_offset(x)]
 
     def init_weights(self, num_layers, pretrained=True):
         if pretrained:
@@ -240,20 +253,13 @@ class PoseResNet(nn.Module):
                     # print('=> init {}.bias as 0'.format(name))
                     nn.init.constant_(m.weight, 1)
                     nn.init.constant_(m.bias, 0)
-            # print('=> init final conv weights from normal distribution')
-            for head in self.heads:
-              final_layer = self.__getattr__(head)
-              for i, m in enumerate(final_layer.modules()):
-                  if isinstance(m, nn.Conv2d):
-                      # nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
-                      # print('=> init {}.weight as normal(0, 0.001)'.format(name))
-                      # print('=> init {}.bias as 0'.format(name))
-                      if m.weight.shape[0] == self.heads[head]:
-                          if 'hm' in head:
-                              nn.init.constant_(m.bias, -2.19)
-                          else:
-                              nn.init.normal_(m.weight, std=0.001)
-                              nn.init.constant_(m.bias, 0)
+
+            self.hm[-1].bias.data.fill_(-2.19)     
+            self.hm_hp[-1].bias.data.fill_(-2.19)                                    
+            fill_fc_weights(self.wh)
+            fill_fc_weights(self.hps)
+            fill_fc_weights(self.reg)
+            fill_fc_weights(self.hp_offset)                              
             #pretrained_state_dict = torch.load(pretrained)
             url = model_urls['resnet{}'.format(num_layers)]
             pretrained_state_dict = model_zoo.load_url(url)
@@ -272,9 +278,9 @@ resnet_spec = {18: (BasicBlock, [2, 2, 2, 2]),
                152: (Bottleneck, [3, 8, 36, 3])}
 
 
-def get_pose_net(num_layers, heads, head_conv):
+def get_pose_net(num_layers, head_conv):
   block_class, layers = resnet_spec[num_layers]
 
-  model = PoseResNet(block_class, layers, heads, head_conv=head_conv)
+  model = PoseResNet(block_class, layers, head_conv)
   model.init_weights(num_layers, pretrained=True)
   return model

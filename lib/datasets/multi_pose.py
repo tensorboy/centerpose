@@ -73,7 +73,7 @@ class MultiPoseDataset(data.Dataset):
     inp = (inp.astype(np.float32) / 255.)
     if self.split == 'train' and not self.cfg.DATASET.NO_COLOR_AUG:
       color_aug(self._data_rng, inp, self._eig_val, self._eig_vec)
-    inp = (inp - self.mean) / self.std
+    inp = (inp - np.array(self.cfg.DATASET.MEAN).astype(np.float32)) / np.array(self.cfg.DATASET.STD).astype(np.float32)
     inp = inp.transpose(2, 0, 1)
 
     output_res = self.cfg.MODEL.OUTPUT_RES

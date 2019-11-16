@@ -35,7 +35,7 @@ _C.MODEL = CN()
 _C.MODEL.LOAD_MODEL = ''
 _C.MODEL.NAME = 'res_50'
 # 0 for no conv layer, -1 for defaults setting, 64 for resnets and 256 for dla
-_C.MODEL.HEAD_CONV = -1
+_C.MODEL.HEAD_CONV = 64
 _C.MODEL.NUM_STACKS = 1
 _C.MODEL.HEADS_NAME = ['hm', 'wh', 'hps', 'reg', 'hm_hp', 'hp_offset']
 _C.MODEL.HEADS_NUM = [1, 2, 34, 2, 17, 2]
@@ -104,6 +104,8 @@ _C.DATASET.IMAGE_SIZE = 512
 # train
 _C.TRAIN = CN()
 
+_C.TRAIN.DISTRIBUTE = True
+_C.TRAIN.LOCAL_RANK = 0
 _C.TRAIN.HIDE_DATA_TIME = False
 _C.TRAIN.SAVE_ALL_MODEL = False
 _C.TRAIN.RESUME = False

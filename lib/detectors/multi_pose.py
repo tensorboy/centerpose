@@ -29,35 +29,37 @@ class MultiPoseDetector(BaseDetector):
     def process(self, images, return_time=False):
         with torch.no_grad():
             torch.cuda.synchronize()
-            output = self.model(images)[-1]
-            output['hm'] = output['hm'].sigmoid_()
+            outputs = self.model(images)
+            hm, wh, hps, reg, hm_hp, hp_offset = outputs
+                    
+            hm = hm.sigmoid_()
             if self.cfg.LOSS.HM_HP and not self.cfg.LOSS.MSE_LOSS:
-                output['hm_hp'] = output['hm_hp'].sigmoid_()
+                hm_hp = hm_hp.sigmoid_()
 
-            reg = output['reg'] if self.cfg.LOSS.REG_OFFSET else None
-            hm_hp = output['hm_hp'] if self.cfg.LOSS.HM_HP else None
-            hp_offset = output['hp_offset'] if self.cfg.LOSS.REG_HP_OFFSET else None
+            reg = reg if self.cfg.LOSS.REG_OFFSET else None
+            hm_hp = hm_hp if self.cfg.LOSS.HM_HP else None
+            hp_offset = hp_offset if self.cfg.LOSS.REG_HP_OFFSET else None
             torch.cuda.synchronize()
             forward_time = time.time()
 
             if self.cfg.TEST.FLIP_TEST:
-                output['hm'] = (output['hm'][0:1] + flip_tensor(output['hm'][1:2])) / 2
-                output['wh'] = (output['wh'][0:1] + flip_tensor(output['wh'][1:2])) / 2
-                output['hps'] = (output['hps'][0:1] + 
-                  flip_lr_off(output['hps'][1:2], self.flip_idx)) / 2
+                hm = (hm[0:1] + flip_tensor(hm[1:2])) / 2
+                wh = (wh[0:1] + flip_tensor(wh[1:2])) / 2
+                hps = (hps[0:1] + 
+                  flip_lr_off(hps[1:2], self.flip_idx)) / 2
                 hm_hp = (hm_hp[0:1] + flip_lr(hm_hp[1:2], self.flip_idx)) / 2 \
                         if hm_hp is not None else None
                 reg = reg[0:1] if reg is not None else None
                 hp_offset = hp_offset[0:1] if hp_offset is not None else None
 
             dets = multi_pose_decode(
-            output['hm'], output['wh'], output['hps'],
+            hm, wh, hps,
             reg=reg, hm_hp=hm_hp, hp_offset=hp_offset, K=self.cfg.TEST.TOPK)
 
         if return_time:
-            return output, dets, forward_time
+            return outputs, dets, forward_time
         else:
-            return output, dets
+            return outputs, dets
 
     def post_process(self, dets, meta, scale=1):
         dets = dets.detach().cpu().numpy().reshape(1, -1, dets.shape[2])
@@ -65,7 +67,7 @@ class MultiPoseDetector(BaseDetector):
           dets.copy(), [meta['c']], [meta['s']],
           meta['out_height'], meta['out_width'])
         for j in range(1, self.num_classes + 1):
-            dets[0][j] = np.array(dets[0][j], dtype=np.float32).reshape(-1, 39)
+            dets[0][j] = np.array(dets[0][j], dtype=np.float32).reshape(-1, 56)
             dets[0][j][:, :4] /= scale
             dets[0][j][:, 5:] /= scale
         return dets[0]

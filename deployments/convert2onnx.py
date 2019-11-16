@@ -86,8 +86,6 @@ def pre_process(image, cfg=None, scale=1, meta=None):
     inp_image = ((inp_image / 255. - mean) / std).astype(np.float32)
 
     images = inp_image.transpose(2, 0, 1).reshape(1, 3, inp_height, inp_width)
-    if cfg.TEST.FLIP_TEST:
-      images = np.concatenate((images, images[:, :, :, ::-1]), axis=0)
     images = torch.from_numpy(images)
     meta = {'c': c, 's': s, 
             'out_height': inp_height // cfg.MODEL.DOWN_RATIO, 
@@ -100,7 +98,7 @@ def post_process(dets, meta, scale=1):
         dets.copy(), [meta['c']], [meta['s']],
         meta['out_height'], meta['out_width'])
     for j in range(1, 1 + 1):
-        dets[0][j] = np.array(dets[0][j], dtype=np.float32).reshape(-1, 39)
+        dets[0][j] = np.array(dets[0][j], dtype=np.float32).reshape(-1, 56)
         dets[0][j][:, :4] /= scale
         dets[0][j][:, 5:] /= scale
     return dets[0]
@@ -187,22 +185,20 @@ def main(cfg):
     HEADS = dict(zip(cfg.MODEL.HEADS_NAME, cfg.MODEL.HEADS_NUM))
     model = create_model('restrt_50',  OrderedDict(HEADS), 64).cuda()
 
-    weight_path = '/home/tensorboy/Documents/multi_pose/coco_pose_res_50/model_last.pth'
+    weight_path = '/home/tensorboy/data/centerpose/trained_best_model/res_50_1x.pth'
     state_dict = torch.load(weight_path)['state_dict']
     model.load_state_dict(state_dict)
 
-    onnx_file_path = "ckpt2.onnx"
-    torch.save(model.state_dict(), 'ckpt2.pth')
+    onnx_file_path = "./model/ckpt1.onnx"
     
     #img = cv2.imread('test_image.jpg')
-    image = cv2.imread('../images/33823288584_1d21cf0a26_k.jpg')
+    image = cv2.imread('../images/17790319373_bd19b24cfc_k.jpg')
     images, meta = pre_process(image, cfg, scale=1)
 
     model.cuda()
     model.eval()
     model.float()
     torch_input = images.cuda()
-    print(torch_input.shape)
 
     #output_pytorch = model(torch_input)
 
@@ -215,6 +211,8 @@ def main(cfg):
     
     heat, hmax, hm_hp, hm_hp_max, kps, reg, hp_offset, wh = output_onnx
     
+    torch.cuda.synchronize()
+    tic = time.time()
     num_joints = cfg.MODEL.NUM_KEYPOINTS
     batch, cat, height, width = heat.shape
     
@@ -298,7 +296,8 @@ def main(cfg):
     kps = (1 - mask) * hm_kps + mask * kps
     kps = kps.transpose(0, 2, 1, 3).reshape(batch, cfg.TEST.TOPK, num_joints * 2)
 
-    dets = np.concatenate([bboxes, scores, kps, clses], axis=2)
+    #dets = np.concatenate([bboxes, scores, kps, clses], axis=2)
+    dets = np.concatenate([bboxes, scores, kps, hm_score.squeeze(axis=3).transpose(0, 2, 1)], axis=2)
 
     dets = post_process(dets, meta, 1)
 
@@ -333,7 +332,7 @@ def main(cfg):
 
   
 if __name__ == '__main__':
-    config_name = '../experiments/dla_34_512x512_adam.yaml'
+    config_name = '../experiments/res_50_512x512.yaml'
     update_config(cfg, config_name)
     main(cfg)
 

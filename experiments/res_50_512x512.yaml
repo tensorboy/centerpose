@@ -1,18 +1,19 @@
 SAMPLE_METHOD: 'coco_hp'
-DATA_DIR: '/media/tensorboy/74DC8ED7DC8E9352/data'
-EXP_ID: 'coco_pose_dla_34'
+DATA_DIR: '/data'
+EXP_ID: 'coco_pose_res_50'
 DEBUG: 0
 DEBUG_THEME: 'white'
 SEED: 317
-OUTPUT_DIR: '/media/tensorboy/74DC8ED7DC8E9352/data/centerpose/multi_pose'
+OUTPUT_DIR: '/data/centerpose/res50_3x'
 LOG_DIR: ''
 EXPERIMENT_NAME: ''
 GPUS: [0, 1, 2, 3]
-WORKERS: 8
+WORKERS: 4
 PRINT_FREQ: 0
 PIN_MEMORY: true
 RANK: 0
-SAVE_RESULTS: false
+SAVE_RESULTS: true
+TASK : 'multi_pose'
 
 CUDNN:
   BENCHMARK: true
@@ -21,10 +22,10 @@ MODEL:
   LOAD_MODEL: ''
   CENTER_THRESH: 0.1
   NUM_CLASSES: 1
-  NAME: 'dla_34'
+  NAME: 'res_50'
   HEADS_NAME: ['hm', 'wh', 'hps', 'reg', 'hm_hp', 'hp_offset']
   HEADS_NUM: [1, 2, 34, 2, 17, 2]
-  HEAD_CONV: 256
+  HEAD_CONV: 64
   DOWN_RATIO: 4
   NUM_STACKS: 1
   INPUT_RES: 512
@@ -57,7 +58,6 @@ LOSS:
   HM_HP_WEIGHT: 1.
   
 DATASET:
-  ROOT: '/data/coco'
   DATASET: 'coco_hp'
   TRAIN_SET: 'train'
   TEST_SET: 'valid'
@@ -84,18 +84,19 @@ DATASET:
   RANDOM_CROP: true 
   
 TRAIN:
+  DISTRIBUTE: true
+  LOCAL_RANK: 0
   HIDE_DATA_TIME: false 
   SAVE_ALL_MODEL: false
   RESUME: false
   LR_FACTOR: 0.1
-  LR_STEP: [90, 120]
-  EPOCHS: 140
+  LR_STEP: [270, 300]
+  EPOCHS: 320
   NUM_ITERS: -1
-  LR: 2.421875e-4
-  BATCH_SIZE: 62
-  MASTER_BATCH_SIZE: 14
+  LR: 2.5e-4
+  BATCH_SIZE: 64
+  MASTER_BATCH_SIZE: 16
 
-  OPTIMIZER: 'adam'
   MOMENTUM: 0.9
   WD: 0.0001
   NESTEROV: false
@@ -112,11 +113,11 @@ TRAIN:
  
 TEST:
   # Test Model Epoch
-  MODEL_PATH: '/home/tensorboy/Documents/multi_pose/model_last.pth'
+  MODEL_PATH: '/home/tensorboy/data/centerpose/trained_best_model/res_50_1x.pth'
   TASK: 'multi_pose'
-  FLIP_TEST: false
+  FLIP_TEST: true
 
-  DEMO_FILE: 'webcam'
+  DEMO_FILE: '../images/33823288584_1d21cf0a26_k.jpg'
   MODEL_FILE: ''
   TEST_SCALES: [1]
   IMAGE_THRE: 0.1
@@ -125,14 +126,13 @@ TEST:
   NMS_THRE: 0.5
   NOT_PREFETCH_TEST: false
   FIX_RES: true
-  KEEP_RES: false
 
   SOFT_NMS: false
   OKS_THRE: 0.5
   VIS_THRESH: 0.3
   KEYPOINT_THRESH: 0.2
   NUM_MIN_KPT: 4
-  THRESH_HUMAN: 0.4
+  THRESH_HUMAN: 0.5
 
   EVAL_ORACLE_HM: false
   EVAL_ORACLE_WH: false

@@ -6,14 +6,11 @@ multi person pose estimation using center point detection:
 
 ### Keypoint detection on COCO validation 2017
 
-| Backbone     |  AP       |  FPS         |
-|--------------|-----------|--------------|
-|Hourglass-104 | 64.0      |    6.6       |
-|DLA-34        | 58.9      |    23        |
-|Resnet-50     | 33.5      |    40        |
-
-
-All models and details are available in our [Model zoo](readme/MODEL_ZOO.md).
+| Backbone     |  AP       |  FPS         | Download | 
+|--------------|-----------|--------------|----------|
+|DLA-34        | 60.5      |    23        |   [model](https://drive.google.com/open?id=151aD93nHG_oGju1xxOmwoDNjfeif6uGi)  |
+|Resnet-50     | 53.0      |    40        |   [model](https://drive.google.com/open?id=1k_kpn7tCpX4CHEEiCqdNxLRXZc-ky-uY)  |
+|MobilenetV3   | 45.1      |    20        |   [model](https://drive.google.com/open?id=1T8_YsPiW7EmLHQfh_Zk37hTsiJpdaAN1)  |
 
 ## Installation
 
@@ -24,22 +21,13 @@ Please refer to [INSTALL.md](readme/INSTALL.md) for installation instructions.
 
 We support demo for image/ image folder, video, and webcam. 
 
-First, download the models (By default, [ctdet_coco_dla_2x](https://drive.google.com/open?id=1pl_-ael8wERdUREEnaIfqOV_VF2bEVRT) for detection and 
-[multi_pose_dla_3x](https://drive.google.com/open?id=1PO1Ax_GDtjiemEmDVD7oPWwqQkUu28PI) for human pose estimation) 
-from the [Model zoo](readme/MODEL_ZOO.md) and put them in `CenterNet_ROOT/models/`.
+First, download the model [multi_pose_dla_1x](https://drive.google.com/open?id=151aD93nHG_oGju1xxOmwoDNjfeif6uGi) for human pose estimation) 
+from the [Model zoo](https://drive.google.com/open?id=1UG2l8XtjOfBtG_GLpSdxlWS2wxFR8hQF) and put them in anywhere.
 
-For object detection on images/ video, run:
-
+Run:
+    
 ~~~
-python demo.py ctdet --demo /path/to/image/or/folder/or/video --load_model ../models/ctdet_coco_dla_2x.pth
-~~~
-We provide example images in `CenterNet_ROOT/images/` (from [Detectron](https://github.com/facebookresearch/Detectron/tree/master/demo)). If set up correctly, the output should look like
-
-<p align="center"> <img src='readme/det1.png' align="center" height="230px"> <img src='readme/det2.png' align="center" height="230px"> </p>
-
-For webcam demo, run     
-~~~
-python demo.py multi_pose --demo /path/to/image/or/folder/or/video/or/webcam --load_model ../models/multi_pose_dla_3x.pth
+python demo.py --cfg ../experiments/res_50_512x512.yaml --TESTMODEL /your/model/path/res_50_1x.pth --DEMOFILE ../images/33823288584_1d21cf0a26_k.jpg --DEBUG 1
 ~~~
 The result for the example images should look like:
 
@@ -47,12 +35,13 @@ The result for the example images should look like:
 
 ## Training
 
-After [installation](readme/INSTALL.md), follow the instructions in [DATA.md](readme/DATA.md) to setup the datasets. Then check [GETTING_STARTED.md](readme/GETTING_STARTED.md) to reproduce the results in the paper.
-We provide scripts for all the experiments in the [experiments](experiments) folder.
+After [installation](readme/INSTALL.md), follow the instructions in [DATA.md](readme/DATA.md) to setup the datasets.
 
-## Develop
+We provide config files for all the experiments in the [experiments](experiments) folder.
 
-If you are interested in training CenterNet in a new dataset, use CenterNet in a new task, or use a new network architecture for CenterNet, please refer to [DEVELOP.md](readme/DEVELOP.md). Also feel free to send us emails for discussions or suggestions.
+```
+cd ./tools python -m torch.distributed.launch --nproc_per_node 4 train.py --cfg ../experiments/*yalm
+```
 
 ## License
 
