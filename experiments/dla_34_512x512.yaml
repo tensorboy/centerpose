@@ -114,7 +114,7 @@ TRAIN:
  
 TEST:
   # Test Model Epoch
-  MODEL_PATH: '/home/tensorboy/data/centerpose/trained_best_model/dla_34_1x.pth'
+  MODEL_PATH: '/home/tensorboy/data/centerpose/trained_best_model/dla34_3x.pth'
   TASK: 'multi_pose'
   FLIP_TEST: true
 

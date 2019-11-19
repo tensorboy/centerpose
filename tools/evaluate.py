@@ -30,6 +30,12 @@ def parse_args():
                         help='experiment configure file name',
                         required=True,
                         type=str)
+    parser.add_argument('--DEBUG', type=int, default=0,
+                         help='level of visualization.'
+                              '1: only show the final detection results'
+                              '2: show the network output features'
+                              '3: use matplot to display' # useful when lunching training with ipython notebook
+                              '4: save all visualizations to disk')                             
     args = parser.parse_args()
 
     return args
@@ -72,4 +78,7 @@ def test(cfg):
 if __name__ == '__main__':
     args = parse_args()
     update_config(cfg, args.cfg)
+    cfg.defrost()
+    cfg.DEBUG = args.DEBUG
+    cfg.freeze()
     test(cfg)
