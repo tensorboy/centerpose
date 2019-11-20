@@ -78,7 +78,6 @@ def main(cfg, local_rank):
         if i < rest_batch_size % (len(cfg.GPUS) - 1):
             slave_chunk_size += 1
         chunk_sizes.append(slave_chunk_size)
-    print(chunk_sizes)
     trainer.set_device(cfg.GPUS, chunk_sizes, device)
 
     print('Setting up data...')

@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 from torch.nn import functional as F
-
+from torch.nn import init
 from .utils import (
     round_filters,
     round_repeats,
@@ -97,7 +97,15 @@ class MBConvBlock(nn.Module):
         """Sets swish function as memory efficient (for training) or standard (for export)"""
         self._swish = MemoryEfficientSwish() if memory_efficient else Swish()
 
-
+def fill_fc_weights(layers):
+  for m in layers.modules():
+    if isinstance(m, nn.Conv2d):
+      nn.init.normal_(m.weight, std=0.001)
+      # torch.nn.init.kaiming_normal_(m.weight.data, nonlinearity='relu')
+      # torch.nn.init.xavier_normal_(m.weight.data)
+      if m.bias is not None:
+        nn.init.constant_(m.bias, 0)
+        
 class EfficientNet(nn.Module):
     """
     An EfficientNet model. Most easily loaded with the .from_name or .from_pretrained methods
@@ -163,9 +171,10 @@ class EfficientNet(nn.Module):
         #self._avg_pooling = nn.AdaptiveAvgPool2d(1)
         #self._dropout = nn.Dropout(self._global_params.dropout_rate)
         #self._fc = nn.Linear(out_channels, self._global_params.num_classes)
-        self.up = nn.ConvTranspose2d(64, 64, 8, stride=4,
-                                padding=4 // 2, output_padding=0,
-                                groups=64, bias=False)
+        #self.up = nn.ConvTranspose2d(64, 64, 8, stride=4,
+        #                        padding=4 // 2, output_padding=0,
+        #                        groups=64, bias=False)
+        self.up = nn.Upsample(scale_factor=32, mode='bilinear', align_corners=True)                        
         self._swish = MemoryEfficientSwish()
         
         self.hm = nn.Sequential(
@@ -212,6 +221,28 @@ class EfficientNet(nn.Module):
                 nn.Conv2d(head_conv, 2,
                           kernel_size=final_kernel, stride=1,
                           padding=final_kernel // 2, bias=True))        
+
+        self.init_params()
+        
+    def init_params(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                init.kaiming_normal_(m.weight, mode='fan_out')
+                if m.bias is not None:
+                    init.constant_(m.bias, 0)
+            elif isinstance(m, nn.BatchNorm2d):
+                init.constant_(m.weight, 1)
+                init.constant_(m.bias, 0)
+            elif isinstance(m, nn.Linear):
+                init.normal_(m.weight, std=0.001)
+                if m.bias is not None:
+                    init.constant_(m.bias, 0)
+        self.hm[-1].bias.data.fill_(-2.19)     
+        self.hm_hp[-1].bias.data.fill_(-2.19)                                    
+        fill_fc_weights(self.wh)
+        fill_fc_weights(self.hps)
+        fill_fc_weights(self.reg)
+        fill_fc_weights(self.hp_offset)
 
     def set_swish(self, memory_efficient=True):
         """Sets swish function as memory efficient (for training) or standard (for export)"""
@@ -290,7 +321,7 @@ class EfficientNet(nn.Module):
         if model_name not in valid_models:
             raise ValueError('model_name should be one of: ' + ', '.join(valid_models))
 
-def get_efficient_pose_net(num_layers, head_conv):
+def get_efficient_pose_net(num_layers, head_conv, cfg):
 
   model = EfficientNet.from_pretrained('efficientnet-b7')     
   

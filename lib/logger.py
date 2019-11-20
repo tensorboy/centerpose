@@ -18,8 +18,10 @@ class Logger(object):
   def __init__(self, cfg):
     """Create a summary writer logging to log_dir."""
     if not os.path.exists(cfg.OUTPUT_DIR):
-      os.makedirs(cfg.OUTPUT_DIR)
-   
+      try:
+        os.makedirs(cfg.OUTPUT_DIR)
+      except:
+        pass
     time_str = time.strftime('%Y-%m-%d-%H-%M')
 
     file_name = os.path.join(cfg.OUTPUT_DIR, 'opt.txt')

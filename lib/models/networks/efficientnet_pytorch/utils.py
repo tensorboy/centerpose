@@ -162,14 +162,14 @@ def efficientnet_params(model_name):
     """ Map EfficientNet model name to parameter coefficients. """
     params_dict = {
         # Coefficients:   width,depth,res,dropout
-        'efficientnet-b0': (1.0, 1.0, 224, 0.2),
+        'efficientnet-b0': (1.0, 1.0, 512, 0.2),
         'efficientnet-b1': (1.0, 1.1, 240, 0.2),
         'efficientnet-b2': (1.1, 1.2, 260, 0.3),
         'efficientnet-b3': (1.2, 1.4, 300, 0.3),
         'efficientnet-b4': (1.4, 1.8, 380, 0.4),
         'efficientnet-b5': (1.6, 2.2, 456, 0.4),
         'efficientnet-b6': (1.8, 2.6, 528, 0.5),
-        'efficientnet-b7': (2.0, 3.1, 600, 0.5),
+        'efficientnet-b7': (2.0, 3.1, 512, 0.5),
     }
     return params_dict[model_name]
 
@@ -254,9 +254,9 @@ def efficientnet(width_coefficient=None, depth_coefficient=None, dropout_rate=0.
     """ Creates a efficientnet model. """
 
     blocks_args = [
-        'r1_k3_s11_e1_i32_o16_se0.25', 'r2_k3_s22_e6_i16_o24_se0.25',
+        'r1_k3_s22_e1_i32_o16_se0.25', 'r2_k3_s22_e6_i16_o24_se0.25',
         'r2_k5_s22_e6_i24_o40_se0.25', 'r3_k3_s22_e6_i40_o80_se0.25',
-        'r3_k5_s11_e6_i80_o112_se0.25', 'r4_k5_s11_e6_i112_o192_se0.25',
+        'r3_k5_s22_e6_i80_o112_se0.25', 'r4_k5_s22_e6_i112_o192_se0.25',
         'r1_k3_s11_e6_i192_o320_se0.25',
     ]
     blocks_args = BlockDecoder.decode(blocks_args)
