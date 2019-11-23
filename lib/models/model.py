@@ -14,8 +14,8 @@ from .networks.resnet_dcn import get_pose_net as get_pose_net_dcn
 from .networks.large_hourglass import get_large_hourglass_net
 from .networks.msra_resnet_trt import get_pose_net_trt
 from .networks.mobilenet import get_mobile_pose_net
-from .networks.efficientnet_pytorch import get_efficient_pose_net
-from .networks.hrnet import get_hrpose_model
+from .networks.shufflenetv2_dcn import get_shufflev2_net
+from .networks.pose_higher_hrnet import get_hrpose_net
 
 _model_factory = {
   'res': get_pose_net, # default Resnet with deconv
@@ -25,15 +25,16 @@ _model_factory = {
   'resdcn': get_pose_net_dcn,
   'hourglass': get_large_hourglass_net,
   'mobilenetv3': get_mobile_pose_net,
-  'efficientnet': get_efficient_pose_net,
-  'highres': get_hrpose_model,
+  'shufflenetV2': get_shufflev2_net,
+  'hrnet': get_hrpose_net
+#  'highres': get_hrpose_model,
 }
 
-def create_model(arch, head_conv):
+def create_model(arch, head_conv, cfg):
     num_layers = int(arch[arch.find('_') + 1:]) if '_' in arch else 0
     arch = arch[:arch.find('_')] if '_' in arch else arch
     get_model = _model_factory[arch]
-    model = get_model(num_layers=num_layers, head_conv=head_conv)
+    model = get_model(num_layers=num_layers, head_conv=head_conv, cfg = cfg)
     return model
 
 def load_model(model, model_path, optimizer=None, resume=False, 

@@ -1,0 +1,198 @@
+SAMPLE_METHOD: 'coco_hp'
+DATA_DIR: '/home/tensorboy/data'
+EXP_ID: 'coco_pose_mobilenet'
+DEBUG: 0
+DEBUG_THEME: 'white'
+SEED: 317
+OUTPUT_DIR: '/home/tensorboy/data/centerpose/mobilenetv3_3x_sgd'
+LOG_DIR: ''
+EXPERIMENT_NAME: ''
+GPUS: [0, 1, 2, 3]
+WORKERS: 8
+PIN_MEMORY: true
+RANK: 0
+PRINT_FREQ: 100
+VERBOSE: false
+CUDNN:
+  BENCHMARK: true
+  DETERMINISTIC: false
+  ENABLED: true
+DATASET:
+  ROOT: '/home/tensorboy/data/coco'
+  DATASET: 'coco_hp'
+  TRAIN_SET: 'train'
+  TEST_SET: 'valid'
+  TRAIN_IMAGE_DIR: 'images/train2017'
+  TRAIN_ANNOTATIONS: ['person_keypoints_train2017.json']
+  VAL_IMAGE_DIR: 'images/val2017'
+  VAL_ANNOTATIONS: 'person_keypoints_val2017.json'
+
+  # training data augmentation
+  MEAN: [0.408, 0.447, 0.470]
+  STD: [0.289, 0.274, 0.278]
+  SHIFT: 0.1
+  SCALE: 0.4
+  ROTATE: 0.
+  # for pose
+  AUG_ROT: 0.
+  FLIP: 0.5
+  NO_COLOR_AUG: false
+
+  ROT_FACTOR: 30
+  SCALE_MIN: 0.5
+  SCALE_MAX: 1.1
+  IMAGE_SIZE: 512
+  RANDOM_CROP: true 
+DEBUG:
+  DEBUG: True
+  SAVE_BATCH_IMAGES_GT: False
+  SAVE_BATCH_IMAGES_PRED: False
+  SAVE_HEATMAPS_GT: True
+  SAVE_HEATMAPS_PRED: True
+  SAVE_TAGMAPS_PRED: True
+LOSS:
+  METRIC: 'loss'
+  MSE_LOSS: false
+  REG_LOSS: 'l1'
+  USE_OHKM: false
+  TOPK: 8
+  USE_TARGET_WEIGHT: true
+  USE_DIFFERENT_JOINTS_WEIGHT: false
+  HP_WEIGHT: 1.
+  HM_HP_WEIGHT: 1.
+  DENSE_HP: false
+  HM_HP: true
+  REG_BBOX: true
+  WH_WEIGHT: 0.1
+  REG_OFFSET: true  
+  OFF_WEIGHT: 1.
+  REG_HP_OFFSET: true
+  HM_HP_WEIGHT: 1.
+MODEL:
+  LOAD_MODEL: ''
+  CENTER_THRESH: 0.1
+  NUM_CLASSES: 1
+  NAME: 'hrnet'
+  DOWN_RATIO: 4
+  NUM_STACKS: 1
+  INPUT_RES: 512
+  OUTPUT_RES: 128
+  INPUT_H: 512
+  INPUT_W: 512
+  PAD: 31
+  NUM_KEYPOINTS: 17
+  SIGMA: 2  
+  HEAD_CONV: 64
+  EXTRA:
+    FINAL_CONV_KERNEL: 1
+    PRETRAINED_LAYERS: ['*']
+    STEM_INPLANES: 64
+    STAGE2:
+      NUM_MODULES: 1
+      NUM_BRANCHES: 2
+      BLOCK: BASIC
+      NUM_BLOCKS:
+      - 4
+      - 4
+      NUM_CHANNELS:
+      - 32
+      - 64
+      FUSE_METHOD: SUM
+    STAGE3:
+      NUM_MODULES: 4
+      NUM_BRANCHES: 3
+      BLOCK: BASIC
+      NUM_BLOCKS:
+      - 4
+      - 4
+      - 4
+      NUM_CHANNELS:
+      - 32
+      - 64
+      - 128
+      FUSE_METHOD: SUM
+    STAGE4:
+      NUM_MODULES: 3
+      NUM_BRANCHES: 4
+      BLOCK: BASIC
+      NUM_BLOCKS:
+      - 4
+      - 4
+      - 4
+      - 4
+      NUM_CHANNELS:
+      - 32
+      - 64
+      - 128
+      - 256
+      FUSE_METHOD: SUM
+    DECONV:
+      NUM_DECONVS: 0
+      NUM_CHANNELS:
+      - 32
+      KERNEL_SIZE:
+      - 4
+      NUM_BASIC_BLOCKS: 4
+      CAT_OUTPUT:
+      - True
+  INIT_WEIGHTS: True
+  PRETRAINED: 'models/pytorch/imagenet/hrnet_w32-36af842e.pth'
+  TAG_PER_JOINT: True
+TEST:
+  # Test Model Epoch
+  MODEL_PATH: '/home/tensorboy/data/centerpose/mobilenetv3_3x_sgd/model_best.pth'
+  TASK: 'multi_pose'
+  FLIP_TEST: true
+
+  DEMO_FILE: '../images/33823288584_1d21cf0a26_k.jpg'
+  MODEL_FILE: ''
+  TEST_SCALES: [1]
+  IMAGE_THRE: 0.1
+  TOPK: 100
+  NMS: false
+  NMS_THRE: 0.5
+  NOT_PREFETCH_TEST: false
+  FIX_RES: false
+  KEEP_RES: false
+
+  SOFT_NMS: false
+  OKS_THRE: 0.5
+  VIS_THRESH: 0.3
+  KEYPOINT_THRESH: 0.2
+  NUM_MIN_KPT: 4
+  THRESH_HUMAN: 0.4
+
+  EVAL_ORACLE_HM: false
+  EVAL_ORACLE_WH: false
+  EVAL_ORACLE_OFFSET: false
+  EVAL_ORACLE_KPS: false
+  EVAL_ORACLE_HMHP: false
+  EVAL_ORACLE_HP_OFFSET: false
+  EVAL_ORACLE_DEP: false
+TRAIN:
+  DISTRIBUTE: true
+  LOCAL_RANK: 0  
+  HIDE_DATA_TIME: false 
+  SAVE_ALL_MODEL: false
+  RESUME: false
+  LR_FACTOR: 0.1
+  LR_STEP: [270, 300]
+  EPOCHS: 320
+  NUM_ITERS: -1
+  LR: 2.5e-4
+  BATCH_SIZE: 64
+  MASTER_BATCH_SIZE: 16
+
+  MOMENTUM: 0.9
+  WD: 0.0001
+  NESTEROV: false
+  GAMMA1: 0.99
+  GAMMA2: 0.0
+
+  # 'apply and reset gradients every n batches'
+  STRIDE_APPLY: 1
+
+  CHECKPOINT: ''
+  SHUFFLE: true
+  VAL_INTERVALS: 1
+  TRAINVAL: false

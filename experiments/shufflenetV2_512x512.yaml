@@ -1,10 +1,10 @@
 SAMPLE_METHOD: 'coco_hp'
-DATA_DIR: '/home/tensorboy/data'
-EXP_ID: 'coco_pose_mobilenet'
+DATA_DIR: '/data'
+EXP_ID: 'coco_pose_shufflenetv2'
 DEBUG: 0
 DEBUG_THEME: 'white'
 SEED: 317
-OUTPUT_DIR: '/home/tensorboy/data/centerpose/mobilenetv3_3x_sgd'
+OUTPUT_DIR: '/data/centerpose/shufflenet_3x_sgd'
 LOG_DIR: ''
 EXPERIMENT_NAME: ''
 GPUS: [0, 1, 2, 3]
@@ -21,7 +21,7 @@ MODEL:
   LOAD_MODEL: ''
   CENTER_THRESH: 0.1
   NUM_CLASSES: 1
-  NAME: 'mobilenetv3'
+  NAME: 'shufflenetV2'
   HEADS_NAME: ['hm', 'wh', 'hps', 'reg', 'hm_hp', 'hp_offset']
   HEADS_NUM: [1, 2, 34, 2, 17, 2]
   HEAD_CONV: 256
@@ -36,57 +36,6 @@ MODEL:
   TAG_PER_JOINT: true
   TARGET_TYPE: 'gaussian'
   SIGMA: 2    
-  EXTRA:
-    FINAL_CONV_KERNEL: 1
-    STAGE1:
-      NUM_MODULES: 1
-      NUM_RANCHES: 1
-      BLOCK: BOTTLENECK
-      NUM_BLOCKS:
-      - 2
-      NUM_CHANNELS:
-      - 64
-      FUSE_METHOD: SUM
-    STAGE2:
-      NUM_MODULES: 1
-      NUM_BRANCHES: 2
-      BLOCK: BASIC
-      NUM_BLOCKS:
-      - 2
-      - 2
-      NUM_CHANNELS:
-      - 18
-      - 36
-      FUSE_METHOD: SUM
-    STAGE3:
-      NUM_MODULES: 3
-      NUM_BRANCHES: 3
-      BLOCK: BASIC
-      NUM_BLOCKS:
-      - 2
-      - 2
-      - 2
-      NUM_CHANNELS:
-      - 18
-      - 36
-      - 72
-      FUSE_METHOD: SUM
-    STAGE4:
-      NUM_MODULES: 2
-      NUM_BRANCHES: 4
-      BLOCK: BASIC
-      NUM_BLOCKS:
-      - 2
-      - 2
-      - 2
-      - 2
-      NUM_CHANNELS:
-      - 18
-      - 36
-      - 72
-      - 144
-      FUSE_METHOD: SUM
-
 
 LOSS:
   METRIC: 'loss'
@@ -144,9 +93,9 @@ TRAIN:
   LR_STEP: [270, 300]
   EPOCHS: 320
   NUM_ITERS: -1
-  LR: 3.359375e-4
-  BATCH_SIZE: 86
-  MASTER_BATCH_SIZE: 20
+  LR: 5.e-4
+  BATCH_SIZE: 128
+  MASTER_BATCH_SIZE: 32
 
   MOMENTUM: 0.9
   WD: 0.0001

@@ -63,6 +63,7 @@ class COCOHP(data.Dataset):
 
     def convert_eval_format(self, all_bboxes):
         detections = []
+        print(all_bboxes)
         for image_id in all_bboxes:
             for cls_ind in all_bboxes[image_id]:
                 category_id = 1

@@ -8,4 +8,4 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from models.pose_hrnet import get_hrpose_model
+from .pose_hrnet import get_hrpose_model
