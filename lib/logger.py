@@ -7,7 +7,7 @@ import os
 import time
 import sys
 import torch
-USE_TENSORBOARD = True
+USE_TENSORBOARD = False
 try:
   import tensorboardX
   print('Using tensorboardX')

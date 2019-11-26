@@ -222,7 +222,7 @@ class hardnet(nn.Module):
             out = self.conv1x1_up[i](out)
             out = self.denseBlocksUp[i](out)
         
-        return [self.hm(x), self.wh(x), self.hps(x), self.reg(x), self.hm_hp(x), self.hp_offset(x)]
+        return [self.hm(out), self.wh(out), self.hps(out), self.reg(out), self.hm_hp(out), self.hp_offset(out)]
 
 
 def get_hard_net(num_layers, head_conv, cfg):

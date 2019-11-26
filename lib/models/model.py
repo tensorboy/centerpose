@@ -27,7 +27,7 @@ _model_factory = {
   'hourglass': get_large_hourglass_net,
   'mobilenetv3': get_mobile_pose_net,
   'shufflenetV2': get_shufflev2_net,
-  'hrnet': get_hrpose_net
+  'hrnet': get_hrpose_net,
   'hardnet': get_hard_net
 }
 
