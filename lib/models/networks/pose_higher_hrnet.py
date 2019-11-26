@@ -27,8 +27,6 @@ def fill_fc_weights(layers):
   for m in layers.modules():
     if isinstance(m, nn.Conv2d):
       nn.init.normal_(m.weight, std=0.001)
-      # torch.nn.init.kaiming_normal_(m.weight.data, nonlinearity='relu')
-      # torch.nn.init.xavier_normal_(m.weight.data)
       if m.bias is not None:
         nn.init.constant_(m.bias, 0)
 
@@ -592,10 +590,7 @@ class PoseHigherResolutionNet(nn.Module):
                 if name.split('.')[0] in self.pretrained_layers \
                    or self.pretrained_layers[0] is '*':
                     if name in parameters_names or name in buffers_names:
-                        if verbose:
-                            logger.info(
-                                '=> init {} from {}'.format(name, pretrained)
-                            )
+                        logger.info( '=> init {} from {}'.format(name, pretrained))
                         need_init_state_dict[name] = m
             self.load_state_dict(need_init_state_dict, strict=False)
 
@@ -604,6 +599,6 @@ def get_hrpose_net(num_layers, head_conv, cfg, **kwargs):
     model = PoseHigherResolutionNet(head_conv, cfg, **kwargs)
 
     if cfg.MODEL.INIT_WEIGHTS:
-        model.init_weights(cfg.MODEL.PRETRAINED, verbose=cfg.VERBOSE)
+        model.init_weights(cfg.MODEL.PRETRAINED)
 
     return model

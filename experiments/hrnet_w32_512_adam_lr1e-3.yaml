@@ -1,24 +1,23 @@
 SAMPLE_METHOD: 'coco_hp'
-DATA_DIR: '/home/tensorboy/data'
-EXP_ID: 'coco_pose_mobilenet'
+DATA_DIR: '/data'
+EXP_ID: 'coco_pose_hrnet'
 DEBUG: 0
 DEBUG_THEME: 'white'
 SEED: 317
-OUTPUT_DIR: '/home/tensorboy/data/centerpose/mobilenetv3_3x_sgd'
+OUTPUT_DIR: '/data/centerpose/hrnet'
 LOG_DIR: ''
 EXPERIMENT_NAME: ''
-GPUS: [0, 1, 2, 3]
+GPUS: [0, 1, 2, 3, 4, 5, 6]
 WORKERS: 8
 PIN_MEMORY: true
 RANK: 0
 PRINT_FREQ: 100
-VERBOSE: false
 CUDNN:
   BENCHMARK: true
   DETERMINISTIC: false
   ENABLED: true
 DATASET:
-  ROOT: '/home/tensorboy/data/coco'
+  ROOT: '/data/coco'
   DATASET: 'coco_hp'
   TRAIN_SET: 'train'
   TEST_SET: 'valid'
@@ -43,13 +42,7 @@ DATASET:
   SCALE_MAX: 1.1
   IMAGE_SIZE: 512
   RANDOM_CROP: true 
-DEBUG:
-  DEBUG: True
-  SAVE_BATCH_IMAGES_GT: False
-  SAVE_BATCH_IMAGES_PRED: False
-  SAVE_HEATMAPS_GT: True
-  SAVE_HEATMAPS_PRED: True
-  SAVE_TAGMAPS_PRED: True
+  
 LOSS:
   METRIC: 'loss'
   MSE_LOSS: false
@@ -135,12 +128,12 @@ MODEL:
       NUM_BASIC_BLOCKS: 4
       CAT_OUTPUT:
       - True
-  INIT_WEIGHTS: True
-  PRETRAINED: 'models/pytorch/imagenet/hrnet_w32-36af842e.pth'
-  TAG_PER_JOINT: True
+  INIT_WEIGHTS: true
+  PRETRAINED: '/data/pretrained_models/imagenet/hrnet_w32-36af842e.pth'
+  TAG_PER_JOINT: true
 TEST:
   # Test Model Epoch
-  MODEL_PATH: '/home/tensorboy/data/centerpose/mobilenetv3_3x_sgd/model_best.pth'
+  MODEL_PATH: ''
   TASK: 'multi_pose'
   FLIP_TEST: true
 
@@ -179,9 +172,9 @@ TRAIN:
   LR_STEP: [270, 300]
   EPOCHS: 320
   NUM_ITERS: -1
-  LR: 2.5e-4
-  BATCH_SIZE: 64
-  MASTER_BATCH_SIZE: 16
+  LR: 1.9140625e-4
+  BATCH_SIZE: 42
+  MASTER_BATCH_SIZE: 6
 
   MOMENTUM: 0.9
   WD: 0.0001

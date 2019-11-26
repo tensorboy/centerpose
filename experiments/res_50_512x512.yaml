@@ -1,10 +1,10 @@
 SAMPLE_METHOD: 'coco_hp'
-DATA_DIR: '/data'
+DATA_DIR: '/home/tensorboy/data'
 EXP_ID: 'coco_pose_res_50'
 DEBUG: 0
 DEBUG_THEME: 'white'
 SEED: 317
-OUTPUT_DIR: '/data/centerpose/res50_3x'
+OUTPUT_DIR: '/home/tensorboy/data/centerpose/res50_3x'
 LOG_DIR: ''
 EXPERIMENT_NAME: ''
 GPUS: [0, 1, 2, 3]
@@ -93,8 +93,8 @@ TRAIN:
   LR_STEP: [270, 300]
   EPOCHS: 320
   NUM_ITERS: -1
-  LR: 4.375e-4
-  BATCH_SIZE: 112
+  LR: 2.5e-4
+  BATCH_SIZE: 64
   MASTER_BATCH_SIZE: 16
 
   MOMENTUM: 0.9

@@ -1,10 +1,10 @@
 SAMPLE_METHOD: 'coco_hp'
-DATA_DIR: '/data'
-EXP_ID: 'coco_pose_shufflenetv2'
+DATA_DIR: '/home/tensorboy/data'
+EXP_ID: 'coco_pose_mobilenet'
 DEBUG: 0
 DEBUG_THEME: 'white'
 SEED: 317
-OUTPUT_DIR: '/data/centerpose/shufflenet_3x_sgd'
+OUTPUT_DIR: '/home/tensorboy/data/centerpose/hardnet'
 LOG_DIR: ''
 EXPERIMENT_NAME: ''
 GPUS: [0, 1, 2, 3]
@@ -21,7 +21,7 @@ MODEL:
   LOAD_MODEL: ''
   CENTER_THRESH: 0.1
   NUM_CLASSES: 1
-  NAME: 'shufflenetV2'
+  NAME: 'hardnet'
   HEADS_NAME: ['hm', 'wh', 'hps', 'reg', 'hm_hp', 'hp_offset']
   HEADS_NUM: [1, 2, 34, 2, 17, 2]
   HEAD_CONV: 256
@@ -93,9 +93,9 @@ TRAIN:
   LR_STEP: [270, 300]
   EPOCHS: 320
   NUM_ITERS: -1
-  LR: 4.6875e-4
-  BATCH_SIZE: 120
-  MASTER_BATCH_SIZE: 30
+  LR: 3.359375e-4
+  BATCH_SIZE: 86
+  MASTER_BATCH_SIZE: 20
 
   MOMENTUM: 0.9
   WD: 0.0001

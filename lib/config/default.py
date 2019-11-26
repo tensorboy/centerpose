@@ -28,11 +28,15 @@ _C.RANK = 0
 
 # Cudnn related params
 _C.CUDNN = CN()
+_C.CUDNN.ENABLED = True
 _C.CUDNN.BENCHMARK = True
+_C.CUDNN.DETERMINISTIC = False
 
 # common params for NETWORK
 _C.MODEL = CN()
 _C.MODEL.LOAD_MODEL = ''
+_C.MODEL.PRETRAINED = ''
+_C.MODEL.INIT_WEIGHTS = True
 _C.MODEL.NAME = 'res_50'
 # 0 for no conv layer, -1 for defaults setting, 64 for resnets and 256 for dla
 _C.MODEL.HEAD_CONV = 64
