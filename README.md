@@ -5,16 +5,17 @@ multi person pose estimation using center point detection:
 ## Main results
 
 ### Keypoint detection on COCO validation 2017
-<p align="center"> <img src='readme/performance.png' align="center" height="230px"></p>
-
+<p align="center"> <img src='readme/performance.png' align="center" height="512px"></p>
+<center>
 | Backbone     |  AP       |  FPS         | Download | 
 |--------------|-----------|--------------|----------|
 |DLA-34        | 62.3      |    23      |   [model](https://drive.google.com/open?id=151aD93nHG_oGju1xxOmwoDNjfeif6uGi)  |
 |Resnet-50     | 53.0      |    28      |   [model](https://drive.google.com/open?id=1k_kpn7tCpX4CHEEiCqdNxLRXZc-ky-uY)  |
 |MobilenetV3   | 45.1      |    30      |   [model](https://drive.google.com/open?id=1T8_YsPiW7EmLHQfh_Zk37hTsiJpdaAN1)  |
-|ShuffleNetV2  | 33.3      |    25      |   [model]()  |
-|High Resolution| 45.2     |    16      |   [model]()  |
-|HardNet| 12.6     |    30        |   [model]()  |
+|ShuffleNetV2  | 34.6      |    25      |   [model]()  |
+|High Resolution| 49.5     |    16      |   [model]()  |
+|HardNet| 34.6     |    30        |   [model]()  |
+</center>
 ## Installation
 
 git submodule init&git submodule update

@@ -133,10 +133,10 @@ MODEL:
   TAG_PER_JOINT: true
 TEST:
   # Test Model Epoch
-  MODEL_PATH: '/data/centerpose/trained_best_model/hrnet_best.pth'
+  MODEL_PATH: '/data/centerpose/trained_best_model/hrnet_model_best.pth'
   TASK: 'multi_pose'
-  FLIP_TEST: false
-  FIX_RES: true
+  FLIP_TEST: true
+  FIX_RES: false
   DEMO_FILE: '../images/33823288584_1d21cf0a26_k.jpg'
   MODEL_FILE: ''
   TEST_SCALES: [1]

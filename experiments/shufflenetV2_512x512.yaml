@@ -113,7 +113,7 @@ TRAIN:
  
 TEST:
   # Test Model Epoch
-  MODEL_PATH: '/data/centerpose/trained_best_model/shufflenet_best.pth'
+  MODEL_PATH: '/data/centerpose/trained_best_model/shufflenetv2_model_best.pth'
   TASK: 'multi_pose'
   FLIP_TEST: true
 

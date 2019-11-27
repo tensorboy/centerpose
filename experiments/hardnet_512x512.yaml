@@ -115,7 +115,7 @@ TEST:
   # Test Model Epoch
   MODEL_PATH: '/data/centerpose/trained_best_model/hardnet_best.pth'
   TASK: 'multi_pose'
-  FLIP_TEST: false
+  FLIP_TEST: true
 
   DEMO_FILE: '../images/33823288584_1d21cf0a26_k.jpg'
   MODEL_FILE: ''
@@ -125,7 +125,7 @@ TEST:
   NMS: false
   NMS_THRE: 0.5
   NOT_PREFETCH_TEST: false
-  FIX_RES: true
+  FIX_RES: false
   KEEP_RES: false
 
   SOFT_NMS: false
