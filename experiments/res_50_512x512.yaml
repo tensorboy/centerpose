@@ -1,10 +1,10 @@
 SAMPLE_METHOD: 'coco_hp'
-DATA_DIR: '/home/tensorboy/data'
+DATA_DIR: '/data'
 EXP_ID: 'coco_pose_res_50'
 DEBUG: 0
 DEBUG_THEME: 'white'
 SEED: 317
-OUTPUT_DIR: '/home/tensorboy/data/centerpose/res50_3x'
+OUTPUT_DIR: '/data/centerpose/res50_3x'
 LOG_DIR: ''
 EXPERIMENT_NAME: ''
 GPUS: [0, 1, 2, 3]
@@ -113,7 +113,7 @@ TRAIN:
  
 TEST:
   # Test Model Epoch
-  MODEL_PATH: '/home/tensorboy/data/centerpose/trained_best_model/res_50_1x.pth'
+  MODEL_PATH: '/data/centerpose/trained_best_model/res_50_1x.pth'
   TASK: 'multi_pose'
   FLIP_TEST: true
 

@@ -57,7 +57,7 @@ LOSS:
   HM_HP_WEIGHT: 1.
   
 DATASET:
-  ROOT: '/home/tensorboy/data/coco'
+  ROOT: '/data/coco'
   DATASET: 'coco_hp'
   TRAIN_SET: 'train'
   TEST_SET: 'valid'
@@ -113,7 +113,7 @@ TRAIN:
  
 TEST:
   # Test Model Epoch
-  MODEL_PATH: '/home/tensorboy/data/centerpose/mobilenetv3_3x_sgd/model_best.pth'
+  MODEL_PATH: '/data/centerpose/trained_best_model/shufflenet_best.pth'
   TASK: 'multi_pose'
   FLIP_TEST: true
 

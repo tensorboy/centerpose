@@ -5,13 +5,16 @@ multi person pose estimation using center point detection:
 ## Main results
 
 ### Keypoint detection on COCO validation 2017
+<p align="center"> <img src='readme/performance.png' align="center" height="230px"></p>
 
 | Backbone     |  AP       |  FPS         | Download | 
 |--------------|-----------|--------------|----------|
-|DLA-34        | 60.5      |    23        |   [model](https://drive.google.com/open?id=151aD93nHG_oGju1xxOmwoDNjfeif6uGi)  |
-|Resnet-50     | 53.0      |    40        |   [model](https://drive.google.com/open?id=1k_kpn7tCpX4CHEEiCqdNxLRXZc-ky-uY)  |
-|MobilenetV3   | 45.1      |    20        |   [model](https://drive.google.com/open?id=1T8_YsPiW7EmLHQfh_Zk37hTsiJpdaAN1)  |
-
+|DLA-34        | 62.3      |    23      |   [model](https://drive.google.com/open?id=151aD93nHG_oGju1xxOmwoDNjfeif6uGi)  |
+|Resnet-50     | 53.0      |    28      |   [model](https://drive.google.com/open?id=1k_kpn7tCpX4CHEEiCqdNxLRXZc-ky-uY)  |
+|MobilenetV3   | 45.1      |    30      |   [model](https://drive.google.com/open?id=1T8_YsPiW7EmLHQfh_Zk37hTsiJpdaAN1)  |
+|ShuffleNetV2  | 33.3      |    25      |   [model]()  |
+|High Resolution| 45.2     |    16      |   [model]()  |
+|HardNet| 12.6     |    30        |   [model]()  |
 ## Installation
 
 git submodule init&git submodule update
@@ -31,7 +34,6 @@ python demo.py --cfg ../experiments/res_50_512x512.yaml --TESTMODEL /your/model/
 ~~~
 The result for the example images should look like:
 
-<p align="center">  <img src='readme/pose1.png' align="center" height="200px"> <img src='readme/pose2.png' align="center" height="200px"> <img src='readme/pose3.png' align="center" height="200px">  </p>
 
 ## Training
 

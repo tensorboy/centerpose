@@ -498,7 +498,7 @@ class DLASeg(nn.Module):
         return [self.hm(y[-1]), self.wh(y[-1]), self.hps(y[-1]), self.reg(y[-1]), self.hm_hp(y[-1]), self.hp_offset(y[-1])]
     
 
-def get_pose_net(num_layers, head_conv=256, down_ratio=4):
+def get_pose_net(num_layers, head_conv=256, cfg=None, down_ratio=4):
   model = DLASeg('dla{}'.format(num_layers),
                  pretrained=True,
                  down_ratio=down_ratio,

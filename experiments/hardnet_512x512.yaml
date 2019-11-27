@@ -113,9 +113,9 @@ TRAIN:
  
 TEST:
   # Test Model Epoch
-  MODEL_PATH: '/home/tensorboy/data/centerpose/mobilenetv3_3x_sgd/model_best.pth'
+  MODEL_PATH: '/data/centerpose/trained_best_model/hardnet_best.pth'
   TASK: 'multi_pose'
-  FLIP_TEST: true
+  FLIP_TEST: false
 
   DEMO_FILE: '../images/33823288584_1d21cf0a26_k.jpg'
   MODEL_FILE: ''
@@ -125,7 +125,7 @@ TEST:
   NMS: false
   NMS_THRE: 0.5
   NOT_PREFETCH_TEST: false
-  FIX_RES: false
+  FIX_RES: true
   KEEP_RES: false
 
   SOFT_NMS: false

@@ -255,7 +255,7 @@ class MobileNetV3(nn.Module):
         return [self.hm(y[-1]), self.wh(y[-1]), self.hps(y[-1]), self.reg(y[-1]), self.hm_hp(y[-1]), self.hp_offset(y[-1])]
         
     
-def get_mobile_pose_net(num_layers, head_conv):
+def get_mobile_pose_net(num_layers, head_conv, cfg):
 
   model = MobileNetV3(final_kernel=1, head_conv=head_conv)
   

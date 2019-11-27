@@ -1,10 +1,10 @@
 SAMPLE_METHOD: 'coco_hp'
-DATA_DIR: '/home/tensorboy/data'
+DATA_DIR: '/data'
 EXP_ID: 'coco_pose_mobilenet'
 DEBUG: 0
 DEBUG_THEME: 'white'
 SEED: 317
-OUTPUT_DIR: '/home/tensorboy/data/centerpose/mobilenetv3_3x_sgd'
+OUTPUT_DIR: '/data/centerpose/mobilenetv3_3x_sgd'
 LOG_DIR: ''
 EXPERIMENT_NAME: ''
 GPUS: [0, 1, 2, 3]
@@ -57,7 +57,7 @@ LOSS:
   HM_HP_WEIGHT: 1.
   
 DATASET:
-  ROOT: '/home/tensorboy/data/coco'
+  ROOT: '/data/coco'
   DATASET: 'coco_hp'
   TRAIN_SET: 'train'
   TEST_SET: 'valid'
@@ -113,7 +113,7 @@ TRAIN:
  
 TEST:
   # Test Model Epoch
-  MODEL_PATH: '/home/tensorboy/data/centerpose/mobilenetv3_3x_sgd/model_best.pth'
+  MODEL_PATH: '/data/centerpose/trained_best_model/mobilenetV3_1x.pth'
   TASK: 'multi_pose'
   FLIP_TEST: true
 
@@ -125,7 +125,7 @@ TEST:
   NMS: false
   NMS_THRE: 0.5
   NOT_PREFETCH_TEST: false
-  FIX_RES: false
+  FIX_RES: true
   KEEP_RES: false
 
   SOFT_NMS: false
