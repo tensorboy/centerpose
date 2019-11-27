@@ -6,7 +6,6 @@ multi person pose estimation using center point detection:
 
 ### Keypoint detection on COCO validation 2017
 <p align="center"> <img src='readme/performance.png' align="center" height="512px"></p>
-<center>
 
 | Backbone     |  AP       |  FPS         | TensorRT Speed | Download |
 |--------------|-----------|--------------|----------|----------|
@@ -17,7 +16,6 @@ multi person pose estimation using center point detection:
 |High Resolution| 49.5     |    16      |  - |[model](https://drive.google.com/open?id=1gKcfMQx2_lRLTQhzvtRQKvJUkPLS2Lpn)  |
 |HardNet| 34.6     |    30        | -  |[model](https://drive.google.com/open?id=12JezItTw5rXoQ9dwxRBf4mn8iqHYgNTd)  |
 
-</center>
 ## Installation
 
 git submodule init&git submodule update
@@ -27,16 +25,16 @@ Please refer to [INSTALL.md](readme/INSTALL.md) for installation instructions.
 
 We support demo for image/ image folder, video, and webcam. 
 
-First, download the model [multi_pose_dla_1x](https://drive.google.com/open?id=151aD93nHG_oGju1xxOmwoDNjfeif6uGi) for human pose estimation) 
+First, download the model [DLA-34](https://drive.google.com/open?id=1OkHjjViB0dzbuicdtIam-YcoT0sYpmjP)
 from the [Model zoo](https://drive.google.com/open?id=1UG2l8XtjOfBtG_GLpSdxlWS2wxFR8hQF) and put them in anywhere.
 
 Run:
     
 ~~~
-python demo.py --cfg ../experiments/res_50_512x512.yaml --TESTMODEL /your/model/path/res_50_1x.pth --DEMOFILE ../images/33823288584_1d21cf0a26_k.jpg --DEBUG 1
+cd tools; python demo.py --cfg ../experiments/dla_34_512x512.yaml --TESTMODEL /your/model/path/dla34_best.pth --DEMOFILE ../images/33823288584_1d21cf0a26_k.jpg --DEBUG 1
 ~~~
 The result for the example images should look like:
-
+<p align="center"> <img src='readme/multi_pose_screenshot_27.11.2019.png' align="center" height="512px"></p>
 
 ## Training
 

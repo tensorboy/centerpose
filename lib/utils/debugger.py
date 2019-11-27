@@ -4,6 +4,7 @@ from __future__ import print_function
 
 import numpy as np
 import cv2
+import math
 
 
 class Debugger(object):
@@ -192,12 +193,22 @@ class Debugger(object):
     points = np.array(points, dtype=np.int32).reshape(self.num_joints, 2)
     for j in range(self.num_joints):
       cv2.circle(self.imgs[img_id],
-                 (points[j, 0], points[j, 1]), 3, self.colors_hp[j], -1)
+                 (points[j, 0], points[j, 1]), 2, (255,255,255), -1)
+                 
+    stickwidth = 2
+    cur_canvas = self.imgs[img_id].copy()             
     for j, e in enumerate(self.edges):
       if points[e].min() > 0:
-        cv2.line(self.imgs[img_id], (points[e[0], 0], points[e[0], 1]),
-                      (points[e[1], 0], points[e[1], 1]), self.ec[j], 2,
-                      lineType=cv2.LINE_AA)
+            X = [points[e[0], 1], points[e[1], 1]]
+            Y = [points[e[0], 0], points[e[1], 0]]
+            mX = np.mean(X)
+            mY = np.mean(Y)
+            length = ((X[0] - X[1]) ** 2 + (Y[0] - Y[1]) ** 2) ** 0.5
+            angle = math.degrees(math.atan2(X[0] - X[1], Y[0] - Y[1]))
+            polygon = cv2.ellipse2Poly((int(mY),int(mX)), (int(length/2), stickwidth), int(angle), 0, 360, 1)
+            cv2.fillConvexPoly(cur_canvas, polygon, (255, 255, 255))
+            self.imgs[img_id] = cv2.addWeighted(self.imgs[img_id], 0.8, cur_canvas, 0.2, 0)
+            
 
   def add_points(self, points, img_id='default'):
     num_classes = len(points)
