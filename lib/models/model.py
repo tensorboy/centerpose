@@ -16,6 +16,7 @@ from .networks.mobilenet import get_mobile_pose_net
 from .networks.shufflenetv2_dcn import get_shufflev2_net
 from .networks.pose_higher_hrnet import get_hrpose_net
 from .networks.hardnet import get_hard_net
+from .networks.darknet import darknet53
 
 _model_factory = {
   'res': get_pose_net, # default Resnet with deconv
@@ -26,7 +27,8 @@ _model_factory = {
   'mobilenetv3': get_mobile_pose_net,
   'shufflenetV2': get_shufflev2_net,
   'hrnet': get_hrpose_net,
-  'hardnet': get_hard_net
+  'hardnet': get_hard_net,
+  'darknet': darknet53
 }
 
 def create_model(arch, head_conv, cfg):

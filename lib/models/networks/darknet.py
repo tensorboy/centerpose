@@ -1,10 +1,20 @@
 import torch
 import torch.nn as nn
 import math
+import torch.nn.functional as F
 from collections import OrderedDict
 
-__all__ = ['darknet21', 'darknet53']
 
+def fill_fc_weights(layers):
+  for m in layers.modules():
+    if isinstance(m, nn.Conv2d):
+      nn.init.normal_(m.weight, std=0.001)
+      # torch.nn.init.kaiming_normal_(m.weight.data, nonlinearity='relu')
+      # torch.nn.init.xavier_normal_(m.weight.data)
+      if m.bias is not None:
+        nn.init.constant_(m.bias, 0)
+        
+        
 class BasicBlock(nn.Module):
     def __init__(self, inplanes, planes):
         super(BasicBlock, self).__init__()
@@ -33,7 +43,7 @@ class BasicBlock(nn.Module):
 
 
 class DarkNet(nn.Module):
-    def __init__(self, layers):
+    def __init__(self, layers, head_conv=256):
         super(DarkNet, self).__init__()
         self.inplanes = 32
         self.conv1 = nn.Conv2d(3, self.inplanes, kernel_size=3, stride=1, padding=1, bias=False)
@@ -43,10 +53,36 @@ class DarkNet(nn.Module):
         self.layer1 = self._make_layer([32, 64], layers[0])
         self.layer2 = self._make_layer([64, 128], layers[1])
         self.layer3 = self._make_layer([128, 256], layers[2])
-        self.layer4 = self._make_layer([256, 512], layers[3])
-        self.layer5 = self._make_layer([512, 1024], layers[4])
+        #self.layer4 = self._make_layer([256, 512], layers[3])
+        #self.layer5 = self._make_layer([512, 1024], layers[4])
 
-        self.layers_out_filters = [64, 128, 256, 512, 1024]
+        self.layers_out_filters = [64, 128, 256]
+        self.hm = nn.Sequential(
+                    nn.Conv2d(256, head_conv, kernel_size=3, padding=1, bias=True),
+                    nn.ReLU(inplace=True),
+                    nn.Conv2d(head_conv, 1, kernel_size=1, stride=1, padding=0))
+
+                          
+        self.wh = nn.Sequential(
+                    nn.Conv2d(256, head_conv, kernel_size=3, padding=1, bias=True),
+                    nn.ReLU(inplace=True),
+                    nn.Conv2d(head_conv, 2, kernel_size=1, stride=1, padding=0))
+        self.hps = nn.Sequential(
+                    nn.Conv2d(256, head_conv, kernel_size=3, padding=1, bias=True),
+                    nn.ReLU(inplace=True),
+                    nn.Conv2d(head_conv, 34, kernel_size=1, stride=1, padding=0))                  
+        self.reg = nn.Sequential(
+                    nn.Conv2d(256, head_conv, kernel_size=3, padding=1, bias=True),
+                    nn.ReLU(inplace=True),
+                    nn.Conv2d(head_conv, 2, kernel_size=1, stride=1, padding=0))        
+        self.hm_hp = nn.Sequential(
+                    nn.Conv2d(256, head_conv, kernel_size=3, padding=1, bias=True),
+                    nn.ReLU(inplace=True),
+                    nn.Conv2d(head_conv, 17, kernel_size=1, stride=1, padding=0))                                           
+        self.hp_offset = nn.Sequential(
+                        nn.Conv2d(256, head_conv, kernel_size=3, padding=1, bias=True),
+                        nn.ReLU(inplace=True),
+                        nn.Conv2d(head_conv, 2, kernel_size=1, stride=1, padding=0))    
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -55,6 +91,13 @@ class DarkNet(nn.Module):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
 
+        self.hm[-1].bias.data.fill_(-2.19)     
+        self.hm_hp[-1].bias.data.fill_(-2.19)                                    
+        fill_fc_weights(self.wh)
+        fill_fc_weights(self.hps)
+        fill_fc_weights(self.reg)
+        fill_fc_weights(self.hp_offset) 
+        
     def _make_layer(self, planes, blocks):
         layers = []
         #  downsample
@@ -75,11 +118,11 @@ class DarkNet(nn.Module):
 
         x = self.layer1(x)
         x = self.layer2(x)
-        out3 = self.layer3(x)
-        out4 = self.layer4(out3)
-        out5 = self.layer5(out4)
+        x = self.layer3(x)
+        x = F.interpolate(x, size=(128, 128), 
+            mode="bilinear", align_corners=True)
 
-        return out3, out4, out5
+        return [self.hm(x), self.wh(x), self.hps(x), self.reg(x), self.hm_hp(x), self.hp_offset(x)]
 
 
 def darknet21(cfg,is_train=True, **kwargs):
@@ -91,11 +134,11 @@ def darknet21(cfg,is_train=True, **kwargs):
             raise Exception("darknet request a pretrained path. got [{}]".format(cfg.BACKBONE.PRETRAINED))
     return model
 
-def darknet53(cfg,is_train=True, **kwargs):
-    model = DarkNet([1, 2, 8, 8, 4])
-    if is_train and cfg.BACKBONE.INIT_WEIGHTS:
-        if isinstance(cfg.BACKBONE.PRETRAINED, str):
-            model.load_state_dict(torch.load(cfg.BACKBONE.PRETRAINED))
-        else:
-            raise Exception("darknet request a pretrained path. got [{}]".format(cfg.BACKBONE.PRETRAINED))
+def darknet53(num_layers, head_conv, cfg):
+    model = DarkNet([1, 2, 8])
+    #if is_train and cfg.BACKBONE.INIT_WEIGHTS:
+    #    if isinstance(cfg.BACKBONE.PRETRAINED, str):
+    #        model.load_state_dict(torch.load(cfg.BACKBONE.PRETRAINED))
+    #    else:
+    #        raise Exception("darknet request a pretrained path. got [{}]".format(cfg.BACKBONE.PRETRAINED))
     return model
