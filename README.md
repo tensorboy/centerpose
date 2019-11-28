@@ -10,11 +10,11 @@ multi person pose estimation using center point detection:
 | Backbone     |  AP       |  FPS         | TensorRT Speed | Download |
 |--------------|-----------|--------------|----------|----------|
 |DLA-34        | 62.3      |    23      |  - |[model](https://drive.google.com/open?id=1OkHjjViB0dzbuicdtIam-YcoT0sYpmjP)  |
-|Resnet-50     | 53.0      |    28      |  - |[model](https://drive.google.com/open?id=190wRY7V2qPFf57WAreVAQrN1LPzjeM9e)  |
+|Resnet-50     | 53.0      |    28      |  33 |[model](https://drive.google.com/open?id=190wRY7V2qPFf57WAreVAQrN1LPzjeM9e)  |
 |MobilenetV3   | 45.1      |    30      |  - |[model](https://drive.google.com/open?id=1VdBEh8XisujRZ4zvxLcvJ-R8dtY3CC-x)  |
 |ShuffleNetV2  | 34.6      |    25      |  - |[model](https://drive.google.com/open?id=12ENL9Qpsp__qHN5mb5E-Gex0sVbGeaD9)  |
-|High Resolution| 49.5     |    16      |  - |[model](https://drive.google.com/open?id=1gKcfMQx2_lRLTQhzvtRQKvJUkPLS2Lpn)  |
-|HardNet| 34.6     |    30        | -  |[model](https://drive.google.com/open?id=12JezItTw5rXoQ9dwxRBf4mn8iqHYgNTd)  |
+|[High Resolution](https://github.com/HRNet/Higher-HRNet-Human-Pose-Estimation)| 49.5     |    16      |  - |[model](https://drive.google.com/open?id=1gKcfMQx2_lRLTQhzvtRQKvJUkPLS2Lpn)  |
+|[HardNet]()| 34.6     |    30        | -  |[model](https://drive.google.com/open?id=12JezItTw5rXoQ9dwxRBf4mn8iqHYgNTd)  |
 
 ## Installation
 

@@ -182,14 +182,13 @@ def _topk(scores, K=40):
            
 def main(cfg):
 
-    HEADS = dict(zip(cfg.MODEL.HEADS_NAME, cfg.MODEL.HEADS_NUM))
-    model = create_model('restrt_50',  OrderedDict(HEADS), 64).cuda()
+    model = create_model('hrnet', cfg.MODEL.HEAD_CONV, cfg).cuda()
 
-    weight_path = '/home/tensorboy/data/centerpose/trained_best_model/res_50_1x.pth'
-    state_dict = torch.load(weight_path)['state_dict']
+    weight_path = '/home/tensorboy/data/centerpose/trained_best_model/hrnet_model_best.pth'
+    state_dict = torch.load(weight_path, map_location=lambda storage, loc: storage)['state_dict']
     model.load_state_dict(state_dict)
 
-    onnx_file_path = "./model/ckpt1.onnx"
+    onnx_file_path = "./model/hrnet.onnx"
     
     #img = cv2.imread('test_image.jpg')
     image = cv2.imread('../images/17790319373_bd19b24cfc_k.jpg')
@@ -199,140 +198,22 @@ def main(cfg):
     model.eval()
     model.float()
     torch_input = images.cuda()
-
-    #output_pytorch = model(torch_input)
-
+        
     torch.onnx.export(model, torch_input, onnx_file_path, verbose=False)
     sess = nxrun.InferenceSession(onnx_file_path)
     
     input_name = sess.get_inputs()[0].name
     label_name = sess.get_outputs()[0].name
-    output_onnx = sess.run(None, {input_name:  images.cpu().data.numpy()})
     
-    heat, hmax, hm_hp, hm_hp_max, kps, reg, hp_offset, wh = output_onnx
-    
-    torch.cuda.synchronize()
-    tic = time.time()
-    num_joints = cfg.MODEL.NUM_KEYPOINTS
-    batch, cat, height, width = heat.shape
-    
-    keep = heat==hmax
-    heat = hmax*keep
-    
-    keep = hm_hp_max==hm_hp
-    hm_hp = hm_hp_max*keep
-
-    scores, inds, clses, ys, xs = _topk(heat, K=cfg.TEST.TOPK)
-    
-    kps = _tranpose_and_gather_feat(kps, inds)    
-
-    kps = kps.reshape(batch, cfg.TEST.TOPK, num_joints*2)
-    kps[..., ::2] +=np.repeat(xs.reshape(batch, cfg.TEST.TOPK, 1), num_joints, axis=2)
-    kps[..., 1::2] +=np.repeat(ys.reshape(batch, cfg.TEST.TOPK, 1), num_joints, axis=2)
-
-    reg = _tranpose_and_gather_feat(reg, inds)
-    reg = reg.reshape(batch, cfg.TEST.TOPK, 2)
-    xs = xs.reshape(batch, cfg.TEST.TOPK, 1) + reg[:, :, 0:1]
-    ys = ys.reshape(batch, cfg.TEST.TOPK, 1) + reg[:, :, 1:2]
-
-    wh = _tranpose_and_gather_feat(wh, inds)
-    wh = wh.reshape(batch, cfg.TEST.TOPK, 2)
-    clses  = clses.reshape(batch, cfg.TEST.TOPK, 1).astype(np.float32)
-    scores = scores.reshape(batch, cfg.TEST.TOPK, 1)
-
-    bboxes = np.concatenate([xs - wh[..., 0:1] / 2, 
-                      ys - wh[..., 1:2] / 2,
-                      xs + wh[..., 0:1] / 2, 
-                      ys + wh[..., 1:2] / 2], axis=2)    
-    
-        
-    thresh = 0.1
-    kps = kps.reshape(batch, cfg.TEST.TOPK, num_joints, 2).transpose(0,2,1,3)
-    reg_kps = np.repeat(np.expand_dims(kps, 3), cfg.TEST.TOPK, axis=3)
-
-    hm_score, hm_inds, hm_ys, hm_xs = _topk_channel(hm_hp, K=cfg.TEST.TOPK)
-
-    hp_offset = _tranpose_and_gather_feat(
-      hp_offset, hm_inds.reshape(batch, -1))
-    hp_offset = hp_offset.reshape(batch, num_joints, cfg.TEST.TOPK, 2)
-    hm_xs = hm_xs + hp_offset[:, :, :, 0]
-    hm_ys = hm_ys + hp_offset[:, :, :, 1]          
-
-    mask = (hm_score > thresh).astype(np.float32)
-
-    hm_score = (1 - mask) * -1 + mask * hm_score
-    hm_ys = (1 - mask) * (-10000) + mask * hm_ys
-    hm_xs = (1 - mask) * (-10000) + mask * hm_xs   
-    
-    
-    hm_kps = np.expand_dims(np.stack([hm_xs, hm_ys], axis=-1), axis=2)
-    hm_kps = np.repeat(hm_kps, cfg.TEST.TOPK, axis=2)
-
-    dist = (np.sum((reg_kps - hm_kps) ** 2,axis=4) ** 0.5)
-
-    min_dist = np.sort(dist)[...,0]
-    min_ind = np.argsort(dist)[...,0]
-
-    hm_score = np.expand_dims(np.take_along_axis(hm_score, min_ind, 2), -1)
-
-    min_dist = np.expand_dims(min_dist, axis= -1)
-
-    min_ind = np.repeat(min_ind.reshape(batch, num_joints, cfg.TEST.TOPK, 1, 1), 2, axis=-1)
-    hm_kps = np.take_along_axis(hm_kps, min_ind, 3)
-    hm_kps = hm_kps.reshape(batch, num_joints, cfg.TEST.TOPK, 2)
-
-    l = np.repeat(bboxes[:, :, 0].reshape(batch, 1, cfg.TEST.TOPK, 1), num_joints, axis=1)
-    t = np.repeat(bboxes[:, :, 1].reshape(batch, 1, cfg.TEST.TOPK, 1), num_joints, axis=1)
-    r = np.repeat(bboxes[:, :, 2].reshape(batch, 1, cfg.TEST.TOPK, 1), num_joints, axis=1)
-    b = np.repeat(bboxes[:, :, 3].reshape(batch, 1, cfg.TEST.TOPK, 1), num_joints, axis=1)
-
-
-    mask = (hm_kps[..., 0:1] < l).astype(np.uint8) + (hm_kps[..., 0:1] > r).astype(np.uint8) + \
-         (hm_kps[..., 1:2] < t).astype(np.uint8) + (hm_kps[..., 1:2] > b).astype(np.uint8) + \
-         (hm_score < thresh).astype(np.uint8) + (min_dist > (np.maximum(b - t, r - l) * 0.3)).astype(np.uint8)
-   
-    mask = np.repeat((mask > 0).astype(np.float32), 2, axis=-1)
-  
-    kps = (1 - mask) * hm_kps + mask * kps
-    kps = kps.transpose(0, 2, 1, 3).reshape(batch, cfg.TEST.TOPK, num_joints * 2)
-
-    #dets = np.concatenate([bboxes, scores, kps, clses], axis=2)
-    dets = np.concatenate([bboxes, scores, kps, hm_score.squeeze(axis=3).transpose(0, 2, 1)], axis=2)
-
-    dets = post_process(dets, meta, 1)
-
-    detections = [dets]
-    #dets = torch.from_numpy(output_onnx)
-
-    #dets = post_process(dets, meta, 1)
-
-    #results = merge_outputs([dets], opt)
-    
-    debugger = Debugger((cfg.DEBUG==3), theme=cfg.DEBUG_THEME, 
-               num_classes=cfg.MODEL.NUM_CLASSES, dataset=cfg.SAMPLE_METHOD, down_ratio=cfg.MODEL.DOWN_RATIO)
-                   
-    results = merge_outputs(detections, cfg)
-    
-    show_results(debugger, image, results, cfg)
-           
-    #dets = torch.from_numpy(output_onnx)
-
-    #dets = post_process(dets, meta, 1)
-
-    #results = merge_outputs([dets], opt)
-    
-    #debugger = Debugger(dataset=opt.dataset, ipynb=(opt.debug==3),
-    #                    theme=opt.debugger_theme)
-
-    #detections = [dets]
-    
-    #results = merge_outputs(detections, opt)
-    
-    #show_results(debugger, image, results, opt)
-
+    print(input_name)
+    print(sess.get_outputs()[0].name)
+    print(sess.get_outputs()[1].name)
+    print(sess.get_outputs()[2].name)
+    output_onnx = sess.run(None, {input_name:  images.cpu().data.numpy()})    
+    print(output_onnx)
   
 if __name__ == '__main__':
-    config_name = '../experiments/res_50_512x512.yaml'
+    config_name = '../experiments/hrnet_w32_512.yaml'
     update_config(cfg, config_name)
     main(cfg)
 

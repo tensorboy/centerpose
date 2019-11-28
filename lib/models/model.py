@@ -12,7 +12,6 @@ from .networks.dlav0 import get_pose_net as get_dlav0
 from .networks.pose_dla_dcn import get_pose_net as get_dla_dcn
 from .networks.resnet_dcn import get_pose_net as get_pose_net_dcn
 from .networks.large_hourglass import get_large_hourglass_net
-from .networks.msra_resnet_trt import get_pose_net_trt
 from .networks.mobilenet import get_mobile_pose_net
 from .networks.shufflenetv2_dcn import get_shufflev2_net
 from .networks.pose_higher_hrnet import get_hrpose_net
@@ -20,7 +19,6 @@ from .networks.hardnet import get_hard_net
 
 _model_factory = {
   'res': get_pose_net, # default Resnet with deconv
-  'restrt': get_pose_net_trt,
   'dlav0': get_dlav0, # default DLAup
   'dla': get_dla_dcn,
   'resdcn': get_pose_net_dcn,

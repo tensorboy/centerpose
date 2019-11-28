@@ -55,7 +55,6 @@ LOSS:
   REG_OFFSET: true  
   OFF_WEIGHT: 1.
   REG_HP_OFFSET: true
-  HM_HP_WEIGHT: 1.
   
 DATASET:
   DATASET: 'coco_hp'
