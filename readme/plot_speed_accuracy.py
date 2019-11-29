@@ -14,7 +14,7 @@ continent_data['Resnet50'] = {'map':[53.0], 'speed':[28]}
 continent_data['MobileNetV3'] = {'map':[45.1], 'speed':[30]}
 continent_data['ShuffleNetV2'] = {'map':[34.6], 'speed':[25]}
 continent_data['HigherResolution'] = {'map':[49.5], 'speed':[16]}
-continent_data['HardNet'] = {'map':[34.5], 'speed':[30]}
+continent_data['HardNet'] = {'map':[39.1], 'speed':[30]}
 
 
 # Create figure

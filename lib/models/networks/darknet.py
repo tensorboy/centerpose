@@ -85,9 +85,7 @@ class DarkNet(nn.Module):
                         nn.Conv2d(head_conv, 2, kernel_size=1, stride=1, padding=0))    
 
         for m in self.modules():
-            if isinstance(m, nn.Conv2d):
-                nn.init.kaiming_normal_(m.weight, mode='fan_out')
-            elif isinstance(m, nn.BatchNorm2d):
+            if isinstance(m, nn.BatchNorm2d):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
 
