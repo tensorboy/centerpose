@@ -15,23 +15,11 @@ After install Anaconda:
     conda activate CenterNet
     ~~~
 
-1. Install pytorch0.4.1:
+1. Install pytorch1.1:
 
     ~~~
-    conda install pytorch=0.4.1 torchvision -c pytorch
+    pip install torch==1.1
     ~~~
-    
-    And disable cudnn batch normalization(Due to [this issue](https://github.com/xingyizhou/pytorch-pose-hg-3d/issues/16)).
-    
-     ~~~
-    # PYTORCH=/path/to/pytorch # usually ~/anaconda3/envs/CenterNet/lib/python3.6/site-packages/
-    # for pytorch v0.4.0
-    sed -i "1194s/torch\.backends\.cudnn\.enabled/False/g" ${PYTORCH}/torch/nn/functional.py
-    # for pytorch v0.4.1
-    sed -i "1254s/torch\.backends\.cudnn\.enabled/False/g" ${PYTORCH}/torch/nn/functional.py
-     ~~~
-     
-     For other pytorch version, you can manually open `torch/nn/functional.py` and find the line with `torch.batch_norm` and replace the `torch.backends.cudnn.enabled` with `False`. We observed slight worse training results without doing so. 
      
 2. Install [COCOAPI](https://github.com/cocodataset/cocoapi):
 
