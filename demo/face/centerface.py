@@ -4,13 +4,12 @@ import datetime
 
 
 class CenterFace(object):
-    def __init__(self, height, width, model_path, landmarks=True):
+    def __init__(self, model_path, landmarks=True):
         self.landmarks = landmarks
         if self.landmarks:
             self.net = cv2.dnn.readNetFromONNX(model_path)
         else:
-            self.net = cv2.dnn.readNetFromONNX('../models/onnx/cface.1k.onnx')
-        self.img_h_new, self.img_w_new, self.scale_h, self.scale_w = self.transform(height, width)
+            self.net = cv2.dnn.readNetFromONNX('cface.1k.onnx')
 
     def __call__(self, img, threshold=0.5):
         blob = cv2.dnn.blobFromImage(img, scalefactor=1.0, size=(self.img_w_new, self.img_h_new), mean=(0, 0, 0), swapRB=True, crop=False)
@@ -44,7 +43,7 @@ class CenterFace(object):
     def transform(self, h, w):
         img_h_new, img_w_new = int(np.ceil(h / 32) * 32), int(np.ceil(w / 32) * 32)
         scale_h, scale_w = img_h_new / h, img_w_new / w
-        return img_h_new, img_w_new, scale_h, scale_w
+        self.img_h_new, self.img_w_new, self.scale_h, self.scale_w = img_h_new, img_w_new, scale_h, scale_w
 
     def decode(self, heatmap, scale, offset, landmark, size, threshold=0.1):
         heatmap = np.squeeze(heatmap)

@@ -7,6 +7,7 @@ import numpy as np
 import pickle
 import tensorrt as trt
 import logging
+from face.centerface import CenterFace
 logger = logging.getLogger(__name__)
 TRT_LOGGER = trt.Logger()  # required by TensorRT 
       
@@ -90,7 +91,6 @@ def build_engine(onnx_file_path, engine_file_path, precision, max_batch_size, ca
             f.write(engine.serialize())
 
 def add_coco_bbox(image, bbox, cat, conf=1): 
-    bbox = np.array(bbox, dtype=np.int32)
     cat = int(cat)
     txt = '{}{:.1f}'.format('person', conf)
     font = cv2.FONT_HERSHEY_SIMPLEX
@@ -120,28 +120,42 @@ def add_coco_hp(image, points):
             image = cv2.addWeighted(image, 0.8, cur_canvas, 0.2, 0)
 
     return image
-build_engine('model/hrnet.onnx', 'model/hrnet.trt', 'fp32', 1)            
-config = '../experiments/hrnet_w32_512.yaml'
-engine = CenterNetTensorRTEngine(weight_file='model/hrnet.trt', config_file=config)
+    
+build_engine('model/resnet50.onnx', 'model/resnet50.trt', 'fp32', 1)            
+config = '../experiments/res_50_512x512.yaml'
+body_engine = CenterNetTensorRTEngine(weight_file='model/resnet50.trt', config_file=config)
 
-image = cv2.imread('../images/33823288584_1d21cf0a26_k.jpg')
-detections = engine.run(image)[1]
+face_model_path = '/home/tensorboy/CenterFace/models/onnx/centerface.onnx'
+#face_engine = CenterFace(model_path = face_model_path)
+
+
+image = cv2.imread('../images/image1.jpg')
+face_image = np.copy(image)
+detections = body_engine.run(image)[1]
 
 for bbox in detections:
-    if bbox[4] > 0.3:
+    if bbox[4] > 0.2:
+        bbox = np.array(bbox, dtype=np.int32)
+        #print(bbox[0], bbox[1], bbox[2], bbox[3])
+        #body = face_image[bbox[1]:bbox[3], bbox[0]:bbox[2]]
+        #print(body.shape)
+        #face_engine.transform(body.shape[0], body.shape[1])
+        #face_dets, lms = centerface(body, threshold=0.35)
+        #print(face_dets.shape)
+        
         add_coco_bbox(image, bbox[:4], 0, bbox[4])
         image = add_coco_hp(image, bbox[5:39])
 cv2.imwrite('result.png', image)
 
 
-image_dir = '/data/coco/images/val2017'
+#image_dir = '/data/coco/images/val2017'
 
-all_times = []
-for image_path in os.listdir(image_dir):
-    image = cv2.imread('../images/33823288584_1d21cf0a26_k.jpg')
-    tic = time.time()
-    detections = engine.run(image)[1]
-    toc = time.time()
-    all_times.append(toc-tic)
-    print('mean times', np.mean(all_times))
+#all_times = []
+#for image_path in os.listdir(image_dir):
+#    image = cv2.imread('../images/33823288584_1d21cf0a26_k.jpg')
+#    tic = time.time()
+#    detections = engine.run(image)[1]
+#    toc = time.time()
+#    all_times.append(toc-tic)
+#    print('mean times', np.mean(all_times))
 

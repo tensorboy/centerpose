@@ -182,16 +182,16 @@ def _topk(scores, K=40):
            
 def main(cfg):
 
-    model = create_model('hrnet', cfg.MODEL.HEAD_CONV, cfg).cuda()
+    model = create_model('res_50', cfg.MODEL.HEAD_CONV, cfg).cuda()
 
-    weight_path = '/home/tensorboy/data/centerpose/trained_best_model/hrnet_model_best.pth'
+    weight_path = '/home/tensorboy/data/trained_best_model/res_50_best_model.pth'
     state_dict = torch.load(weight_path, map_location=lambda storage, loc: storage)['state_dict']
     model.load_state_dict(state_dict)
 
-    onnx_file_path = "./model/hrnet.onnx"
+    onnx_file_path = "./model/resnet50.onnx"
     
     #img = cv2.imread('test_image.jpg')
-    image = cv2.imread('../images/17790319373_bd19b24cfc_k.jpg')
+    image = cv2.imread('../images/image1.jpg')
     images, meta = pre_process(image, cfg, scale=1)
 
     model.cuda()
