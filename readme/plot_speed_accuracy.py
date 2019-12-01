@@ -12,7 +12,7 @@ continent_data = {}
 continent_data['DLA-34'] = {'map':[62.3], 'speed':[23], 'size':82.7/2}
 continent_data['Resnet50'] = {'map':[53.0], 'speed':[28], 'size':139.8/2}
 continent_data['MobileNetV3'] = {'map':[45.1], 'speed':[30], 'size':9.7/2}
-continent_data['ShuffleNetV2'] = {'map':[34.6], 'speed':[25], 'size':40./2}
+continent_data['ShuffleNetV2'] = {'map':[37.7], 'speed':[25], 'size':40./2}
 continent_data['HigherResolution'] = {'map':[49.5], 'speed':[16], 'size':115.2/2}
 continent_data['HardNet'] = {'map':[41.9], 'speed':[30], 'size':19.3/2}
 
@@ -26,7 +26,6 @@ for continent_name, continent in continent_data.items():
         name=continent_name, text='model performance',
         marker_size=continent['size'],
         ))
-
 # Tune marker appearance and layout
 fig.update_traces(mode='markers', marker=dict(sizemode='area',
                                               sizeref=sizeref, line_width=2))
