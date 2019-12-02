@@ -1,13 +1,8 @@
 # -*- coding: utf-8 -*-
 
-"""
-    @date: 2019.07.19
-    @author: samuel ko
-    @func: same function as api.py in original PRNet Repo.
-"""
 import torch
 import numpy as np
-from model.resfcn256 import ResFCN256
+from .resfcn256 import ResFCN256
 
 
 class PRN:
@@ -24,9 +19,9 @@ class PRN:
         self.channel = kwargs.get("channel") or 3
         self.size = kwargs.get("size") or 16
 
-        self.uv_kpt_ind_path = kwargs.get("uv_kpt_path") or "utils/uv_data/uv_kpt_ind.txt"
-        self.face_ind_path = kwargs.get("face_ind_path") or "utils/uv_data/face_ind.txt"
-        self.triangles_path = kwargs.get("triangles_path") or "utils/uv_data/triangles.txt"
+        self.uv_kpt_ind_path = kwargs.get("uv_kpt_path") or "face/utils/uv_data/uv_kpt_ind.txt"
+        self.face_ind_path = kwargs.get("face_ind_path") or "face/utils/uv_data/face_ind.txt"
+        self.triangles_path = kwargs.get("triangles_path") or "face/utils/uv_data/triangles.txt"
 
         # 1) load model.
         self.pos_predictor = ResFCN256()

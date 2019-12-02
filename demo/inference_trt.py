@@ -8,6 +8,11 @@ import pickle
 import tensorrt as trt
 import logging
 from face.centerface import CenterFace
+from face.prnet import PRN
+from face.utils.estimate_pose import estimate_pose
+from torchvision import transforms
+from face.utils.cv_plot import plot_kpt, plot_vertices, plot_pose_box
+
 logger = logging.getLogger(__name__)
 TRT_LOGGER = trt.Logger()  # required by TensorRT 
       
@@ -119,7 +124,7 @@ def add_coco_hp(image, points, color):
             angle = math.degrees(math.atan2(X[0] - X[1], Y[0] - Y[1]))
             polygon = cv2.ellipse2Poly((int(mY),int(mX)), (int(length/2), stickwidth), int(angle), 0, 360, 1)
             cv2.fillConvexPoly(cur_canvas, polygon, (int(color[0]), int(color[1]), int(color[2])))
-            image = cv2.addWeighted(image, 0.8, cur_canvas, 0.2, 0)
+            image = cv2.addWeighted(image, 0.5, cur_canvas, 0.5, 0)
 
     return image
     
@@ -130,9 +135,18 @@ body_engine = CenterNetTensorRTEngine(weight_file='model/resnet50.trt', config_f
 face_model_path = '/home/tensorboy/CenterFace/models/onnx/centerface.onnx'
 face_engine = CenterFace(model_path = face_model_path, landmarks = True)
 
+face_3d_model_path = '/home/tensorboy/data/demo_model/prnet.pth' 
+face_3d_model = PRN(face_3d_model_path)
+        
+
+# ---- transform
+face_3d_transform_img = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+])
 
 image = cv2.imread('../images/image1.jpg')
-face_image = np.copy(image)
+ori_img = np.copy(image)
 detections = body_engine.run(image)[1]
 
 face_engine.transform(image.shape[0], image.shape[1])
@@ -142,7 +156,6 @@ print(face_dets.shape)
 for i, bbox in enumerate(detections):
     if bbox[4] > 0.3:
         color = colors[i]
-        print(color)
         bbox = np.array(bbox, dtype=np.int32)
         body_bbox = bbox[:4]
         body_prob = bbox[4]
@@ -155,6 +168,41 @@ for i, bbox in enumerate(detections):
         face_bbox = face_dets[face_min_dis][:4]
         face_prob = face_dets[face_min_dis][4]
         
+        face_image = ori_img[int(face_bbox[1]): int(face_bbox[3]), int(face_bbox[0]): int(face_bbox[2])]
+
+        [h, w, c] = face_image.shape
+
+        # the core: regress position map
+        #cv2.imwrite('face.jpg', face_image)
+        face_image = cv2.resize(face_image, (256, 256))
+        
+        image_t = face_3d_transform_img(face_image)
+        image_t = image_t.unsqueeze(0)
+        pos = face_3d_model.net_forward(image_t.cuda())  # input image has been cropped to 256x256
+
+
+        out = pos.cpu().detach().numpy()
+        pos = np.squeeze(out)
+        cropped_pos = pos * 255
+        pos = cropped_pos.transpose(1, 2, 0)
+
+        vertices = face_3d_model.get_vertices(pos)
+        save_vertices = vertices.copy()
+        save_vertices[:, 1] = h - 1 - save_vertices[:, 1]
+        
+        kpt = face_3d_model.get_landmarks(pos)
+        camera_matrix, pose = estimate_pose(vertices)
+                    
+        image_pose = plot_pose_box(face_image, camera_matrix, kpt)
+        sparse_face =  plot_kpt(face_image, kpt)
+        dense_face = plot_vertices(face_image, vertices)
+        
+        image[int(face_bbox[1]): int(face_bbox[3]), int(face_bbox[0]): int(face_bbox[2])] = cv2.resize(image_pose, (w,h))
+          
+        #cv2.imshow('image pose', image_pose)
+        #cv2.imshow('sparse alignment', sparse_face)
+        #cv2.imshow('dense alignment', dense_face)
+        #cv2.waitKey(0)
         cv2.rectangle(image, (int(face_bbox[0]), int(face_bbox[1])), (int(face_bbox[2]), int(face_bbox[3])), (int(color[0]), int(color[1]), int(color[2])), 3)
         add_coco_bbox(image, body_bbox, 0, body_prob, color)
         image = add_coco_hp(image, keypoints, color)
