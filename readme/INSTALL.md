@@ -1,7 +1,7 @@
 # Installation
 
 
-The code was tested on Ubuntu 16.04, with [Anaconda](https://www.anaconda.com/download) Python 3.6 and [PyTorch]((http://pytorch.org/)) v0.4.1. NVIDIA GPUs are needed for both training and testing.
+The code was tested on Ubuntu 18.04, with [Anaconda](https://www.anaconda.com/download) Python 3.6 and [PyTorch]((http://pytorch.org/)) v1.1. NVIDIA GPUs are needed for both training and testing.
 After install Anaconda:
 
 0. [Optional but recommended] create a new conda environment. 

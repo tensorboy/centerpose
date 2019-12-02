@@ -1,10 +1,10 @@
 SAMPLE_METHOD: 'coco_hp'
-DATA_DIR: '/data'
+DATA_DIR: '/home/tensorboy/data'
 EXP_ID: 'coco_pose_hrnet'
 DEBUG: 0
 DEBUG_THEME: 'white'
 SEED: 317
-OUTPUT_DIR: '/data/centerpose/hrnet'
+OUTPUT_DIR: '/home/tensorboy/data/centerpose/hrnet'
 LOG_DIR: ''
 EXPERIMENT_NAME: ''
 GPUS: [0, 1, 2, 3, 4, 5, 6]
@@ -17,7 +17,7 @@ CUDNN:
   DETERMINISTIC: false
   ENABLED: true
 DATASET:
-  ROOT: '/data/coco'
+  ROOT: '/home/tensorboy/data/coco'
   DATASET: 'coco_hp'
   TRAIN_SET: 'train'
   TEST_SET: 'valid'
@@ -133,7 +133,7 @@ MODEL:
   TAG_PER_JOINT: true
 TEST:
   # Test Model Epoch
-  MODEL_PATH: '/data/centerpose/trained_best_model/hrnet_model_best.pth'
+  MODEL_PATH: '/home/tensorboy/data/centerpose/hrnet/model_best.pth'
   TASK: 'multi_pose'
   FLIP_TEST: true
   FIX_RES: false
