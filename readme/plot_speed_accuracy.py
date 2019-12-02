@@ -10,7 +10,7 @@ continent_names = ['DLA', 'Resnet', 'MobileNet', 'ShuffleNet', 'HigherResolution
 continent_data = {}
 
 continent_data['DLA-34'] = {'map':[62.3], 'speed':[23], 'size':82.7/2}
-continent_data['Resnet50'] = {'map':[53.0], 'speed':[28], 'size':139.8/2}
+continent_data['Resnet50'] = {'map':[53.1], 'speed':[28], 'size':139.8/2}
 continent_data['MobileNetV3'] = {'map':[45.1], 'speed':[30], 'size':9.7/2}
 continent_data['ShuffleNetV2'] = {'map':[37.7], 'speed':[25], 'size':40./2}
 continent_data['HigherResolution'] = {'map':[49.5], 'speed':[16], 'size':115.2/2}
