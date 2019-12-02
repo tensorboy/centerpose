@@ -11,6 +11,9 @@ from face.centerface import CenterFace
 logger = logging.getLogger(__name__)
 TRT_LOGGER = trt.Logger()  # required by TensorRT 
       
+
+colors = [tuple(np.random.choice(np.arange(256).astype(np.int32), size=3)) for i in range(100)]
+
 def kp_connections(keypoints):
     kp_lines = [
         [keypoints.index('nose'), keypoints.index('left_eye')],
@@ -90,20 +93,19 @@ def build_engine(onnx_file_path, engine_file_path, precision, max_batch_size, ca
         with open(engine_file_path, "wb") as f:
             f.write(engine.serialize())
 
-def add_coco_bbox(image, bbox, cat, conf=1): 
+def add_coco_bbox(image, bbox, cat, conf=1, color=None): 
     cat = int(cat)
     txt = '{}{:.1f}'.format('person', conf)
     font = cv2.FONT_HERSHEY_SIMPLEX
     cat_size = cv2.getTextSize(txt, font, 0.5, 2)[0]
-    cv2.rectangle(image, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (217,  83,  25), 2)
+    cv2.rectangle(image, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (int(color[0]), int(color[1]), int(color[2])), 2)
     cv2.putText(image, txt, (bbox[0], bbox[1] - 2), 
               font, 0.5, (0, 0, 0), thickness=1, lineType=cv2.LINE_AA)
 
-def add_coco_hp(image, points): 
-    points = np.array(points, dtype=np.int32).reshape(17, 2)
+def add_coco_hp(image, points, color): 
     for j in range(17):
         cv2.circle(image,
-                 (points[j, 0], points[j, 1]), 2, (255,255,255), -1)
+                 (points[j, 0], points[j, 1]), 2, (int(color[0]), int(color[1]), int(color[2])), -1)
                  
     stickwidth = 2
     cur_canvas = image.copy()             
@@ -116,7 +118,7 @@ def add_coco_hp(image, points):
             length = ((X[0] - X[1]) ** 2 + (Y[0] - Y[1]) ** 2) ** 0.5
             angle = math.degrees(math.atan2(X[0] - X[1], Y[0] - Y[1]))
             polygon = cv2.ellipse2Poly((int(mY),int(mX)), (int(length/2), stickwidth), int(angle), 0, 360, 1)
-            cv2.fillConvexPoly(cur_canvas, polygon, (255, 255, 255))
+            cv2.fillConvexPoly(cur_canvas, polygon, (int(color[0]), int(color[1]), int(color[2])))
             image = cv2.addWeighted(image, 0.8, cur_canvas, 0.2, 0)
 
     return image
@@ -126,25 +128,36 @@ config = '../experiments/res_50_512x512.yaml'
 body_engine = CenterNetTensorRTEngine(weight_file='model/resnet50.trt', config_file=config)
 
 face_model_path = '/home/tensorboy/CenterFace/models/onnx/centerface.onnx'
-#face_engine = CenterFace(model_path = face_model_path)
+face_engine = CenterFace(model_path = face_model_path, landmarks = True)
 
 
 image = cv2.imread('../images/image1.jpg')
 face_image = np.copy(image)
 detections = body_engine.run(image)[1]
 
-for bbox in detections:
-    if bbox[4] > 0.2:
+face_engine.transform(image.shape[0], image.shape[1])
+face_dets, lms = face_engine(image, threshold=0.5)
+print(face_dets.shape)   
+
+for i, bbox in enumerate(detections):
+    if bbox[4] > 0.3:
+        color = colors[i]
+        print(color)
         bbox = np.array(bbox, dtype=np.int32)
-        #print(bbox[0], bbox[1], bbox[2], bbox[3])
-        #body = face_image[bbox[1]:bbox[3], bbox[0]:bbox[2]]
-        #print(body.shape)
-        #face_engine.transform(body.shape[0], body.shape[1])
-        #face_dets, lms = centerface(body, threshold=0.35)
-        #print(face_dets.shape)
+        body_bbox = bbox[:4]
+        body_prob = bbox[4]
+        body_pose = bbox[5:39]
+        keypoints = np.array(body_pose, dtype=np.int32).reshape(17, 2)
+        center_of_the_face = np.mean(keypoints[:7,:], axis=0)
+                 
+        face_min_dis = np.argmin(np.sum(((face_dets[:,2:4]+face_dets[:,:2])/2.-center_of_the_face)**2,axis=1))
+            
+        face_bbox = face_dets[face_min_dis][:4]
+        face_prob = face_dets[face_min_dis][4]
         
-        add_coco_bbox(image, bbox[:4], 0, bbox[4])
-        image = add_coco_hp(image, bbox[5:39])
+        cv2.rectangle(image, (int(face_bbox[0]), int(face_bbox[1])), (int(face_bbox[2]), int(face_bbox[3])), (int(color[0]), int(color[1]), int(color[2])), 3)
+        add_coco_bbox(image, body_bbox, 0, body_prob, color)
+        image = add_coco_hp(image, keypoints, color)
 cv2.imwrite('result.png', image)
 
 

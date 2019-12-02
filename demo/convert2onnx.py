@@ -68,15 +68,11 @@ def pre_process(image, cfg=None, scale=1, meta=None):
     new_width  = int(width * scale)
     mean = np.array(cfg.DATASET.MEAN, dtype=np.float32).reshape(1, 1, 3)
     std = np.array(cfg.DATASET.STD, dtype=np.float32).reshape(1, 1, 3)
-    if cfg.TEST.FIX_RES:
-      inp_height, inp_width = cfg.MODEL.INPUT_H, cfg.MODEL.INPUT_W
-      c = np.array([new_width / 2., new_height / 2.], dtype=np.float32)
-      s = max(height, width) * 1.0
-    else:
-      inp_height = (new_height | cfg.MODEL.PAD) + 1
-      inp_width = (new_width | cfg.MODEL.PAD) + 1
-      c = np.array([new_width // 2, new_height // 2], dtype=np.float32)
-      s = np.array([inp_width, inp_height], dtype=np.float32)
+
+    inp_height, inp_width = cfg.MODEL.INPUT_H, cfg.MODEL.INPUT_W
+    c = np.array([new_width / 2., new_height / 2.], dtype=np.float32)
+    s = max(height, width) * 1.0
+
 
     trans_input = get_affine_transform(c, s, 0, [inp_width, inp_height])
     resized_image = cv2.resize(image, (new_width, new_height))
@@ -198,6 +194,7 @@ def main(cfg):
     model.eval()
     model.float()
     torch_input = images.cuda()
+    print(torch_input.shape)
         
     torch.onnx.export(model, torch_input, onnx_file_path, verbose=False)
     sess = nxrun.InferenceSession(onnx_file_path)
@@ -209,8 +206,10 @@ def main(cfg):
     print(sess.get_outputs()[0].name)
     print(sess.get_outputs()[1].name)
     print(sess.get_outputs()[2].name)
-    output_onnx = sess.run(None, {input_name:  images.cpu().data.numpy()})    
-    print(output_onnx)
+    output_onnx = sess.run(None, {input_name:  images.cpu().data.numpy()})
+    hm, wh, hps, reg, hm_hp, hp_offset = output_onnx  
+    print(hm)
+    print(len(output_onnx))
   
 if __name__ == '__main__':
     config_name = '../experiments/hrnet_w32_512.yaml'

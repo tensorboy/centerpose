@@ -76,15 +76,9 @@ class CenterNetTensorRTEngine(object):
         mean = np.array(self.cfg.DATASET.MEAN, dtype=np.float32).reshape(1, 1, 3)
         std = np.array(self.cfg.DATASET.STD, dtype=np.float32).reshape(1, 1, 3)
 
-        if self.cfg.TEST.FIX_RES:
-            inp_height, inp_width = self.cfg.MODEL.INPUT_H, self.cfg.MODEL.INPUT_W
-            c = np.array([new_width / 2., new_height / 2.], dtype=np.float32)
-            s = max(height, width) * 1.0
-        else:
-            inp_height = (new_height | self.cfg.MODEL.PAD) + 1
-            inp_width = (new_width | self.cfg.MODEL.PAD) + 1
-            c = np.array([new_width // 2, new_height // 2], dtype=np.float32)
-            s = np.array([inp_width, inp_height], dtype=np.float32)
+        inp_height, inp_width = self.cfg.MODEL.INPUT_H, self.cfg.MODEL.INPUT_W
+        c = np.array([new_width / 2., new_height / 2.], dtype=np.float32)
+        s = max(height, width) * 1.0
 
         trans_input = get_affine_transform(c, s, 0, [inp_width, inp_height])
         resized_image = cv2.resize(image, (new_width, new_height))

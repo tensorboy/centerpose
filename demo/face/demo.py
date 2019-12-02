@@ -8,7 +8,8 @@ def test_image(image_path, model_path):
     frame = cv2.imread(image_path)
     h, w = frame.shape[:2]
     landmarks = True
-    centerface = CenterFace(h, w, model_path=model_path, landmarks=landmarks)
+    centerface = CenterFace(model_path=model_path, landmarks=landmarks)
+    centerface.transform(h, w)
     if landmarks:
         dets, lms = centerface(frame, threshold=0.35)
     else:
@@ -30,6 +31,6 @@ def test_image(image_path, model_path):
 
 
 if __name__ == '__main__':
-    image_path = '/home/tensorboy/centerpose/images/pic1.jpg'
+    image_path = '/home/tensorboy/centerpose/images/image1.jpg'
     model_path = '/home/tensorboy/CenterFace/models/onnx/centerface.onnx'
     test_image(image_path, model_path)
