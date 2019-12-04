@@ -139,59 +139,76 @@ face_engine = CenterFace(model_path = face_model_path, landmarks = True)
 face_3d_model_path = '/home/tensorboy/data/demo/weights/prnet.pth' 
 face_3d_model = PRN(face_3d_model_path, '/home/tensorboy/centerpose/demo/face')
 
-image = cv2.imread('../images/image1.jpg')
-rgb_img =  cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-detections = body_engine.run(image)[1]
 
-face_engine.transform(image.shape[0], image.shape[1])
-face_dets, lms = face_engine(image, threshold=0.35)
-print(face_dets.shape)   
+video_name = '/home/tensorboy/data/demo/tic1.mp4'
+cap = cv2.VideoCapture(video_name)
 
-for i, bbox in enumerate(detections):
-    if bbox[4] > 0.3:
-        color = colors[i]
-        bbox = np.array(bbox, dtype=np.int32)
-        body_bbox = bbox[:4]
-        body_prob = bbox[4]
-        body_pose = bbox[5:39]
-        keypoints = np.array(body_pose, dtype=np.int32).reshape(17, 2)
-        center_of_the_face = np.mean(keypoints[:7,:], axis=0)
-                 
-        face_min_dis = np.argmin(np.sum(((face_dets[:,2:4]+face_dets[:,:2])/2.-center_of_the_face)**2,axis=1))
+while(True):
+    # Capture frame-by-frame
+    ret, image = cap.read()
+    print(ret)
+    
+    rgb_img =  cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    detections = body_engine.run(image)[1]
+
+    face_engine.transform(image.shape[0], image.shape[1])
+    face_dets, lms = face_engine(image, threshold=0.35) 
+
+    for i, bbox in enumerate(detections):
+        if bbox[4] > 0.3:
+            color = colors[i]
+            bbox = np.array(bbox, dtype=np.int32)
+            body_bbox = bbox[:4]
+            body_prob = bbox[4]
+            body_pose = bbox[5:39]
+            keypoints = np.array(body_pose, dtype=np.int32).reshape(17, 2)
+            center_of_the_face = np.mean(keypoints[:7,:], axis=0)
+                     
+            face_min_dis = np.argmin(np.sum(((face_dets[:,2:4]+face_dets[:,:2])/2.-center_of_the_face)**2,axis=1))
+                
+            face_bbox = face_dets[face_min_dis][:4]
+            face_prob = face_dets[face_min_dis][4]
             
-        face_bbox = face_dets[face_min_dis][:4]
-        face_prob = face_dets[face_min_dis][4]
-        
-        face_image = rgb_img[int(face_bbox[1]): int(face_bbox[3]), int(face_bbox[0]): int(face_bbox[2])]
-        # the core: regress position map
-        #cv2.imwrite('face%d.jpg'%i, face_image)
-        [h, w, c] = face_image.shape          
-          
-        box = np.array([0, face_image.shape[1]-1, 0, face_image.shape[0]-1]) # cropped with bounding box
-        pos = face_3d_model.process(face_image, box)    
-        
-        vertices = face_3d_model.get_vertices(pos)
-        save_vertices = vertices.copy()
-        save_vertices[:, 1] = h - 1 - save_vertices[:, 1]
-        
-        kpt = face_3d_model.get_landmarks(pos)
-        camera_matrix, pose = estimate_pose(vertices)
-                    
-        bgr_face_image = cv2.cvtColor(face_image, cv2.COLOR_BGR2RGB)
-        image_pose = plot_pose_box(bgr_face_image, camera_matrix, kpt)
-        sparse_face =  plot_kpt(bgr_face_image, kpt)
+            face_image = rgb_img[int(face_bbox[1]): int(face_bbox[3]), int(face_bbox[0]): int(face_bbox[2])]
+            # the core: regress position map
+            #cv2.imwrite('face%d.jpg'%i, face_image)
+            [h, w, c] = face_image.shape          
+              
+            box = np.array([0, face_image.shape[1]-1, 0, face_image.shape[0]-1]) # cropped with bounding box
+            pos = face_3d_model.process(face_image, box)    
+            
+            vertices = face_3d_model.get_vertices(pos)
+            save_vertices = vertices.copy()
+            save_vertices[:, 1] = h - 1 - save_vertices[:, 1]
+            
+            kpt = face_3d_model.get_landmarks(pos)
+            camera_matrix, pose = estimate_pose(vertices)
+                        
+            bgr_face_image = cv2.cvtColor(face_image, cv2.COLOR_BGR2RGB)
+            image_pose = plot_pose_box(bgr_face_image, camera_matrix, kpt)
+            sparse_face =  plot_kpt(bgr_face_image, kpt)
 
-        dense_face = plot_vertices(bgr_face_image, vertices)
-        image[int(face_bbox[1]): int(face_bbox[3]), int(face_bbox[0]): int(face_bbox[2])] = cv2.resize(image_pose, (w,h))
-          
-        #cv2.imshow('image pose', image_pose)
-        #cv2.imshow('sparse alignment', sparse_face)
-        #cv2.imshow('dense alignment', dense_face)
-        #cv2.waitKey(0)
-        cv2.rectangle(image, (int(face_bbox[0]), int(face_bbox[1])), (int(face_bbox[2]), int(face_bbox[3])), (int(color[0]), int(color[1]), int(color[2])), 3)
-        add_coco_bbox(image, body_bbox, 0, body_prob, color)
-        image = add_coco_hp(image, keypoints, color)
-cv2.imwrite('result.png', image)
+            dense_face = plot_vertices(bgr_face_image, vertices)
+            image[int(face_bbox[1]): int(face_bbox[3]), int(face_bbox[0]): int(face_bbox[2])] = cv2.resize(image_pose, (w,h))
+              
+            #cv2.imshow('image pose', image_pose)
+            #cv2.imshow('sparse alignment', sparse_face)
+            #cv2.imshow('dense alignment', dense_face)
+            #cv2.waitKey(0)
+            cv2.rectangle(image, (int(face_bbox[0]), int(face_bbox[1])), (int(face_bbox[2]), int(face_bbox[3])), (int(color[0]), int(color[1]), int(color[2])), 3)
+            add_coco_bbox(image, body_bbox, 0, body_prob, color)
+            image = add_coco_hp(image, keypoints, color)
+    cv2.imshow('image result', image)
+    # Display the resulting frame
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+# When everything done, release the capture
+cap.release()
+cv2.destroyAllWindows()
+
+
+
 
 
 #image_dir = '/data/coco/images/val2017'
