@@ -7,7 +7,7 @@ SEED: 317
 OUTPUT_DIR: '/home/tensorboy/data/centerpose/hrnet'
 LOG_DIR: ''
 EXPERIMENT_NAME: ''
-GPUS: [0, 1, 2, 3, 4, 5, 6]
+GPUS: [0, 1, 2, 3]
 WORKERS: 8
 PIN_MEMORY: true
 RANK: 0
@@ -172,9 +172,9 @@ TRAIN:
   LR_STEP: [270, 300]
   EPOCHS: 320
   NUM_ITERS: -1
-  LR: 1.40625e-4
-  BATCH_SIZE: 36
-  MASTER_BATCH_SIZE: 6
+  LR: 1.875e-4
+  BATCH_SIZE: 48
+  MASTER_BATCH_SIZE: 12
 
   MOMENTUM: 0.9
   WD: 0.0001

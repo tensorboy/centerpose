@@ -5,7 +5,7 @@ from __future__ import print_function
 import torch
 import numpy as np
 
-from models.losses import FocalLoss, RegL1Loss, RegLoss, RegWeightedL1Loss
+from models.losses import FocalLoss, RegL1Loss, RegLoss, RegWeightedL1Loss, SegLoss, SegLoss2
 from models.decode import multi_pose_decode
 from models.utils import _sigmoid, flip_tensor, flip_lr_off, flip_lr
 from utils.debugger import Debugger
@@ -22,14 +22,17 @@ class MultiPoseLoss(torch.nn.Module):
                        torch.nn.L1Loss(reduction='sum')
         self.crit_reg = RegL1Loss() if cfg.LOSS.REG_LOSS == 'l1' else \
                         RegLoss() if cfg.LOSS.REG_LOSS == 'sl1' else None
+        self.crit_seg = SegLoss2()                         
         self.cfg = cfg
         self.local_rank = local_rank
 
     def forward(self, outputs, batch):
         cfg = self.cfg
-        hm_loss, wh_loss, off_loss = 0, 0, 0
+        hm_loss, wh_loss, off_loss, seg_loss, seg_feat_loss = 0, 0, 0, 0, 0
         hp_loss, off_loss, hm_hp_loss, hp_offset_loss = 0, 0, 0, 0
-        hm, wh, hps, reg, hm_hp, hp_offset = outputs
+        hm, wh, hps, reg, hm_hp, hp_offset, seg_feat, seg = outputs
+        #print('seg feat shape', seg_feat.shape)
+        #print('seg feat', seg.shape)
 
         for s in range(cfg.MODEL.NUM_STACKS):
             hm = _sigmoid(hm)
@@ -77,13 +80,17 @@ class MultiPoseLoss(torch.nn.Module):
             if cfg.LOSS.HM_HP and cfg.LOSS.HM_HP_WEIGHT > 0:
                 hm_hp_loss += self.crit_hm_hp(
                 hm_hp, batch['hm_hp']) / cfg.MODEL.NUM_STACKS
+                
+            seg_loss += self.crit_seg(seg, seg_feat, batch['ind'], batch['seg'])
+                            
         loss = cfg.LOSS.HM_WEIGHT * hm_loss + cfg.LOSS.WH_WEIGHT * wh_loss + \
                cfg.LOSS.OFF_WEIGHT * off_loss + cfg.LOSS.HP_WEIGHT * hp_loss + \
-               cfg.LOSS.HM_HP_WEIGHT * hm_hp_loss + cfg.LOSS.OFF_WEIGHT * hp_offset_loss
+               cfg.LOSS.HM_HP_WEIGHT * hm_hp_loss + cfg.LOSS.OFF_WEIGHT * hp_offset_loss+\
+               seg_loss
 
         loss_stats = {'loss': loss, 'hm_loss': hm_loss, 'hp_loss': hp_loss, 
                       'hm_hp_loss': hm_hp_loss, 'hp_offset_loss': hp_offset_loss,
-                      'wh_loss': wh_loss, 'off_loss': off_loss}
+                      'wh_loss': wh_loss, 'off_loss': off_loss, 'seg_loss': seg_loss}
         return loss, loss_stats
 
 class MultiPoseTrainer(BaseTrainer):
@@ -92,7 +99,7 @@ class MultiPoseTrainer(BaseTrainer):
 
     def _get_losses(self, cfg, local_rank):
         loss_states = ['loss', 'hm_loss', 'hp_loss', 'hm_hp_loss', 
-                       'hp_offset_loss', 'wh_loss', 'off_loss']
+                       'hp_offset_loss', 'wh_loss', 'off_loss', 'seg_loss']
         loss = MultiPoseLoss(cfg, local_rank)
         return loss_states, loss
 

@@ -3,6 +3,7 @@ import os
 import cv2
 import math
 import time
+import torch
 import numpy as np
 import pickle
 import tensorrt as trt
@@ -132,25 +133,18 @@ build_engine('model/resnet50.onnx', 'model/resnet50.trt', 'fp32', 1)
 config = '../experiments/res_50_512x512.yaml'
 body_engine = CenterNetTensorRTEngine(weight_file='model/resnet50.trt', config_file=config)
 
-face_model_path = '/home/tensorboy/CenterFace/models/onnx/centerface.onnx'
+face_model_path = '/home/tensorboy/Documents/centerface/models/onnx/centerface.onnx'
 face_engine = CenterFace(model_path = face_model_path, landmarks = True)
 
-face_3d_model_path = '/home/tensorboy/data/demo_model/prnet.pth' 
-face_3d_model = PRN(face_3d_model_path)
-        
-
-# ---- transform
-face_3d_transform_img = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-])
+face_3d_model_path = '/home/tensorboy/data/demo/weights/prnet.pth' 
+face_3d_model = PRN(face_3d_model_path, '/home/tensorboy/centerpose/demo/face')
 
 image = cv2.imread('../images/image1.jpg')
-ori_img = np.copy(image)
+rgb_img =  cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 detections = body_engine.run(image)[1]
 
 face_engine.transform(image.shape[0], image.shape[1])
-face_dets, lms = face_engine(image, threshold=0.5)
+face_dets, lms = face_engine(image, threshold=0.35)
 print(face_dets.shape)   
 
 for i, bbox in enumerate(detections):
@@ -168,24 +162,14 @@ for i, bbox in enumerate(detections):
         face_bbox = face_dets[face_min_dis][:4]
         face_prob = face_dets[face_min_dis][4]
         
-        face_image = ori_img[int(face_bbox[1]): int(face_bbox[3]), int(face_bbox[0]): int(face_bbox[2])]
-
-        [h, w, c] = face_image.shape
-
+        face_image = rgb_img[int(face_bbox[1]): int(face_bbox[3]), int(face_bbox[0]): int(face_bbox[2])]
         # the core: regress position map
-        #cv2.imwrite('face.jpg', face_image)
-        face_image = cv2.resize(face_image, (256, 256))
+        #cv2.imwrite('face%d.jpg'%i, face_image)
+        [h, w, c] = face_image.shape          
+          
+        box = np.array([0, face_image.shape[1]-1, 0, face_image.shape[0]-1]) # cropped with bounding box
+        pos = face_3d_model.process(face_image, box)    
         
-        image_t = face_3d_transform_img(face_image)
-        image_t = image_t.unsqueeze(0)
-        pos = face_3d_model.net_forward(image_t.cuda())  # input image has been cropped to 256x256
-
-
-        out = pos.cpu().detach().numpy()
-        pos = np.squeeze(out)
-        cropped_pos = pos * 255
-        pos = cropped_pos.transpose(1, 2, 0)
-
         vertices = face_3d_model.get_vertices(pos)
         save_vertices = vertices.copy()
         save_vertices[:, 1] = h - 1 - save_vertices[:, 1]
@@ -193,10 +177,11 @@ for i, bbox in enumerate(detections):
         kpt = face_3d_model.get_landmarks(pos)
         camera_matrix, pose = estimate_pose(vertices)
                     
-        image_pose = plot_pose_box(face_image, camera_matrix, kpt)
-        sparse_face =  plot_kpt(face_image, kpt)
-        dense_face = plot_vertices(face_image, vertices)
-        
+        bgr_face_image = cv2.cvtColor(face_image, cv2.COLOR_BGR2RGB)
+        image_pose = plot_pose_box(bgr_face_image, camera_matrix, kpt)
+        sparse_face =  plot_kpt(bgr_face_image, kpt)
+
+        dense_face = plot_vertices(bgr_face_image, vertices)
         image[int(face_bbox[1]): int(face_bbox[3]), int(face_bbox[0]): int(face_bbox[2])] = cv2.resize(image_pose, (w,h))
           
         #cv2.imshow('image pose', image_pose)

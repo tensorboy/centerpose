@@ -4,7 +4,7 @@ from __future__ import print_function
 
 import torch
 import torch.nn as nn
-from .utils import _gather_feat, _tranpose_and_gather_feat
+from .utils import _gather_feat, _transpose_and_gather_feat
 
 def _nms(heat, kernel=3):
     pad = (kernel - 1) // 2
@@ -123,14 +123,14 @@ def ctdet_decode(heat, wh, reg=None, cat_spec_wh=False, K=100):
       
     scores, inds, clses, ys, xs = _topk(heat, K=K)
     if reg is not None:
-        reg = _tranpose_and_gather_feat(reg, inds)
+        reg = _transpose_and_gather_feat(reg, inds)
         reg = reg.view(batch, K, 2)
         xs = xs.view(batch, K, 1) + reg[:, :, 0:1]
         ys = ys.view(batch, K, 1) + reg[:, :, 1:2]
     else:
         xs = xs.view(batch, K, 1) + 0.5
         ys = ys.view(batch, K, 1) + 0.5
-    wh = _tranpose_and_gather_feat(wh, inds)
+    wh = _transpose_and_gather_feat(wh, inds)
     if cat_spec_wh:
         wh = wh.view(batch, K, cat, 2)
         clses_ind = clses.view(batch, K, 1, 1).expand(batch, K, 1, 2).long()
@@ -157,19 +157,19 @@ def multi_pose_decode(
     heat = _nms(heat)
     scores, inds, clses, ys, xs = _topk(heat, K=K)
 
-    kps = _tranpose_and_gather_feat(kps, inds)
+    kps = _transpose_and_gather_feat(kps, inds)
     kps = kps.view(batch, K, num_joints * 2)
     kps[..., ::2] += xs.view(batch, K, 1).expand(batch, K, num_joints)
     kps[..., 1::2] += ys.view(batch, K, 1).expand(batch, K, num_joints)
     if reg is not None:
-        reg = _tranpose_and_gather_feat(reg, inds)
+        reg = _transpose_and_gather_feat(reg, inds)
         reg = reg.view(batch, K, 2)
         xs = xs.view(batch, K, 1) + reg[:, :, 0:1]
         ys = ys.view(batch, K, 1) + reg[:, :, 1:2]
     else:
         xs = xs.view(batch, K, 1) + 0.5
         ys = ys.view(batch, K, 1) + 0.5
-    wh = _tranpose_and_gather_feat(wh, inds)
+    wh = _transpose_and_gather_feat(wh, inds)
     wh = wh.view(batch, K, 2)
     clses  = clses.view(batch, K, 1).float()
     scores = scores.view(batch, K, 1)
@@ -186,7 +186,7 @@ def multi_pose_decode(
         reg_kps = kps.unsqueeze(3).expand(batch, num_joints, K, K, 2)
         hm_score, hm_inds, hm_ys, hm_xs = _topk_channel(hm_hp, K=K) # b x J x K
         if hp_offset is not None:
-            hp_offset = _tranpose_and_gather_feat(
+            hp_offset = _transpose_and_gather_feat(
               hp_offset, hm_inds.view(batch, -1))
             hp_offset = hp_offset.view(batch, num_joints, K, 2)
             hm_xs = hm_xs + hp_offset[:, :, :, 0]

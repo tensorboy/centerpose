@@ -180,7 +180,7 @@ def main(cfg):
 
     model = create_model('res_50', cfg.MODEL.HEAD_CONV, cfg).cuda()
 
-    weight_path = '/home/tensorboy/data/trained_best_model/res_50_best_model.pth'
+    weight_path = '/home/tensorboy/data/centerpose/trained_best_model/res_50_best_model.pth'
     state_dict = torch.load(weight_path, map_location=lambda storage, loc: storage)['state_dict']
     model.load_state_dict(state_dict)
 
