@@ -34,7 +34,6 @@ _C.CUDNN.DETERMINISTIC = False
 
 # common params for NETWORK
 _C.MODEL = CN()
-_C.MODEL.LOAD_MODEL = ''
 _C.MODEL.PRETRAINED = ''
 _C.MODEL.INIT_WEIGHTS = True
 _C.MODEL.NAME = 'res_50'

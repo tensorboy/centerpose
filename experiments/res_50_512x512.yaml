@@ -19,13 +19,14 @@ CUDNN:
   BENCHMARK: true
 
 MODEL:
-  LOAD_MODEL: ''
+  INIT_WEIGHTS: false
+  PRETRAINED: ''
   CENTER_THRESH: 0.1
   NUM_CLASSES: 1
   NAME: 'res_50'
   HEADS_NAME: ['hm', 'wh', 'hps', 'reg', 'hm_hp', 'hp_offset']
   HEADS_NUM: [1, 2, 34, 2, 17, 2]
-  HEAD_CONV: 256
+  HEAD_CONV: 64
   DOWN_RATIO: 4
   NUM_STACKS: 1
   INPUT_RES: 512
@@ -84,6 +85,7 @@ DATASET:
   
 TRAIN:
   DISTRIBUTE: true
+  OPTIMIZER: 'sgd'  
   LOCAL_RANK: 0
   HIDE_DATA_TIME: false 
   SAVE_ALL_MODEL: false
@@ -112,7 +114,7 @@ TRAIN:
  
 TEST:
   # Test Model Epoch
-  MODEL_PATH: '/data/centerpose/trained_best_model/res_50_1x.pth'
+  MODEL_PATH: '/home/tensorboy/data/centerpose/trained_best_model/res_50_best_model.pth'
   TASK: 'multi_pose'
   FLIP_TEST: true
 

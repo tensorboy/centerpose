@@ -1,7 +1,7 @@
 SAMPLE_METHOD: 'coco_hp'
 DATA_DIR: '/data'
 EXP_ID: 'coco_pose_dla_34_sgd'
-DEBUG: 1
+DEBUG: 0
 DEBUG_THEME: 'white'
 SEED: 317
 OUTPUT_DIR: '/data/centerpose/multi_pose_1x_sgd'
@@ -18,7 +18,8 @@ CUDNN:
   BENCHMARK: true
 
 MODEL:
-  LOAD_MODEL: ''
+  INIT_WEIGHTS: false
+  PRETRAINED: ''
   CENTER_THRESH: 0.1
   NUM_CLASSES: 1
   NAME: 'dla_34'
@@ -84,8 +85,8 @@ DATASET:
   RANDOM_CROP: true 
   
 TRAIN:
-  DISTRIBUTE: false
-  OPTIMIZER: 'adam'
+  DISTRIBUTE: true
+  OPTIMIZER: 'sgd'
   LOCAL_RANK: 0
   HIDE_DATA_TIME: false 
   SAVE_ALL_MODEL: false

@@ -60,9 +60,9 @@ def main(cfg, local_rank):
         NotImplementedError
         
     start_epoch = 0
-    if cfg.MODEL.LOAD_MODEL != '':
+    if cfg.MODEL.INIT_WEIGHTS:
         model, optimizer, start_epoch = load_model(
-          model, cfg.MODEL.LOAD_MODEL, optimizer, cfg.TRAIN.RESUME, cfg.TRAIN.LR, cfg.TRAIN.LR_STEP)
+          model, cfg.MODEL.PRETRAINED, optimizer, cfg.TRAIN.RESUME, cfg.TRAIN.LR, cfg.TRAIN.LR_STEP)
 
     Trainer = train_factory[cfg.TASK]
     trainer = Trainer(cfg, local_rank, model, optimizer)

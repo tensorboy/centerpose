@@ -62,7 +62,6 @@ LOSS:
   REG_HP_OFFSET: true
   HM_HP_WEIGHT: 1.
 MODEL:
-  LOAD_MODEL: ''
   CENTER_THRESH: 0.1
   NUM_CLASSES: 1
   NAME: 'hrnet'

@@ -18,7 +18,6 @@ CUDNN:
   BENCHMARK: true
 
 MODEL:
-  LOAD_MODEL: ''
   CENTER_THRESH: 0.1
   NUM_CLASSES: 1
   NAME: 'shufflenetV2'

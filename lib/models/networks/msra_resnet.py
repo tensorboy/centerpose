@@ -162,14 +162,14 @@ class PoseResNet(nn.Module):
                         nn.Conv2d(256, head_conv, kernel_size=3, padding=1, bias=True),
                         nn.ReLU(inplace=True),
                         nn.Conv2d(head_conv, 2, kernel_size=1, stride=1, padding=0))                      
-        #self.seg_feat = nn.Sequential(
-        #                nn.Conv2d(256, head_conv, kernel_size=3, padding=1, bias=True),
-        #                nn.ReLU(inplace=True),
-        #                nn.Conv2d(head_conv, 48, kernel_size=1, stride=1, padding=0))                              
-        #self.seg =      nn.Sequential(
-        #                nn.Conv2d(256, head_conv, kernel_size=3, padding=1, bias=True),
-        #                nn.ReLU(inplace=True),
-        #                nn.Conv2d(head_conv, 432, kernel_size=1, stride=1, padding=0))                        
+        self.seg_feat = nn.Sequential(
+                        nn.Conv2d(256, head_conv, kernel_size=3, padding=1, bias=True),
+                        nn.ReLU(inplace=True),
+                        nn.Conv2d(head_conv, 48, kernel_size=1, stride=1, padding=0))                              
+        self.seg =      nn.Sequential(
+                        nn.Conv2d(256, head_conv, kernel_size=3, padding=1, bias=True),
+                        nn.ReLU(inplace=True),
+                        nn.Conv2d(head_conv, 432, kernel_size=1, stride=1, padding=0))                        
                         
 
     def _make_layer(self, block, planes, blocks, stride=1):
@@ -242,8 +242,8 @@ class PoseResNet(nn.Module):
 
         x = self.deconv_layers(x)
         
-        return [self.hm(x), self.wh(x), self.hps(x), self.reg(x), self.hm_hp(x), self.hp_offset(x)]
-        #return [self.hm(x), self.wh(x), self.hps(x), self.reg(x), self.hm_hp(x), self.hp_offset(x), self.seg_feat(x), self.seg(x)]
+        #return [self.hm(x), self.wh(x), self.hps(x), self.reg(x), self.hm_hp(x), self.hp_offset(x)]
+        return [self.hm(x), self.wh(x), self.hps(x), self.reg(x), self.hm_hp(x), self.hp_offset(x), self.seg_feat(x), self.seg(x)]
 
     def init_weights(self, num_layers, pretrained=True):
         if pretrained:

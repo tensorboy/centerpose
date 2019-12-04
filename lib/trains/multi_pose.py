@@ -31,8 +31,7 @@ class MultiPoseLoss(torch.nn.Module):
         hm_loss, wh_loss, off_loss, seg_loss, seg_feat_loss = 0, 0, 0, 0, 0
         hp_loss, off_loss, hm_hp_loss, hp_offset_loss = 0, 0, 0, 0
         hm, wh, hps, reg, hm_hp, hp_offset, seg_feat, seg = outputs
-        #print('seg feat shape', seg_feat.shape)
-        #print('seg feat', seg.shape)
+
 
         for s in range(cfg.MODEL.NUM_STACKS):
             hm = _sigmoid(hm)

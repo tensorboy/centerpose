@@ -30,6 +30,10 @@ def parse_args():
                         help='experiment configure file name',
                         required=True,
                         type=str)
+    parser.add_argument('--NMS',
+                        help='whether to do NMS',
+                        type=bool,
+                        default=True)                            
     parser.add_argument('--DEBUG', type=int, default=0,
                          help='level of visualization.'
                               '1: only show the final detection results'
@@ -44,7 +48,6 @@ def parse_args():
 def test(cfg):
 
     Dataset = dataset_factory[cfg.SAMPLE_METHOD]
-
     Logger(cfg)
     Detector = detector_factory[cfg.TEST.TASK]
 
@@ -80,5 +83,6 @@ if __name__ == '__main__':
     update_config(cfg, args.cfg)
     cfg.defrost()
     cfg.DEBUG = args.DEBUG
+    cfg.TEST.NMS = args.NMS    
     cfg.freeze()
     test(cfg)

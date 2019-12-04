@@ -189,16 +189,19 @@ class Debugger(object):
       cv2.putText(self.imgs[img_id], txt, (bbox[0], bbox[1] - 2), 
                   font, 0.5, (0, 0, 0), thickness=1, lineType=cv2.LINE_AA)
 
-  def add_coco_hp(self, points, img_id='default'): 
+  def add_coco_hp(self, points, points_prob, img_id='default'): 
     points = np.array(points, dtype=np.int32).reshape(self.num_joints, 2)
+    points_prob = np.array(points_prob, dtype=np.float32).reshape(self.num_joints)
+
     for j in range(self.num_joints):
-      cv2.circle(self.imgs[img_id],
-                 (points[j, 0], points[j, 1]), 2, (255,255,255), -1)
-                 
+        if points_prob[j]>0.:
+            cv2.circle(self.imgs[img_id],
+                      (points[j, 0], points[j, 1]), 2, (255,255,255), -1)
+                     
     stickwidth = 2
     cur_canvas = self.imgs[img_id].copy()             
     for j, e in enumerate(self.edges):
-      if points[e].min() > 0:
+        if points_prob[e[0]] > 0. and points_prob[e[1]] > 0.:
             X = [points[e[0], 1], points[e[1], 1]]
             Y = [points[e[0], 0], points[e[1], 0]]
             mX = np.mean(X)
@@ -208,20 +211,20 @@ class Debugger(object):
             polygon = cv2.ellipse2Poly((int(mY),int(mX)), (int(length/2), stickwidth), int(angle), 0, 360, 1)
             cv2.fillConvexPoly(cur_canvas, polygon, (255, 255, 255))
             self.imgs[img_id] = cv2.addWeighted(self.imgs[img_id], 0.8, cur_canvas, 0.2, 0)
-            
+
 
   def add_points(self, points, img_id='default'):
     num_classes = len(points)
     # assert num_classes == len(self.colors)
     for i in range(num_classes):
-      for j in range(len(points[i])):
-        c = self.colors[i, 0, 0]
-        cv2.circle(self.imgs[img_id], (points[i][j][0] * self.down_ratio, 
-                                       points[i][j][1] * self.down_ratio),
-                   5, (255, 255, 255), -1)
-        cv2.circle(self.imgs[img_id], (points[i][j][0] * self.down_ratio,
-                                       points[i][j][1] * self.down_ratio),
-                   3, (int(c[0]), int(c[1]), int(c[2])), -1)
+        for j in range(len(points[i])):
+            c = self.colors[i, 0, 0]
+            cv2.circle(self.imgs[img_id], (points[i][j][0] * self.down_ratio, 
+                                           points[i][j][1] * self.down_ratio),
+                       5, (255, 255, 255), -1)
+            cv2.circle(self.imgs[img_id], (points[i][j][0] * self.down_ratio,
+                                           points[i][j][1] * self.down_ratio),
+                       3, (int(c[0]), int(c[1]), int(c[2])), -1)
 
   def show_all_imgs(self, pause=False, time=0):
     if not self.ipynb:

@@ -18,7 +18,8 @@ CUDNN:
   BENCHMARK: true
 
 MODEL:
-  LOAD_MODEL: ''
+  INIT_WEIGHTS: true
+  PRETRAINED: '/data/pretrained_models/imagenet/hrnet_w32-36af842e.pth'
   CENTER_THRESH: 0.1
   NUM_CLASSES: 1
   NAME: 'hardnet'

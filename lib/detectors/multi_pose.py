@@ -30,7 +30,8 @@ class MultiPoseDetector(BaseDetector):
         with torch.no_grad():
             torch.cuda.synchronize()
             outputs = self.model(images)
-            hm, wh, hps, reg, hm_hp, hp_offset = outputs
+            hm, wh, hps, reg, hm_hp, hp_offset = outputs            
+            #hm, wh, hps, reg, hm_hp, hp_offset, seg_feat, seg = outputs
                     
             hm = hm.sigmoid_()
             if self.cfg.LOSS.HM_HP and not self.cfg.LOSS.MSE_LOSS:
@@ -69,7 +70,7 @@ class MultiPoseDetector(BaseDetector):
         for j in range(1, self.num_classes + 1):
             dets[0][j] = np.array(dets[0][j], dtype=np.float32).reshape(-1, 56)
             dets[0][j][:, :4] /= scale
-            dets[0][j][:, 5:] /= scale
+            dets[0][j][:, 5:39] /= scale
         return dets[0]
 
     def merge_outputs(self, detections):
@@ -97,8 +98,12 @@ class MultiPoseDetector(BaseDetector):
   
     def show_results(self, debugger, image, results):
         debugger.add_img(image, img_id='multi_pose')
-        for bbox in results[1]:
-            if bbox[4] > self.cfg.TEST.VIS_THRESH:
-                debugger.add_coco_bbox(bbox[:4], 0, bbox[4], img_id='multi_pose')
-                debugger.add_coco_hp(bbox[5:39], img_id='multi_pose')
+        for detection in results[1]:
+            bbox = detection[:4]
+            bbox_prob = detection[4]
+            keypoints = detection[5:39]
+            keypoints_prob = detection[39:]
+            if bbox_prob > self.cfg.TEST.VIS_THRESH:
+                debugger.add_coco_bbox(bbox, 0, bbox_prob, img_id='multi_pose')
+                debugger.add_coco_hp(keypoints, keypoints_prob, img_id='multi_pose')
         debugger.show_all_imgs(pause=self.pause)
