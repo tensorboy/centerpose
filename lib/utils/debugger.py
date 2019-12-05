@@ -1,10 +1,9 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-import numpy as np
-import cv2
 import math
+
+import cv2
+import numpy as np
 
 
 class Debugger(object):
@@ -226,6 +225,12 @@ class Debugger(object):
                                            points[i][j][1] * self.down_ratio),
                        3, (int(c[0]), int(c[1]), int(c[2])), -1)
 
+  def add_coco_seg(self, seg, img_id='default'):
+
+      seg = seg > 0
+      color = np.array([[np.random.randint(0, 255), np.random.randint(0, 255), np.random.randint(0, 255)]])
+      self.imgs[img_id][seg] = self.imgs[img_id][seg]*0.2 + color*0.8
+      
   def show_all_imgs(self, pause=False, time=0):
     if not self.ipynb:
       for i, v in self.imgs.items():

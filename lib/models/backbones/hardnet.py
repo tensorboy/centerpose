@@ -1,7 +1,7 @@
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import numpy as np
 
 
 class ConvLayer(nn.Sequential):
@@ -228,4 +228,3 @@ class hardnet(nn.Module):
 def get_hard_net(num_layers, head_conv, cfg):
   model = hardnet(head_conv)
   return model
-

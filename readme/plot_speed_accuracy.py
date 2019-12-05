@@ -1,7 +1,8 @@
-import plotly.graph_objects as go
-import plotly.express as px
-import pandas as pd
 import math
+
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
 
 sizeref = 2000
 

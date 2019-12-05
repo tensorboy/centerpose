@@ -1,11 +1,11 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import math
+
 import torch.nn.functional as F
 from torch import nn
 from torch.nn import init
+
 from .DCNv2.dcn_v2 import DCN
 
 

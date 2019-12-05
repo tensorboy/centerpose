@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+
 class BasicBlock(nn.Module):
     def __init__(self, c_in, c_out,is_downsample=False):
         super(BasicBlock,self).__init__()
@@ -100,5 +101,3 @@ if __name__ == '__main__':
     x = torch.randn(4,3,128,64)
     y = net(x)
     import ipdb; ipdb.set_trace()
-
-

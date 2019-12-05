@@ -5,9 +5,7 @@
 # Modified by Xingyi Zhou
 # ------------------------------------------------------------------------------
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import os
 
@@ -108,8 +106,6 @@ def fill_fc_weights(layers):
   for m in layers.modules():
     if isinstance(m, nn.Conv2d):
       nn.init.normal_(m.weight, std=0.001)
-      # torch.nn.init.kaiming_normal_(m.weight.data, nonlinearity='relu')
-      # torch.nn.init.xavier_normal_(m.weight.data)
       if m.bias is not None:
         nn.init.constant_(m.bias, 0)
         

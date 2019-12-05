@@ -1,18 +1,18 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-import torch.utils.data as data
+import json
+import math
+import os
+
+import cv2
 import numpy as np
 import torch
-import json
-import cv2
-import os
-from utils.image import flip, color_aug
-from utils.image import get_affine_transform, affine_transform
-from utils.image import gaussian_radius, draw_umich_gaussian, draw_msra_gaussian
-from utils.image import draw_dense_reg
-import math
+import torch.utils.data as data
+
+from utils.image import (affine_transform, color_aug, draw_dense_reg,
+                         draw_msra_gaussian, draw_umich_gaussian, flip,
+                         gaussian_radius, get_affine_transform)
+
 
 class MultiPoseDataset(data.Dataset):
   def _coco_box_to_bbox(self, box):

@@ -1,9 +1,10 @@
+import cv2
+import numpy as np
 import torch
 import torchvision.transforms as transforms
-import numpy as np
-import cv2
 
 from .model import Net
+
 
 class Extractor(object):
     def __init__(self, model_path, use_cuda=True):
@@ -32,4 +33,3 @@ if __name__ == '__main__':
     extr = Extractor("checkpoint/ckpt.t7")
     feature = extr(img)
     print(feature.shape)
-

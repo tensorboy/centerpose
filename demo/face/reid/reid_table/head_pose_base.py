@@ -1,14 +1,14 @@
+import collections
+import copy
+import logging
+from typing import List
+
 import numpy as np
 from numpy import linalg as LA
 from scipy.optimize import linear_sum_assignment
-import collections
-import copy
-from typing import List
-import logging
 
 from .base_idbase import BaseReidDatabase
-from .reid_utils import MatchFlags, HEADFLAGS, assign_head_status
-
+from .reid_utils import HEADFLAGS, MatchFlags, assign_head_status
 
 logger = logging.getLogger(__name__)
 

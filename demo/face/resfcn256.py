@@ -1,5 +1,6 @@
 from torch import nn
 
+
 def padding_same_conv2d(input_size, in_c, out_c, kernel_size=4, stride=1):
     output_size = input_size // stride
     padding_num = stride * (output_size - 1) - input_size + kernel_size

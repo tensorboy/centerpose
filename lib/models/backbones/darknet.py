@@ -1,8 +1,9 @@
+import math
+from collections import OrderedDict
+
 import torch
 import torch.nn as nn
-import math
 import torch.nn.functional as F
-from collections import OrderedDict
 
 
 def fill_fc_weights(layers):

@@ -1,18 +1,20 @@
-from centernet_tensorrt_engine import CenterNetTensorRTEngine
-import os
-import cv2
-import math
-import time
-import torch
-import numpy as np
-import pickle
-import tensorrt as trt
 import logging
+import math
+import os
+import pickle
+import time
+
+import cv2
+import numpy as np
+import tensorrt as trt
+import torch
+from torchvision import transforms
+
+from centernet_tensorrt_engine import CenterNetTensorRTEngine
 from face.centerface import CenterFace
 from face.prnet import PRN
+from face.utils.cv_plot import plot_kpt, plot_pose_box, plot_vertices
 from face.utils.estimate_pose import estimate_pose
-from torchvision import transforms
-from face.utils.cv_plot import plot_kpt, plot_vertices, plot_pose_box
 from tracking.deep_sort import DeepSort
 from tracking.util import COLORS_10, draw_bboxes
 
@@ -282,4 +284,3 @@ cv2.destroyAllWindows()
 #    toc = time.time()
 #    all_times.append(toc-tic)
 #    print('mean times', np.mean(all_times))
-

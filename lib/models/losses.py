@@ -4,15 +4,14 @@
 # Copyright (c) 2018, University of Michigan
 # Licensed under the BSD 3-Clause License
 # ------------------------------------------------------------------------------
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import torch
 import torch.nn as nn
-from .utils import _transpose_and_gather_feat
 import torch.nn.functional as F
 from torch.autograd import Variable
+
+from .utils import _transpose_and_gather_feat
 
 try:
     from itertools import ifilterfalse
@@ -521,5 +520,3 @@ def mean(l, ignore_nan=False, empty=0):
     if n == 1:
         return acc
     return acc / n    
-    
-    

@@ -1,15 +1,14 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-import pycocotools.coco as coco
-from pycocotools.cocoeval import COCOeval
-import numpy as np
-import time
 import json
 import os
+import time
 
+import numpy as np
+import pycocotools.coco as coco
 import torch.utils.data as data
+from pycocotools.cocoeval import COCOeval
+
 
 class COCOHP(data.Dataset):
     num_classes = 1

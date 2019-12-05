@@ -1,22 +1,16 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import, division, print_function
 
-import os
 import math
-import logging
-import numpy as np
 from os.path import join
 
+import numpy as np
 import torch
-from torch import nn
-import torch.nn.functional as F
 import torch.utils.model_zoo as model_zoo
+from torch import nn
 
-from .DCNv2.dcn_v2 import DCN
-
-BN_MOMENTUM = 0.1
-logger = logging.getLogger(__name__)
+BatchNorm = nn.BatchNorm2d
 
 def get_model_url(data='imagenet', name='dla34', hash='ba72cf86'):
     return join('http://dl.yf.io/dla/models', data, '{}-{}.pth'.format(name, hash))
@@ -34,12 +28,12 @@ class BasicBlock(nn.Module):
         self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=3,
                                stride=stride, padding=dilation,
                                bias=False, dilation=dilation)
-        self.bn1 = nn.BatchNorm2d(planes, momentum=BN_MOMENTUM)
+        self.bn1 = BatchNorm(planes)
         self.relu = nn.ReLU(inplace=True)
         self.conv2 = nn.Conv2d(planes, planes, kernel_size=3,
                                stride=1, padding=dilation,
                                bias=False, dilation=dilation)
-        self.bn2 = nn.BatchNorm2d(planes, momentum=BN_MOMENTUM)
+        self.bn2 = BatchNorm(planes)
         self.stride = stride
 
     def forward(self, x, residual=None):
@@ -68,14 +62,14 @@ class Bottleneck(nn.Module):
         bottle_planes = planes // expansion
         self.conv1 = nn.Conv2d(inplanes, bottle_planes,
                                kernel_size=1, bias=False)
-        self.bn1 = nn.BatchNorm2d(bottle_planes, momentum=BN_MOMENTUM)
+        self.bn1 = BatchNorm(bottle_planes)
         self.conv2 = nn.Conv2d(bottle_planes, bottle_planes, kernel_size=3,
                                stride=stride, padding=dilation,
                                bias=False, dilation=dilation)
-        self.bn2 = nn.BatchNorm2d(bottle_planes, momentum=BN_MOMENTUM)
+        self.bn2 = BatchNorm(bottle_planes)
         self.conv3 = nn.Conv2d(bottle_planes, planes,
                                kernel_size=1, bias=False)
-        self.bn3 = nn.BatchNorm2d(planes, momentum=BN_MOMENTUM)
+        self.bn3 = BatchNorm(planes)
         self.relu = nn.ReLU(inplace=True)
         self.stride = stride
 
@@ -112,14 +106,14 @@ class BottleneckX(nn.Module):
         bottle_planes = planes * cardinality // 32
         self.conv1 = nn.Conv2d(inplanes, bottle_planes,
                                kernel_size=1, bias=False)
-        self.bn1 = nn.BatchNorm2d(bottle_planes, momentum=BN_MOMENTUM)
+        self.bn1 = BatchNorm(bottle_planes)
         self.conv2 = nn.Conv2d(bottle_planes, bottle_planes, kernel_size=3,
                                stride=stride, padding=dilation, bias=False,
                                dilation=dilation, groups=cardinality)
-        self.bn2 = nn.BatchNorm2d(bottle_planes, momentum=BN_MOMENTUM)
+        self.bn2 = BatchNorm(bottle_planes)
         self.conv3 = nn.Conv2d(bottle_planes, planes,
                                kernel_size=1, bias=False)
-        self.bn3 = nn.BatchNorm2d(planes, momentum=BN_MOMENTUM)
+        self.bn3 = BatchNorm(planes)
         self.relu = nn.ReLU(inplace=True)
         self.stride = stride
 
@@ -150,7 +144,7 @@ class Root(nn.Module):
         self.conv = nn.Conv2d(
             in_channels, out_channels, 1,
             stride=1, bias=False, padding=(kernel_size - 1) // 2)
-        self.bn = nn.BatchNorm2d(out_channels, momentum=BN_MOMENTUM)
+        self.bn = BatchNorm(out_channels)
         self.relu = nn.ReLU(inplace=True)
         self.residual = residual
 
@@ -202,7 +196,7 @@ class Tree(nn.Module):
             self.project = nn.Sequential(
                 nn.Conv2d(in_channels, out_channels,
                           kernel_size=1, stride=1, bias=False),
-                nn.BatchNorm2d(out_channels, momentum=BN_MOMENTUM)
+                BatchNorm(out_channels)
             )
 
     def forward(self, x, residual=None, children=None):
@@ -223,14 +217,16 @@ class Tree(nn.Module):
 
 class DLA(nn.Module):
     def __init__(self, levels, channels, num_classes=1000,
-                 block=BasicBlock, residual_root=False, linear_root=False):
+                 block=BasicBlock, residual_root=False, return_levels=False,
+                 pool_size=7, linear_root=False):
         super(DLA, self).__init__()
         self.channels = channels
+        self.return_levels = return_levels
         self.num_classes = num_classes
         self.base_layer = nn.Sequential(
             nn.Conv2d(3, channels[0], kernel_size=7, stride=1,
                       padding=3, bias=False),
-            nn.BatchNorm2d(channels[0], momentum=BN_MOMENTUM),
+            BatchNorm(channels[0]),
             nn.ReLU(inplace=True))
         self.level0 = self._make_conv_level(
             channels[0], channels[0], levels[0])
@@ -246,13 +242,17 @@ class DLA(nn.Module):
         self.level5 = Tree(levels[5], block, channels[4], channels[5], 2,
                            level_root=True, root_residual=residual_root)
 
-        # for m in self.modules():
-        #     if isinstance(m, nn.Conv2d):
-        #         n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
-        #         m.weight.data.normal_(0, math.sqrt(2. / n))
-        #     elif isinstance(m, nn.BatchNorm2d):
-        #         m.weight.data.fill_(1)
-        #         m.bias.data.zero_()
+        self.avgpool = nn.AvgPool2d(pool_size)
+        self.fc = nn.Conv2d(channels[-1], num_classes, kernel_size=1,
+                            stride=1, padding=0, bias=True)
+
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+                m.weight.data.normal_(0, math.sqrt(2. / n))
+            elif isinstance(m, BatchNorm):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
 
     def _make_level(self, block, inplanes, planes, blocks, stride=1):
         downsample = None
@@ -261,7 +261,7 @@ class DLA(nn.Module):
                 nn.MaxPool2d(stride, stride=stride),
                 nn.Conv2d(inplanes, planes,
                           kernel_size=1, stride=1, bias=False),
-                nn.BatchNorm2d(planes, momentum=BN_MOMENTUM),
+                BatchNorm(planes),
             )
 
         layers = []
@@ -278,7 +278,7 @@ class DLA(nn.Module):
                 nn.Conv2d(inplanes, planes, kernel_size=3,
                           stride=stride if i == 0 else 1,
                           padding=dilation, bias=False, dilation=dilation),
-                nn.BatchNorm2d(planes, momentum=BN_MOMENTUM),
+                BatchNorm(planes),
                 nn.ReLU(inplace=True)])
             inplanes = planes
         return nn.Sequential(*modules)
@@ -289,10 +289,17 @@ class DLA(nn.Module):
         for i in range(6):
             x = getattr(self, 'level{}'.format(i))(x)
             y.append(x)
-        return y
+        if self.return_levels:
+            return y
+        else:
+            x = self.avgpool(x)
+            x = self.fc(x)
+            x = x.view(x.size(0), -1)
 
-    def load_pretrained_model(self, data='imagenet', name='dla34', hash='ba72cf86'):
-        # fc = self.fc
+            return x
+
+    def load_pretrained_model(self,  data='imagenet', name='dla34', hash='ba72cf86'):
+        fc = self.fc
         if name.endswith('.pth'):
             model_weights = torch.load(data + name)
         else:
@@ -303,10 +310,10 @@ class DLA(nn.Module):
             self.channels[-1], num_classes,
             kernel_size=1, stride=1, padding=0, bias=True)
         self.load_state_dict(model_weights)
-        # self.fc = fc
+        self.fc = fc
 
 
-def dla34(pretrained=True, **kwargs):  # DLA-34
+def dla34(pretrained, **kwargs):  # DLA-34
     model = DLA([1, 1, 1, 2, 2, 1],
                 [16, 32, 64, 128, 256, 512],
                 block=BasicBlock, **kwargs)
@@ -314,20 +321,105 @@ def dla34(pretrained=True, **kwargs):  # DLA-34
         model.load_pretrained_model(data='imagenet', name='dla34', hash='ba72cf86')
     return model
 
-class Identity(nn.Module):
 
+def dla46_c(pretrained=None, **kwargs):  # DLA-46-C
+    Bottleneck.expansion = 2
+    model = DLA([1, 1, 1, 2, 2, 1],
+                [16, 32, 64, 64, 128, 256],
+                block=Bottleneck, **kwargs)
+    if pretrained is not None:
+        model.load_pretrained_model(pretrained, 'dla46_c')
+    return model
+
+
+def dla46x_c(pretrained=None, **kwargs):  # DLA-X-46-C
+    BottleneckX.expansion = 2
+    model = DLA([1, 1, 1, 2, 2, 1],
+                [16, 32, 64, 64, 128, 256],
+                block=BottleneckX, **kwargs)
+    if pretrained is not None:
+        model.load_pretrained_model(pretrained, 'dla46x_c')
+    return model
+
+
+def dla60x_c(pretrained, **kwargs):  # DLA-X-60-C
+    BottleneckX.expansion = 2
+    model = DLA([1, 1, 1, 2, 3, 1],
+                [16, 32, 64, 64, 128, 256],
+                block=BottleneckX, **kwargs)
+    if pretrained:
+        model.load_pretrained_model(data='imagenet', name='dla60x_c', hash='b870c45c')
+    return model
+
+
+def dla60(pretrained=None, **kwargs):  # DLA-60
+    Bottleneck.expansion = 2
+    model = DLA([1, 1, 1, 2, 3, 1],
+                [16, 32, 128, 256, 512, 1024],
+                block=Bottleneck, **kwargs)
+    if pretrained is not None:
+        model.load_pretrained_model(pretrained, 'dla60')
+    return model
+
+
+def dla60x(pretrained=None, **kwargs):  # DLA-X-60
+    BottleneckX.expansion = 2
+    model = DLA([1, 1, 1, 2, 3, 1],
+                [16, 32, 128, 256, 512, 1024],
+                block=BottleneckX, **kwargs)
+    if pretrained is not None:
+        model.load_pretrained_model(pretrained, 'dla60x')
+    return model
+
+
+def dla102(pretrained=None, **kwargs):  # DLA-102
+    Bottleneck.expansion = 2
+    model = DLA([1, 1, 1, 3, 4, 1], [16, 32, 128, 256, 512, 1024],
+                block=Bottleneck, residual_root=True, **kwargs)
+    if pretrained is not None:
+        model.load_pretrained_model(pretrained, 'dla102')
+    return model
+
+
+def dla102x(pretrained=None, **kwargs):  # DLA-X-102
+    BottleneckX.expansion = 2
+    model = DLA([1, 1, 1, 3, 4, 1], [16, 32, 128, 256, 512, 1024],
+                block=BottleneckX, residual_root=True, **kwargs)
+    if pretrained is not None:
+        model.load_pretrained_model(pretrained, 'dla102x')
+    return model
+
+
+def dla102x2(pretrained=None, **kwargs):  # DLA-X-102 64
+    BottleneckX.cardinality = 64
+    model = DLA([1, 1, 1, 3, 4, 1], [16, 32, 128, 256, 512, 1024],
+                block=BottleneckX, residual_root=True, **kwargs)
+    if pretrained is not None:
+        model.load_pretrained_model(pretrained, 'dla102x2')
+    return model
+
+
+def dla169(pretrained=None, **kwargs):  # DLA-169
+    Bottleneck.expansion = 2
+    model = DLA([1, 1, 2, 3, 5, 1], [16, 32, 128, 256, 512, 1024],
+                block=Bottleneck, residual_root=True, **kwargs)
+    if pretrained is not None:
+        model.load_pretrained_model(pretrained, 'dla169')
+    return model
+
+
+def set_bn(bn):
+    global BatchNorm
+    BatchNorm = bn
+    dla.BatchNorm = bn
+
+
+class Identity(nn.Module):
     def __init__(self):
         super(Identity, self).__init__()
 
     def forward(self, x):
         return x
-
-
-def fill_fc_weights(layers):
-    for m in layers.modules():
-        if isinstance(m, nn.Conv2d):
-            if m.bias is not None:
-                nn.init.constant_(m.bias, 0)
 
 
 def fill_up_weights(up):
@@ -342,55 +434,68 @@ def fill_up_weights(up):
         w[c, 0, :, :] = w[0, 0, :, :]
 
 
-class DeformConv(nn.Module):
-    def __init__(self, chi, cho):
-        super(DeformConv, self).__init__()
-        self.actf = nn.Sequential(
-            nn.BatchNorm2d(cho, momentum=BN_MOMENTUM),
-            nn.ReLU(inplace=True)
-        )
-        self.conv = DCN(chi, cho, kernel_size=(3,3), stride=1, padding=1, dilation=1, deformable_groups=1)
-
-    def forward(self, x):
-        x = self.conv(x)
-        x = self.actf(x)
-        return x
-
-
 class IDAUp(nn.Module):
-
-    def __init__(self, o, channels, up_f):
+    def __init__(self, node_kernel, out_dim, channels, up_factors):
         super(IDAUp, self).__init__()
-        for i in range(1, len(channels)):
-            c = channels[i]
-            f = int(up_f[i])  
-            proj = DeformConv(c, o)
-            node = DeformConv(o, o)
-     
-            up = nn.ConvTranspose2d(o, o, f * 2, stride=f, 
-                                    padding=f // 2, output_padding=0,
-                                    groups=o, bias=False)
-            fill_up_weights(up)
-
+        self.channels = channels
+        self.out_dim = out_dim
+        for i, c in enumerate(channels):
+            if c == out_dim:
+                proj = Identity()
+            else:
+                proj = nn.Sequential(
+                    nn.Conv2d(c, out_dim,
+                              kernel_size=1, stride=1, bias=False),
+                    BatchNorm(out_dim),
+                    nn.ReLU(inplace=True))
+            f = int(up_factors[i])
+            if f == 1:
+                up = Identity()
+            else:
+                up = nn.ConvTranspose2d(
+                    out_dim, out_dim, f * 2, stride=f, padding=f // 2,
+                    output_padding=0, groups=out_dim, bias=False)
+                fill_up_weights(up)
             setattr(self, 'proj_' + str(i), proj)
             setattr(self, 'up_' + str(i), up)
-            setattr(self, 'node_' + str(i), node)
-                 
-        
-    def forward(self, layers, startp, endp):
-        for i in range(startp + 1, endp):
-            upsample = getattr(self, 'up_' + str(i - startp))
-            project = getattr(self, 'proj_' + str(i - startp))
-            layers[i] = upsample(project(layers[i]))
-            node = getattr(self, 'node_' + str(i - startp))
-            layers[i] = node(layers[i] + layers[i - 1])
 
+        for i in range(1, len(channels)):
+            node = nn.Sequential(
+                nn.Conv2d(out_dim * 2, out_dim,
+                          kernel_size=node_kernel, stride=1,
+                          padding=node_kernel // 2, bias=False),
+                BatchNorm(out_dim),
+                nn.ReLU(inplace=True))
+            setattr(self, 'node_' + str(i), node)
+
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+                m.weight.data.normal_(0, math.sqrt(2. / n))
+            elif isinstance(m, BatchNorm):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
+
+    def forward(self, layers):
+        assert len(self.channels) == len(layers), \
+            '{} vs {} layers'.format(len(self.channels), len(layers))
+        layers = list(layers)
+        for i, l in enumerate(layers):
+            upsample = getattr(self, 'up_' + str(i))
+            project = getattr(self, 'proj_' + str(i))
+            layers[i] = upsample(project(l))
+        x = layers[0]
+        y = []
+        for i in range(1, len(layers)):
+            node = getattr(self, 'node_' + str(i))
+            x = node(torch.cat([x, layers[i]], 1))
+            y.append(x)
+        return x, y
 
 
 class DLAUp(nn.Module):
-    def __init__(self, startp, channels, scales, in_channels=None):
+    def __init__(self, channels, scales=(1, 2, 4, 8, 16), in_channels=None):
         super(DLAUp, self).__init__()
-        self.startp = startp
         if in_channels is None:
             in_channels = channels
         self.channels = channels
@@ -399,111 +504,141 @@ class DLAUp(nn.Module):
         for i in range(len(channels) - 1):
             j = -i - 2
             setattr(self, 'ida_{}'.format(i),
-                    IDAUp(channels[j], in_channels[j:],
+                    IDAUp(3, channels[j], in_channels[j:],
                           scales[j:] // scales[j]))
             scales[j + 1:] = scales[j]
             in_channels[j + 1:] = [channels[j] for _ in channels[j + 1:]]
 
     def forward(self, layers):
-        out = [layers[-1]] # start with 32
-        for i in range(len(layers) - self.startp - 1):
+        layers = list(layers)
+        assert len(layers) > 1
+        for i in range(len(layers) - 1):
             ida = getattr(self, 'ida_{}'.format(i))
-            ida(layers, len(layers) -i - 2, len(layers))
-            out.insert(0, layers[-1])
-        return out
-
-
-class Interpolate(nn.Module):
-    def __init__(self, scale, mode):
-        super(Interpolate, self).__init__()
-        self.scale = scale
-        self.mode = mode
-        
-    def forward(self, x):
-        x = F.interpolate(x, scale_factor=self.scale, mode=self.mode, align_corners=False)
+            x, y = ida(layers[-i - 2:])
+            layers[-i - 1:] = y
         return x
 
+def fill_fc_weights(layers):
+    for m in layers.modules():
+        if isinstance(m, nn.Conv2d):
+            nn.init.normal_(m.weight, std=0.001)
+            # torch.nn.init.kaiming_normal_(m.weight.data, nonlinearity='relu')
+            # torch.nn.init.xavier_normal_(m.weight.data)
+            if m.bias is not None:
+                nn.init.constant_(m.bias, 0)
 
 class DLASeg(nn.Module):
-    def __init__(self, base_name, pretrained, down_ratio, final_kernel,
-                 last_level, head_conv, out_channel=0):
+    def __init__(self, base_name, heads,
+                 pretrained=True, down_ratio=4, head_conv=256):
         super(DLASeg, self).__init__()
         assert down_ratio in [2, 4, 8, 16]
+        self.heads = heads
         self.first_level = int(np.log2(down_ratio))
-        self.last_level = last_level
-        self.base = globals()[base_name](pretrained=pretrained)
+        self.base = globals()[base_name](
+          pretrained=pretrained, return_levels=True)
         channels = self.base.channels
         scales = [2 ** i for i in range(len(channels[self.first_level:]))]
-        self.dla_up = DLAUp(self.first_level, channels[self.first_level:], scales)
+        self.dla_up = DLAUp(channels[self.first_level:], scales=scales)
+        '''
+        self.fc = nn.Sequential(
+            nn.Conv2d(channels[self.first_level], classes, kernel_size=1,
+                      stride=1, padding=0, bias=True)
+        )
+        '''
 
-        if out_channel == 0:
-            out_channel = channels[self.first_level]
+        for head in self.heads:
+            classes = self.heads[head]
+            if head_conv > 0:
+                fc = nn.Sequential(
+                  nn.Conv2d(channels[self.first_level], head_conv,
+                    kernel_size=3, padding=1, bias=True),
+                  nn.ReLU(inplace=True),
+                  nn.Conv2d(head_conv, classes, 
+                    kernel_size=1, stride=1, 
+                    padding=0, bias=True))
+                if 'hm' in head:
+                    fc[-1].bias.data.fill_(-2.19)
+                else:
+                    fill_fc_weights(fc)
+            else:
+                fc = nn.Conv2d(channels[self.first_level], classes, 
+                  kernel_size=1, stride=1, 
+                  padding=0, bias=True)
+                if 'hm' in head:
+                    fc.bias.data.fill_(-2.19)
+                else:
+                    fill_fc_weights(fc)
+            self.__setattr__(head, fc)
 
-        self.ida_up = IDAUp(out_channel, channels[self.first_level:self.last_level], 
-                            [2 ** i for i in range(self.last_level - self.first_level)])
- 
-        self.hm = nn.Sequential(
-                  nn.Conv2d(channels[self.first_level], head_conv,
-                    kernel_size=3, padding=1, bias=True),
-                  nn.ReLU(inplace=True),
-                  nn.Conv2d(head_conv, 1, 
-                    kernel_size=final_kernel, stride=1, 
-                    padding=final_kernel // 2, bias=True))                          
-        self.wh = nn.Sequential(
-                  nn.Conv2d(channels[self.first_level], head_conv,
-                    kernel_size=3, padding=1, bias=True),
-                  nn.ReLU(inplace=True),
-                  nn.Conv2d(head_conv, 2, 
-                    kernel_size=final_kernel, stride=1, 
-                    padding=final_kernel // 2, bias=True))
-        self.hps = nn.Sequential(
-                  nn.Conv2d(channels[self.first_level], head_conv,
-                    kernel_size=3, padding=1, bias=True),
-                  nn.ReLU(inplace=True),
-                  nn.Conv2d(head_conv, 34, 
-                    kernel_size=final_kernel, stride=1, 
-                    padding=final_kernel // 2, bias=True))            
-        self.reg = nn.Sequential(
-                  nn.Conv2d(channels[self.first_level], head_conv,
-                    kernel_size=3, padding=1, bias=True),
-                  nn.ReLU(inplace=True),
-                  nn.Conv2d(head_conv, 2, 
-                    kernel_size=final_kernel, stride=1, 
-                    padding=final_kernel // 2, bias=True))    
-        self.hm_hp = nn.Sequential(
-                  nn.Conv2d(channels[self.first_level], head_conv,
-                    kernel_size=3, padding=1, bias=True),
-                  nn.ReLU(inplace=True),
-                  nn.Conv2d(head_conv, 17, 
-                    kernel_size=final_kernel, stride=1, 
-                    padding=final_kernel // 2, bias=True))                                      
-        self.hp_offset = nn.Sequential(
-                  nn.Conv2d(channels[self.first_level], head_conv,
-                    kernel_size=3, padding=1, bias=True),
-                  nn.ReLU(inplace=True),
-                  nn.Conv2d(head_conv, 2, 
-                    kernel_size=final_kernel, stride=1, 
-                    padding=final_kernel // 2, bias=True))
-                                 
+        '''
+        up_factor = 2 ** self.first_level
+        if up_factor > 1:
+            up = nn.ConvTranspose2d(classes, classes, up_factor * 2,
+                                    stride=up_factor, padding=up_factor // 2,
+                                    output_padding=0, groups=classes,
+                                    bias=False)
+            fill_up_weights(up)
+            up.weight.requires_grad = False
+        else:
+            up = Identity()
+        self.up = up
+        self.softmax = nn.LogSoftmax(dim=1)
+        
+
+        for m in self.fc.modules():
+            if isinstance(m, nn.Conv2d):
+                n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+                m.weight.data.normal_(0, math.sqrt(2. / n))
+            elif isinstance(m, BatchNorm):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
+        '''
 
     def forward(self, x):
         x = self.base(x)
-        x = self.dla_up(x)
+        x = self.dla_up(x[self.first_level:])
+        # x = self.fc(x)
+        # y = self.softmax(self.up(x))
+        ret = {}
+        for head in self.heads:
+            ret[head] = self.__getattr__(head)(x)
+        return [ret]
 
-        y = []
-        for i in range(self.last_level - self.first_level):
-            y.append(x[i].clone())
-        self.ida_up(y, 0, len(y))
+    '''
+    def optim_parameters(self, memo=None):
+        for param in self.base.parameters():
+            yield param
+        for param in self.dla_up.parameters():
+            yield param
+        for param in self.fc.parameters():
+            yield param
+    '''
+'''
+def dla34up(classes, pretrained_base=None, **kwargs):
+    model = DLASeg('dla34', classes, pretrained_base=pretrained_base, **kwargs)
+    return model
 
-        return [self.hm(y[-1]), self.wh(y[-1]), self.hps(y[-1]), self.reg(y[-1]), self.hm_hp(y[-1]), self.hp_offset(y[-1])]
-    
 
-def get_pose_net(num_layers, head_conv=256, cfg=None, down_ratio=4):
-  model = DLASeg('dla{}'.format(num_layers),
+def dla60up(classes, pretrained_base=None, **kwargs):
+    model = DLASeg('dla60', classes, pretrained_base=pretrained_base, **kwargs)
+    return model
+
+
+def dla102up(classes, pretrained_base=None, **kwargs):
+    model = DLASeg('dla102', classes,
+                   pretrained_base=pretrained_base, **kwargs)
+    return model
+
+
+def dla169up(classes, pretrained_base=None, **kwargs):
+    model = DLASeg('dla169', classes,
+                   pretrained_base=pretrained_base, **kwargs)
+    return model
+'''
+
+def get_pose_net(num_layers, heads, head_conv=256, down_ratio=4):
+  model = DLASeg('dla{}'.format(num_layers), heads,
                  pretrained=True,
                  down_ratio=down_ratio,
-                 final_kernel=1,
-                 last_level=5,
                  head_conv=head_conv)
   return model
-

@@ -18,7 +18,7 @@ CUDNN:
   BENCHMARK: true
 
 MODEL:
-  INIT_WEIGHTS: true
+  INIT_WEIGHTS: false
   PRETRAINED: '/data/pretrained_models/imagenet/hrnet_w32-36af842e.pth'
   CENTER_THRESH: 0.1
   NUM_CLASSES: 1
@@ -114,7 +114,7 @@ TRAIN:
  
 TEST:
   # Test Model Epoch
-  MODEL_PATH: '/home/tensorboy/data/centerpose/hardnet/model_best.pth'
+  MODEL_PATH: '/home/tensorboy/data/centerpose/model_zoo/hardnet_best.pth'
   TASK: 'multi_pose'
   FLIP_TEST: true
 

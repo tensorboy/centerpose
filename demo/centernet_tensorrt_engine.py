@@ -1,18 +1,17 @@
-import os
-import cv2
-import sys
-import numpy as np
 import logging
+import os
+import sys
+
+import cv2
+import numpy as np
 import torch
 import torch.nn as nn
 
 import _init_paths
-from config import cfg
-from config import update_config
-from utils.image import get_affine_transform, transform_preds
+from config import cfg, update_config
 from models.utils import _gather_feat, _transpose_and_gather_feat
-
 from tensorrt_model import TRTModel
+from utils.image import get_affine_transform, transform_preds
 
 logger = logging.getLogger(__name__)
 def kp_connections(keypoints):

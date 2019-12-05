@@ -1,15 +1,12 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
+
+import argparse
+import os
+
+import cv2
 
 import _init_paths
-
-import os
-import cv2
-import argparse
-
-from config import cfg
-from config import update_config
+from config import cfg, update_config
 from detectors.detector_factory import detector_factory
 
 

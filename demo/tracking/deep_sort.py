@@ -1,12 +1,13 @@
+import time
+
 import numpy as np
 
 from .feature_extractor import Extractor
+from .sort.detection import Detection
 from .sort.nn_matching import NearestNeighborDistanceMetric
 from .sort.preprocessing import non_max_suppression
-from .sort.detection import Detection
 from .sort.tracker import Tracker
 
-import time
 
 class DeepSort(object):
     def __init__(self, model_path):

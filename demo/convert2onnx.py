@@ -1,25 +1,27 @@
-import os
-import cv2
-import json
-import numpy as np
 import argparse
-import math
 import glob
-import time
+import json
 import logging
-import _init_paths
-import torch
-import onnxruntime as nxrun
-from utils.post_process import multi_pose_post_process
-from utils.image import get_affine_transform
-from models.model import create_model
-from models.decode import multi_pose_decode
-logger = logging.getLogger(__name__)
-from utils.debugger import Debugger
+import math
+import os
+import time
 from collections import OrderedDict
 
-from config import cfg
-from config import update_config
+import cv2
+import numpy as np
+import onnxruntime as nxrun
+import torch
+
+import _init_paths
+from config import cfg, update_config
+from models.decode import multi_pose_decode
+from models.model import create_model
+from utils.debugger import Debugger
+from utils.image import get_affine_transform
+from utils.post_process import multi_pose_post_process
+
+logger = logging.getLogger(__name__)
+
 
 def gather(a, dim, index):
     expanded_index = [index if dim==i else np.arange(a.shape[i]).reshape([-1 if i==j else 1 for j in range(a.ndim)]) for i in range(a.ndim)]
@@ -215,4 +217,3 @@ if __name__ == '__main__':
     config_name = '../experiments/hrnet_w32_512.yaml'
     update_config(cfg, config_name)
     main(cfg)
-

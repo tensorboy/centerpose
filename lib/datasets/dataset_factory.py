@@ -1,10 +1,7 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-from .multi_pose import MultiPoseDataset
 from .coco_hp import COCOHP
-
+from .multi_pose import MultiPoseDataset
 
 dataset_factory = {
   'coco_hp': COCOHP
@@ -19,4 +16,3 @@ def get_dataset(dataset, task):
   class Dataset(dataset_factory[dataset], _sample_factory[task]):
     pass
   return Dataset
-  

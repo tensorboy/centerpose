@@ -1,22 +1,19 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-import _init_paths
-
-import os
 import argparse
+import os
 
 import torch
-import torch.utils.data
 import torch.distributed as dist
-from models.model import create_model, load_model, save_model
-from logger import Logger
+import torch.utils.data
+
+import _init_paths
+from config import cfg, update_config
 from datasets.dataset_factory import get_dataset
+from logger import Logger
+from models.model import create_model, load_model, save_model
 from trains.train_factory import train_factory
 
-from config import cfg
-from config import update_config
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train keypoints network')

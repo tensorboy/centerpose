@@ -1,10 +1,13 @@
-import numpy as np
 import os
+from time import time
+
+import numpy as np
+import torch
 from skimage.io import imread, imsave
 from skimage.transform import estimate_transform, warp
-from time import time
-import torch
+
 from .resfcn256 import PRNet
+
 
 class PRN:
     ''' Joint 3D Face Reconstruction and Dense Alignment with Position Map Regression Network

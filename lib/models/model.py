@@ -1,22 +1,22 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-import torchvision.models as models
-import torch
-import torch.nn as nn
 import os
 
-from .networks.msra_resnet import get_pose_net
-from .networks.dlav0 import get_pose_net as get_dlav0
-from .networks.pose_dla_dcn import get_pose_net as get_dla_dcn
-from .networks.resnet_dcn import get_pose_net as get_pose_net_dcn
-from .networks.large_hourglass import get_large_hourglass_net
-from .networks.mobilenet import get_mobile_pose_net
-from .networks.shufflenetv2_dcn import get_shufflev2_net
-from .networks.pose_higher_hrnet import get_hrpose_net
-from .networks.hardnet import get_hard_net
-from .networks.darknet import darknet53
+import torch
+import torch.nn as nn
+import torchvision.models as models
+
+from .backbones.darknet import darknet53
+from .backbones.dlav0 import get_pose_net as get_dlav0
+from .backbones.hardnet import get_hard_net
+from .backbones.large_hourglass import get_large_hourglass_net
+from .backbones.mobilenet import get_mobile_pose_net
+from .backbones.msra_resnet import get_pose_net
+from .backbones.pose_dla_dcn import get_pose_net as get_dla_dcn
+from .backbones.pose_higher_hrnet import get_hrpose_net
+from .backbones.resnet_dcn import get_pose_net as get_pose_net_dcn
+from .backbones.shufflenetv2_dcn import get_shufflev2_net
+from .heads import bbox, keypoint, mask, whole_body
 
 _model_factory = {
   'res': get_pose_net, # default Resnet with deconv
@@ -103,4 +103,3 @@ def save_model(path, epoch, model, optimizer=None):
     if not (optimizer is None):
         data['optimizer'] = optimizer.state_dict()
     torch.save(data, path)
-

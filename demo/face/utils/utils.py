@@ -3,12 +3,12 @@
     @author: samuel ko
     @date:   2019/05/06
 """
+import math
 import os
+
+import cv2
 import numpy as np
 import torch
-import math
-import cv2
-
 import torchvision.transforms.functional as F
 
 irange = range

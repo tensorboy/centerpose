@@ -4,7 +4,7 @@ EXP_ID: 'coco_pose_res_50'
 DEBUG: 0
 DEBUG_THEME: 'white'
 SEED: 317
-OUTPUT_DIR: '/data/centerpose/res50_3x'
+OUTPUT_DIR: '/data/centerpose/res50'
 LOG_DIR: ''
 EXPERIMENT_NAME: ''
 GPUS: [0, 1, 2, 3]
@@ -26,7 +26,7 @@ MODEL:
   NAME: 'res_50'
   HEADS_NAME: ['hm', 'wh', 'hps', 'reg', 'hm_hp', 'hp_offset']
   HEADS_NUM: [1, 2, 34, 2, 17, 2]
-  HEAD_CONV: 64
+  HEAD_CONV: 256
   DOWN_RATIO: 4
   NUM_STACKS: 1
   INPUT_RES: 512
@@ -116,7 +116,7 @@ TEST:
   # Test Model Epoch
   MODEL_PATH: '/home/tensorboy/data/centerpose/trained_best_model/res_50_best_model.pth'
   TASK: 'multi_pose'
-  FLIP_TEST: true
+  FLIP_TEST: false
 
   DEMO_FILE: '../images/33823288584_1d21cf0a26_k.jpg'
   MODEL_FILE: ''

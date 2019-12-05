@@ -1,11 +1,14 @@
+import math
+from collections import OrderedDict
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
-from collections import OrderedDict
 from torch.nn import init
+
 from .DCNv2.dcn_v2 import DCN
-import math
+
 BN_MOMENTUM = 0.1
 def conv_bn(inp, oup, stride):
     return nn.Sequential(

@@ -1,11 +1,11 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import time
+
 import torch
 import torch.nn as nn
 from progress.bar import Bar
+
 from models.data_parallel import DataParallel
 from utils.utils import AverageMeter
 
