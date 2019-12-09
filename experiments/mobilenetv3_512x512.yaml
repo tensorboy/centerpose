@@ -23,7 +23,7 @@ MODEL:
   CENTER_THRESH: 0.1
   NUM_CLASSES: 1
   NAME: 'mobilenetv3'
-  HEADS_NAME: ['hm', 'wh', 'hps', 'reg', 'hm_hp', 'hp_offset']
+  HEADS_NAME: 'keypoint'
   HEADS_NUM: [1, 2, 34, 2, 17, 2]
   HEAD_CONV: 256
   DOWN_RATIO: 4

@@ -26,6 +26,7 @@ class MultiPoseDataset(data.Dataset):
         i *= 2
     return border // i
 
+
   def __getitem__(self, index):
     img_id = self.images[index]
     file_name = self.coco.loadImgs(ids=[img_id])[0]['file_name']

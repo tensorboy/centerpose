@@ -1,10 +1,10 @@
 SAMPLE_METHOD: 'coco_hp'
-DATA_DIR: '/home/tensorboy/data'
+DATA_DIR: '/data'
 EXP_ID: 'coco_pose_hrnet'
 DEBUG: 0
 DEBUG_THEME: 'white'
 SEED: 317
-OUTPUT_DIR: '/home/tensorboy/data/centerpose/hrnet'
+OUTPUT_DIR: '/data/centerpose/hrnet'
 LOG_DIR: ''
 EXPERIMENT_NAME: ''
 GPUS: [0, 1, 2, 3]
@@ -62,6 +62,8 @@ LOSS:
   REG_HP_OFFSET: true
   HM_HP_WEIGHT: 1.
 MODEL:
+  HEADS_NAME: 'keypoint'
+  INTERMEDIATE_CHANNEL: 32 
   CENTER_THRESH: 0.1
   NUM_CLASSES: 1
   NAME: 'hrnet'
@@ -127,7 +129,7 @@ MODEL:
       NUM_BASIC_BLOCKS: 4
       CAT_OUTPUT:
       - True
-  INIT_WEIGHTS: true
+  INIT_WEIGHTS: false
   PRETRAINED: '/data/pretrained_models/imagenet/hrnet_w32-36af842e.pth'
   TAG_PER_JOINT: true
 TEST:
@@ -163,6 +165,7 @@ TEST:
   EVAL_ORACLE_DEP: false
 TRAIN:
   DISTRIBUTE: true
+  OPTIMIZER: 'sgd'   
   LOCAL_RANK: 0  
   HIDE_DATA_TIME: false 
   SAVE_ALL_MODEL: false
@@ -171,9 +174,9 @@ TRAIN:
   LR_STEP: [270, 300]
   EPOCHS: 320
   NUM_ITERS: -1
-  LR: 1.875e-4
-  BATCH_SIZE: 48
-  MASTER_BATCH_SIZE: 12
+  LR: 1.71875e-4
+  BATCH_SIZE: 44
+  MASTER_BATCH_SIZE: 11
 
   MOMENTUM: 0.9
   WD: 0.0001

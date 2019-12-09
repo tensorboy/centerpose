@@ -250,7 +250,7 @@ blocks_dict = {
 
 class PoseHigherResolutionNet(nn.Module):
 
-    def __init__(self, head_conv, cfg, **kwargs):
+    def __init__(self, cfg, **kwargs):
         self.inplanes = 64
         extra = cfg.MODEL.EXTRA
         super(PoseHigherResolutionNet, self).__init__()
@@ -296,31 +296,7 @@ class PoseHigherResolutionNet(nn.Module):
             pre_stage_channels, num_channels)
         self.stage4, pre_stage_channels = self._make_stage(
             self.stage4_cfg, num_channels, multi_scale_output=False)
-        
-        self.hm = nn.Sequential(
-                    nn.Conv2d(pre_stage_channels[0], head_conv, kernel_size=3, padding=1, bias=True),
-                    nn.ReLU(inplace=True),
-                    nn.Conv2d(head_conv, 1, kernel_size=1, stride=1, padding=0))           
-        self.wh = nn.Sequential(
-                    nn.Conv2d(pre_stage_channels[0], head_conv, kernel_size=3, padding=1, bias=True),
-                    nn.ReLU(inplace=True),
-                    nn.Conv2d(head_conv, 2, kernel_size=1, stride=1, padding=0))
-        self.hps = nn.Sequential(
-                    nn.Conv2d(pre_stage_channels[0], head_conv, kernel_size=3, padding=1, bias=True),
-                    nn.ReLU(inplace=True),
-                    nn.Conv2d(head_conv, 34, kernel_size=1, stride=1, padding=0))                  
-        self.reg = nn.Sequential(
-                    nn.Conv2d(pre_stage_channels[0], head_conv, kernel_size=3, padding=1, bias=True),
-                    nn.ReLU(inplace=True),
-                    nn.Conv2d(head_conv, 2, kernel_size=1, stride=1, padding=0))        
-        self.hm_hp = nn.Sequential(
-                    nn.Conv2d(pre_stage_channels[0], head_conv, kernel_size=3, padding=1, bias=True),
-                    nn.ReLU(inplace=True),
-                    nn.Conv2d(head_conv, 17, kernel_size=1, stride=1, padding=0))                                           
-        self.hp_offset = nn.Sequential(
-                        nn.Conv2d(pre_stage_channels[0], head_conv, kernel_size=3, padding=1, bias=True),
-                        nn.ReLU(inplace=True),
-                        nn.Conv2d(head_conv, 2, kernel_size=1, stride=1, padding=0))          
+               
         #self.final_layers = self._make_final_layers(cfg, pre_stage_channels[0])
         
         #self.deconv_layers = self._make_deconv_layers(
@@ -542,7 +518,7 @@ class PoseHigherResolutionNet(nn.Module):
         #    x = self.deconv_layers[i](x)
         #    y = self.final_layers[i+1](x)
         #    final_outputs.append(y)
-        return [self.hm(x), self.wh(x), self.hps(x), self.reg(x), self.hm_hp(x), self.hp_offset(x)]
+        return x
 
     def init_weights(self, pretrained='', verbose=True):
         logger.info('=> init weights from normal distribution')
@@ -560,12 +536,7 @@ class PoseHigherResolutionNet(nn.Module):
                 for name, _ in m.named_parameters():
                     if name in ['bias']:
                         nn.init.constant_(m.bias, 0)
-        self.hm[-1].bias.data.fill_(-2.19)     
-        self.hm_hp[-1].bias.data.fill_(-2.19)                                    
-        fill_fc_weights(self.wh)
-        fill_fc_weights(self.hps)
-        fill_fc_weights(self.reg)
-        fill_fc_weights(self.hp_offset)
+
         parameters_names = set()
         for name, _ in self.named_parameters():
             parameters_names.add(name)
@@ -588,8 +559,8 @@ class PoseHigherResolutionNet(nn.Module):
             self.load_state_dict(need_init_state_dict, strict=False)
 
 
-def get_hrpose_net(num_layers, head_conv, cfg, **kwargs):
-    model = PoseHigherResolutionNet(head_conv, cfg, **kwargs)
+def get_hrpose_net(num_layers, cfg, **kwargs):
+    model = PoseHigherResolutionNet(cfg, **kwargs)
 
     if cfg.MODEL.INIT_WEIGHTS:
         model.init_weights(cfg.MODEL.PRETRAINED)

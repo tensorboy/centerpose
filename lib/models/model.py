@@ -11,15 +11,16 @@ from .backbones.dlav0 import get_pose_net as get_dlav0
 from .backbones.hardnet import get_hard_net
 from .backbones.large_hourglass import get_large_hourglass_net
 from .backbones.mobilenet import get_mobile_pose_net
-from .backbones.msra_resnet import get_pose_net
+from .backbones.msra_resnet import get_resnet
 from .backbones.pose_dla_dcn import get_pose_net as get_dla_dcn
 from .backbones.pose_higher_hrnet import get_hrpose_net
 from .backbones.resnet_dcn import get_pose_net as get_pose_net_dcn
 from .backbones.shufflenetv2_dcn import get_shufflev2_net
-from .heads import bbox, keypoint, mask, whole_body
+from .heads.whole_body import WholeBodyHead
+from .heads.keypoint import KeypointHead
 
-_model_factory = {
-  'res': get_pose_net, # default Resnet with deconv
+_backbone_factory = {
+  'res': get_resnet, # default Resnet with deconv
   'dlav0': get_dlav0, # default DLAup
   'dla': get_dla_dcn,
   'resdcn': get_pose_net_dcn,
@@ -31,12 +32,34 @@ _model_factory = {
   'darknet': darknet53
 }
 
+_head_factory = {
+  'keypoint': KeypointHead,
+  'wholebody': WholeBodyHead
+}
+
+class BackBoneWithHead(nn.Module):
+
+    def __init__(self, arch, head_conv, cfg):
+        super(BackBoneWithHead, self).__init__()    
+        
+        num_layers = int(arch[arch.find('_') + 1:]) if '_' in arch else 0
+        arch = arch[:arch.find('_')] if '_' in arch else arch
+        backbone = _backbone_factory[arch]
+        self.backbone_model = backbone(num_layers=num_layers, cfg = cfg)
+        
+        head = _head_factory[cfg.MODEL.HEADS_NAME]
+        self.head_model = head(cfg.MODEL.INTERMEDIATE_CHANNEL, cfg.MODEL.HEAD_CONV)
+        
+    def forward(self, x):
+    
+        x = self.backbone_model(x)
+        return self.head_model(x)
+
+
+
 def create_model(arch, head_conv, cfg):
-    num_layers = int(arch[arch.find('_') + 1:]) if '_' in arch else 0
-    arch = arch[:arch.find('_')] if '_' in arch else arch
-    get_model = _model_factory[arch]
-    model = get_model(num_layers=num_layers, head_conv=head_conv, cfg = cfg)
-    return model
+    
+    return BackBoneWithHead(arch, head_conv, cfg)
 
 def load_model(model, model_path, optimizer=None, resume=False, 
                lr=None, lr_step=None):

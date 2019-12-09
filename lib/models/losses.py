@@ -219,7 +219,6 @@ class SegLoss2(nn.Module):
     def __init__(self):
         super(SegLoss2, self).__init__()
 
-
     def forward(self, output_weight , seg_feat , ind , target ):
 
         B,C,H,W = seg_feat.size()

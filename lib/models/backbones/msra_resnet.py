@@ -112,7 +112,7 @@ def fill_fc_weights(layers):
         
 class PoseResNet(nn.Module):
 
-    def __init__(self, block, layers, head_conv, **kwargs):
+    def __init__(self, block, layers, **kwargs):
         self.inplanes = 64
         self.deconv_with_bias = False
 
@@ -132,40 +132,7 @@ class PoseResNet(nn.Module):
             3,
             [256, 256, 256],
             [4, 4, 4],
-        )
-
-        self.hm = nn.Sequential(
-                    nn.Conv2d(256, head_conv, kernel_size=3, padding=1, bias=True),
-                    nn.ReLU(inplace=True),
-                    nn.Conv2d(head_conv, 1, kernel_size=1, stride=1, padding=0))
-        self.wh = nn.Sequential(
-                    nn.Conv2d(256, head_conv, kernel_size=3, padding=1, bias=True),
-                    nn.ReLU(inplace=True),
-                    nn.Conv2d(head_conv, 2, kernel_size=1, stride=1, padding=0))
-        self.hps = nn.Sequential(
-                    nn.Conv2d(256, head_conv, kernel_size=3, padding=1, bias=True),
-                    nn.ReLU(inplace=True),
-                    nn.Conv2d(head_conv, 34, kernel_size=1, stride=1, padding=0))                  
-        self.reg = nn.Sequential(
-                    nn.Conv2d(256, head_conv, kernel_size=3, padding=1, bias=True),
-                    nn.ReLU(inplace=True),
-                    nn.Conv2d(head_conv, 2, kernel_size=1, stride=1, padding=0))        
-        self.hm_hp = nn.Sequential(
-                    nn.Conv2d(256, head_conv, kernel_size=3, padding=1, bias=True),
-                    nn.ReLU(inplace=True),
-                    nn.Conv2d(head_conv, 17, kernel_size=1, stride=1, padding=0))                                           
-        self.hp_offset = nn.Sequential(
-                        nn.Conv2d(256, head_conv, kernel_size=3, padding=1, bias=True),
-                        nn.ReLU(inplace=True),
-                        nn.Conv2d(head_conv, 2, kernel_size=1, stride=1, padding=0))                      
-        self.seg_feat = nn.Sequential(
-                        nn.Conv2d(256, head_conv, kernel_size=3, padding=1, bias=True),
-                        nn.ReLU(inplace=True),
-                        nn.Conv2d(head_conv, 48, kernel_size=1, stride=1, padding=0))                              
-        self.seg =      nn.Sequential(
-                        nn.Conv2d(256, head_conv, kernel_size=3, padding=1, bias=True),
-                        nn.ReLU(inplace=True),
-                        nn.Conv2d(head_conv, 432, kernel_size=1, stride=1, padding=0))                        
+        )                
                         
 
     def _make_layer(self, block, planes, blocks, stride=1):
@@ -237,10 +204,9 @@ class PoseResNet(nn.Module):
         x = self.layer4(x)
 
         x = self.deconv_layers(x)
-        
-        #return [self.hm(x), self.wh(x), self.hps(x), self.reg(x), self.hm_hp(x), self.hp_offset(x)]
-        return [self.hm(x), self.wh(x), self.hps(x), self.reg(x), self.hm_hp(x), self.hp_offset(x), self.seg_feat(x), self.seg(x)]
 
+        return x
+        
     def init_weights(self, num_layers, pretrained=True):
         if pretrained:
             # print('=> init resnet deconv weights from normal distribution')
@@ -256,13 +222,7 @@ class PoseResNet(nn.Module):
                     # print('=> init {}.bias as 0'.format(name))
                     nn.init.constant_(m.weight, 1)
                     nn.init.constant_(m.bias, 0)
-
-            self.hm[-1].bias.data.fill_(-2.19)     
-            self.hm_hp[-1].bias.data.fill_(-2.19)                                    
-            fill_fc_weights(self.wh)
-            fill_fc_weights(self.hps)
-            fill_fc_weights(self.reg)
-            fill_fc_weights(self.hp_offset)                              
+                           
             #pretrained_state_dict = torch.load(pretrained)
             url = model_urls['resnet{}'.format(num_layers)]
             pretrained_state_dict = model_zoo.load_url(url)
@@ -281,9 +241,9 @@ resnet_spec = {18: (BasicBlock, [2, 2, 2, 2]),
                152: (Bottleneck, [3, 8, 36, 3])}
 
 
-def get_pose_net(num_layers, head_conv, cfg):
+def get_resnet(num_layers, cfg):
   block_class, layers = resnet_spec[num_layers]
 
-  model = PoseResNet(block_class, layers, head_conv)
+  model = PoseResNet(block_class, layers)
   model.init_weights(num_layers, pretrained=True)
   return model

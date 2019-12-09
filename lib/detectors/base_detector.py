@@ -16,7 +16,6 @@ class BaseDetector(object):
     def __init__(self, cfg):
     
         print('Creating model...')
-        HEADS = dict(zip(cfg.MODEL.HEADS_NAME, cfg.MODEL.HEADS_NUM))
         self.model = create_model(cfg.MODEL.NAME, cfg.MODEL.HEAD_CONV, cfg)
         self.model = load_model(self.model, cfg.TEST.MODEL_PATH)
         self.model = self.model.to(torch.device('cuda'))

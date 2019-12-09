@@ -37,8 +37,9 @@ _C.MODEL.INIT_WEIGHTS = True
 _C.MODEL.NAME = 'res_50'
 # 0 for no conv layer, -1 for defaults setting, 64 for resnets and 256 for dla
 _C.MODEL.HEAD_CONV = 64
+_C.MODEL.INTERMEDIATE_CHANNEL = 64
 _C.MODEL.NUM_STACKS = 1
-_C.MODEL.HEADS_NAME = ['hm', 'wh', 'hps', 'reg', 'hm_hp', 'hp_offset']
+_C.MODEL.HEADS_NAME = 'keypoint'
 _C.MODEL.HEADS_NUM = [1, 2, 34, 2, 17, 2]
 _C.MODEL.DOWN_RATIO = 4
 _C.MODEL.INPUT_RES = 512
