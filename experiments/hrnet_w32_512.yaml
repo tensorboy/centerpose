@@ -17,7 +17,7 @@ CUDNN:
   DETERMINISTIC: false
   ENABLED: true
 DATASET:
-  ROOT: '/home/tensorboy/data/coco'
+  ROOT: '/data/coco'
   DATASET: 'coco_hp'
   TRAIN_SET: 'train'
   TEST_SET: 'valid'
@@ -134,7 +134,7 @@ MODEL:
   TAG_PER_JOINT: true
 TEST:
   # Test Model Epoch
-  MODEL_PATH: '/home/tensorboy/data/centerpose/hrnet/model_best.pth'
+  MODEL_PATH: '/data/centerpose/hrnet/model_best.pth'
   TASK: 'multi_pose'
   FLIP_TEST: true
   FIX_RES: false

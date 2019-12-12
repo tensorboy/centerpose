@@ -8,7 +8,8 @@ dataset_factory = {
 }
 
 _sample_factory = {
-  'multi_pose': MultiPoseDataset
+  'multi_pose': MultiPoseDataset,
+  'whole_body': MultiPoseDataset  
 }
 
 

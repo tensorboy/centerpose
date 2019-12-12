@@ -59,30 +59,29 @@ class COCOHP(data.Dataset):
     def convert_eval_format(self, all_bboxes):
         detections = []
         for image_id in all_bboxes:
-            for cls_ind in all_bboxes[image_id]:
-                category_id = 1
-                for dets in all_bboxes[image_id][cls_ind]:
-                    bbox = dets[:4]
-                    bbox[2] -= bbox[0]
-                    bbox[3] -= bbox[1]
-                    score = dets[4]
-                    keypoint_prob = np.array(np.array(dets[39:56])>0.1).astype(np.int32).reshape(17,1)
-                    keypoints = np.array(dets[5:39], dtype=np.float32).reshape(-1, 2)
-                    #keypoints[np.array(dets[39:56])<0.0]=np.array([0,0])
-                    #print(keypoint_prob)
-                    bbox_out  = list(map(self._to_float, bbox))
-                    keypoints_pred = np.concatenate([
-                    keypoints, keypoint_prob], axis=1).reshape(51).tolist()
-                    keypoints_pred  = list(map(self._to_float, keypoints_pred))
+            category_id = 1
+            for dets in all_bboxes[image_id]:
+                bbox = dets[:4]
+                bbox[2] -= bbox[0]
+                bbox[3] -= bbox[1]
+                score = dets[4]
+                keypoint_prob = np.array(np.array(dets[39:56])>0.1).astype(np.int32).reshape(17,1)
+                keypoints = np.array(dets[5:39], dtype=np.float32).reshape(-1, 2)
+                #keypoints[np.array(dets[39:56])<0.0]=np.array([0,0])
+                #print(keypoint_prob)
+                bbox_out  = list(map(self._to_float, bbox))
+                keypoints_pred = np.concatenate([
+                keypoints, keypoint_prob], axis=1).reshape(51).tolist()
+                keypoints_pred  = list(map(self._to_float, keypoints_pred))
 
-                    detection = {
-                      "image_id": int(image_id),
-                      "category_id": int(category_id),
-                      "bbox": bbox_out,
-                      "score": float("{:.2f}".format(score)),
-                      "keypoints": keypoints_pred
-                    }
-                    detections.append(detection)
+                detection = {
+                  "image_id": int(image_id),
+                  "category_id": int(category_id),
+                  "bbox": bbox_out,
+                  "score": float("{:.2f}".format(score)),
+                  "keypoints": keypoints_pred
+                }
+                detections.append(detection)
         return detections
 
     def __len__(self):

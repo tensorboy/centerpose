@@ -52,15 +52,7 @@ def fill_up_weights(up):
     for c in range(1, w.size(0)):
         w[c, 0, :, :] = w[0, 0, :, :] 
 
-def fill_fc_weights(layers):
-    for m in layers.modules():
-        if isinstance(m, nn.Conv2d):
-            nn.init.normal_(m.weight, std=0.001)
-            # torch.nn.init.kaiming_normal_(m.weight.data, nonlinearity='relu')
-            # torch.nn.init.xavier_normal_(m.weight.data)
-            if m.bias is not None:
-                nn.init.constant_(m.bias, 0)
-                
+
 class InvertedResidual(nn.Module):
     def __init__(self, inp, oup, stride, benchmodel):
         super(InvertedResidual, self).__init__()
@@ -125,17 +117,8 @@ class InvertedResidual(nn.Module):
 
         return channel_shuffle(out, 2)
 
-def fill_fc_weights(layers):
-  for m in layers.modules():
-    if isinstance(m, nn.Conv2d):
-      nn.init.normal_(m.weight, std=0.001)
-      # torch.nn.init.kaiming_normal_(m.weight.data, nonlinearity='relu')
-      # torch.nn.init.xavier_normal_(m.weight.data)
-      if m.bias is not None:
-        nn.init.constant_(m.bias, 0)
-
 class ShuffleNetV2(nn.Module):
-    def __init__(self,head_conv, input_size=512, width_mult=1.):
+    def __init__(self, input_size=512, width_mult=1.):
         super(ShuffleNetV2, self).__init__()
         self.inplanes = 24
         self.deconv_with_bias = False
@@ -189,53 +172,7 @@ class ShuffleNetV2(nn.Module):
             3,
             [256, 256, 256],
             [4, 4, 4],
-        )        
-
-
-        self.hm = nn.Sequential(
-                  nn.Conv2d(256, head_conv,
-                    kernel_size=3, padding=1, bias=True),
-                  nn.ReLU(inplace=True),
-                  nn.Conv2d(head_conv, 1, 
-                    kernel_size=1, stride=1, 
-                    padding=0, bias=True))
-
-                          
-        self.wh = nn.Sequential(
-                  nn.Conv2d(256, head_conv,
-                    kernel_size=3, padding=1, bias=True),
-                  nn.ReLU(inplace=True),
-                  nn.Conv2d(head_conv, 2, 
-                    kernel_size=1, stride=1, 
-                    padding=0, bias=True))
-        self.hps = nn.Sequential(
-                  nn.Conv2d(256, head_conv,
-                    kernel_size=3, padding=1, bias=True),
-                  nn.ReLU(inplace=True),
-                  nn.Conv2d(head_conv, 34, 
-                    kernel_size=1, stride=1, 
-                    padding=0, bias=True))           
-        self.reg = nn.Sequential(
-                  nn.Conv2d(256, head_conv,
-                    kernel_size=3, padding=1, bias=True),
-                  nn.ReLU(inplace=True),
-                  nn.Conv2d(head_conv, 2, 
-                    kernel_size=1, stride=1, 
-                    padding=0, bias=True))     
-        self.hm_hp = nn.Sequential(
-                  nn.Conv2d(256, head_conv,
-                    kernel_size=3, padding=1, bias=True),
-                  nn.ReLU(inplace=True),
-                  nn.Conv2d(head_conv, 17, 
-                    kernel_size=1, stride=1, 
-                    padding=0, bias=True))                                      
-        self.hp_offset = nn.Sequential(
-                  nn.Conv2d(256, head_conv,
-                    kernel_size=3, padding=1, bias=True),
-                  nn.ReLU(inplace=True),
-                  nn.Conv2d(head_conv, 2, 
-                    kernel_size=1, stride=1, 
-                    padding=0, bias=True))
+        )
 
 
     def _get_deconv_cfg(self, deconv_kernel, index):
@@ -304,12 +241,6 @@ class ShuffleNetV2(nn.Module):
             #pretrained_state_dict = torch.load(address)
             #self.load_state_dict(pretrained_state_dict, strict=False)
 
-        self.hm[-1].bias.data.fill_(-2.19)     
-        self.hm_hp[-1].bias.data.fill_(-2.19)                                    
-        fill_fc_weights(self.wh)
-        fill_fc_weights(self.hps)
-        fill_fc_weights(self.reg)
-        fill_fc_weights(self.hp_offset)
             
     def forward(self, x):
         #import pdb; pdb.set_trace()
@@ -318,7 +249,7 @@ class ShuffleNetV2(nn.Module):
         x = self.features(x)
         x = self.deconv_layers(x)
         
-        return [self.hm(x), self.wh(x), self.hps(x), self.reg(x), self.hm_hp(x), self.hp_offset(x)]
+        return x
 
 
 def shufflenetv2(width_mult=1.):
@@ -326,7 +257,7 @@ def shufflenetv2(width_mult=1.):
     return model
 
 
-def get_shufflev2_net(num_layers, head_conv, cfg):
-  model = ShuffleNetV2(head_conv)
+def get_shufflev2_net(num_layers, cfg):
+  model = ShuffleNetV2()
   model.init_weights( pretrained=True)
   return model

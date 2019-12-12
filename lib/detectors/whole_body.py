@@ -22,9 +22,9 @@ except:
         ' do \n cd $CenterNet_ROOT/src/lib/external \n make')
 
 
-class MultiPoseDetector(BaseDetector):
+class WholeBodyDetector(BaseDetector):
     def __init__(self, cfg):
-        super(MultiPoseDetector, self).__init__(cfg)
+        super(WholeBodyDetector, self).__init__(cfg)
         self.flip_idx = [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12], [13, 14], [15, 16]]
 
     def process(self, images, return_time=False):

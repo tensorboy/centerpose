@@ -7,12 +7,11 @@ import numpy as np
 import torch
 from progress.bar import Bar
 
-from models.decode import multi_pose_decode, whole_body_decode
+from models.decode import multi_pose_decode
 from models.utils import flip_lr, flip_lr_off, flip_tensor
 from utils.debugger import Debugger
 from utils.image import get_affine_transform
-from utils.post_process import multi_pose_post_process, whole_body_post_process
-
+from utils.post_process import multi_pose_post_process
 from .base_detector import BaseDetector
 
 try:
@@ -31,8 +30,7 @@ class MultiPoseDetector(BaseDetector):
         with torch.no_grad():
             torch.cuda.synchronize()
             outputs = self.model(images)
-            #hm, wh, hps, reg, hm_hp, hp_offset = outputs            
-            hm, wh, hps, reg, hm_hp, hp_offset, seg_feat, seg = outputs
+            hm, wh, hps, reg, hm_hp, hp_offset = outputs            
 
             hm = hm.sigmoid_()
             if self.cfg.LOSS.HM_HP and not self.cfg.LOSS.MSE_LOSS:
@@ -54,36 +52,33 @@ class MultiPoseDetector(BaseDetector):
                 reg = reg[0:1] if reg is not None else None
                 hp_offset = hp_offset[0:1] if hp_offset is not None else None
 
-            dets = whole_body_decode(hm, wh, hps, seg_feat=seg_feat, seg=seg, reg=reg, hm_hp=hm_hp, hp_offset=hp_offset, K=self.cfg.TEST.TOPK)
+            dets = multi_pose_decode(hm, wh, hps, reg=reg, hm_hp=hm_hp, hp_offset=hp_offset, K=self.cfg.TEST.TOPK)
 
         if return_time:
             return outputs, dets, forward_time
         else:
             return outputs, dets
 
-    def post_process(self, all_dets, meta, scale=1):
-        dets, seg = all_dets
+    def post_process(self, dets, meta, scale=1):
         dets = dets.detach().cpu().numpy().reshape(1, -1, dets.shape[2])
-        dets, inds = whole_body_post_process(
+        dets= multi_pose_post_process(
           dets.copy(), [meta['c']], [meta['s']],
-          meta['out_height'], meta['out_width'], self.num_classes)
+          meta['out_height'], meta['out_width'])
         for j in range(1, self.num_classes + 1):
             dets[0][j] = np.array(dets[0][j], dtype=np.float32).reshape(-1, 56)
             dets[0][j][:, :4] /= scale
             dets[0][j][:, 5:39] /= scale
-        return dets[0],inds,seg,meta
+        return dets[0]
 
-    #def merge_outputs(self, detections):
-    #    results = np.concatenate(
-    #        [detection[1] for detection in detections], axis=0).astype(np.float32)
-    #    if self.cfg.TEST.NMS or len(self.cfg.TEST.TEST_SCALES) > 1:
-    #        soft_nms_39(results, Nt=0.5, method=2)
-    #    results = results.tolist()
-    #    return results
-        
     def merge_outputs(self, detections):
-        return detections        
+        results = np.concatenate(
+            [detection[1] for detection in detections], axis=0).astype(np.float32)
+        if self.cfg.TEST.NMS or len(self.cfg.TEST.TEST_SCALES) > 1:
+            soft_nms_39(results, Nt=0.5, method=2)
+        results = results.tolist()
+        return results
         
+
     def debug(self, debugger, images, dets, output, scale=1):
         dets = dets.detach().cpu().numpy().copy()
         dets[:, :, :4] *= self.cfg.MODEL.DOWN_RATIO
@@ -99,8 +94,7 @@ class MultiPoseDetector(BaseDetector):
             debugger.add_blend_img(img, pred, 'pred_hmhp')
   
     def show_results(self, debugger, image, results):
-        results, inds, seg ,meta = results[0]
-        seg = seg[0]    
+        results, meta = results[0]   
         trans = get_affine_transform(meta['c'], meta['s'], 0, ( meta['out_width'], meta['out_height']), inv=1)
         debugger.add_img(image, img_id='multi_pose')
         for j in range(1, self.num_classes + 1):
@@ -110,24 +104,7 @@ class MultiPoseDetector(BaseDetector):
                 keypoints = detection[5:39]
                 keypoints_prob = detection[39:]
                 if bbox_prob > self.cfg.TEST.VIS_THRESH:
-                    debugger.add_coco_bbox(bbox, 0, bbox_prob, img_id='multi_pose')
-                    segment = seg[b_id].detach().cpu().numpy()
-
-                    segment = cv2.warpAffine(segment, trans,(image.shape[1],image.shape[0]),
-                                                 flags=cv2.INTER_CUBIC)
-                    w,h = bbox[2:4] - bbox[:2]
-                    ct = np.array(
-                        [(bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2], dtype=np.float32)
-
-                    segment_mask = np.zeros_like(segment)
-                    pad_rate = 0.3
-                    x, y = np.clip([ct[0] - (1 + pad_rate) * w / 2, ct[0] + (1 + pad_rate) * w / 2], 0,
-                                   segment.shape[1] - 1).astype(np.int), \
-                           np.clip([ct[1] - (1 + pad_rate) * h / 2, ct[1] + (1 + pad_rate) * h / 2], 0,
-                                   segment.shape[0] - 1).astype(np.int)
-                    segment_mask[y[0]:y[1], x[0]:x[1]] = 1
-                    segment = segment_mask*segment
-                    debugger.add_coco_seg(segment, img_id='multi_pose')                    
+                    debugger.add_coco_bbox(bbox, 0, bbox_prob, img_id='multi_pose')              
                     debugger.add_coco_hp(keypoints, keypoints_prob, img_id='multi_pose')  
                     
         debugger.show_all_imgs(pause=self.pause)

@@ -98,17 +98,8 @@ class TransitionUp(nn.Module):
           
         return out
 
-def fill_fc_weights(layers):
-  for m in layers.modules():
-    if isinstance(m, nn.Conv2d):
-      nn.init.normal_(m.weight, std=0.001)
-      # torch.nn.init.kaiming_normal_(m.weight.data, nonlinearity='relu')
-      # torch.nn.init.xavier_normal_(m.weight.data)
-      if m.bias is not None:
-        nn.init.constant_(m.bias, 0)
-        
 class hardnet(nn.Module):
-    def __init__(self, head_conv=64):
+    def __init__(self):
         super(hardnet, self).__init__()
 
         first_ch  = [16,24,32,48]
@@ -170,39 +161,6 @@ class hardnet(nn.Module):
             prev_block_channels = blk.get_out_ch()
             cur_channels_count = prev_block_channels
 
-        self.hm = nn.Sequential(
-                    nn.Conv2d(cur_channels_count, head_conv, kernel_size=3, padding=1, bias=True),
-                    nn.ReLU(inplace=True),
-                    nn.Conv2d(head_conv, 1, kernel_size=1, stride=1, padding=0))                          
-        self.wh = nn.Sequential(
-                    nn.Conv2d(cur_channels_count, head_conv, kernel_size=3, padding=1, bias=True),
-                    nn.ReLU(inplace=True),
-                    nn.Conv2d(head_conv, 2, kernel_size=1, stride=1, padding=0))
-        self.hps = nn.Sequential(
-                    nn.Conv2d(cur_channels_count, head_conv, kernel_size=3, padding=1, bias=True),
-                    nn.ReLU(inplace=True),
-                    nn.Conv2d(head_conv, 34, kernel_size=1, stride=1, padding=0))                  
-        self.reg = nn.Sequential(
-                    nn.Conv2d(cur_channels_count, head_conv, kernel_size=3, padding=1, bias=True),
-                    nn.ReLU(inplace=True),
-                    nn.Conv2d(head_conv, 2, kernel_size=1, stride=1, padding=0))        
-        self.hm_hp = nn.Sequential(
-                    nn.Conv2d(cur_channels_count, head_conv, kernel_size=3, padding=1, bias=True),
-                    nn.ReLU(inplace=True),
-                    nn.Conv2d(head_conv, 17, kernel_size=1, stride=1, padding=0))                                           
-        self.hp_offset = nn.Sequential(
-                        nn.Conv2d(cur_channels_count, head_conv, kernel_size=3, padding=1, bias=True),
-                        nn.ReLU(inplace=True),
-                        nn.Conv2d(head_conv, 2, kernel_size=1, stride=1, padding=0))      
-
-
-        self.hm[-1].bias.data.fill_(-2.19)     
-        self.hm_hp[-1].bias.data.fill_(-2.19)                                    
-        fill_fc_weights(self.wh)
-        fill_fc_weights(self.hps)
-        fill_fc_weights(self.reg)
-        fill_fc_weights(self.hp_offset)                        
-               
 
     def forward(self, x):
         
@@ -222,9 +180,9 @@ class hardnet(nn.Module):
             out = self.conv1x1_up[i](out)
             out = self.denseBlocksUp[i](out)
         
-        return [self.hm(out), self.wh(out), self.hps(out), self.reg(out), self.hm_hp(out), self.hp_offset(out)]
+        return out
 
 
-def get_hard_net(num_layers, head_conv, cfg):
-  model = hardnet(head_conv)
+def get_hard_net(num_layers, cfg):
+  model = hardnet()
   return model

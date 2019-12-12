@@ -33,7 +33,7 @@ _C.CUDNN.DETERMINISTIC = False
 # common params for NETWORK
 _C.MODEL = CN()
 _C.MODEL.PRETRAINED = ''
-_C.MODEL.INIT_WEIGHTS = True
+_C.MODEL.INIT_WEIGHTS = False
 _C.MODEL.NAME = 'res_50'
 # 0 for no conv layer, -1 for defaults setting, 64 for resnets and 256 for dla
 _C.MODEL.HEAD_CONV = 64

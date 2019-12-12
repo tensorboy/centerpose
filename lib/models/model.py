@@ -49,16 +49,17 @@ class BackBoneWithHead(nn.Module):
         
         head = _head_factory[cfg.MODEL.HEADS_NAME]
         self.head_model = head(cfg.MODEL.INTERMEDIATE_CHANNEL, cfg.MODEL.HEAD_CONV)
-        
+
     def forward(self, x):
-    
+        print(x.shape)
         x = self.backbone_model(x)
+        print(x.shape)
         return self.head_model(x)
 
 
 
 def create_model(arch, head_conv, cfg):
-    
+   
     return BackBoneWithHead(arch, head_conv, cfg)
 
 def load_model(model, model_path, optimizer=None, resume=False, 

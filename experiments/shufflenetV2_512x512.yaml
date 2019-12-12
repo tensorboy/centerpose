@@ -1,10 +1,10 @@
 SAMPLE_METHOD: 'coco_hp'
-DATA_DIR: '/home/tensorboy/data'
+DATA_DIR: '/data'
 EXP_ID: 'coco_pose_shufflenetv2'
 DEBUG: 0
 DEBUG_THEME: 'white'
 SEED: 317
-OUTPUT_DIR: '/home/tensorboy/data/centerpose/shufflenet_3x_sgd'
+OUTPUT_DIR: '/data/centerpose/shufflenet_3x_sgd'
 LOG_DIR: ''
 EXPERIMENT_NAME: ''
 GPUS: [0, 1, 2, 3]
@@ -24,6 +24,7 @@ MODEL:
   HEADS_NAME: 'keypoint'
   HEADS_NUM: [1, 2, 34, 2, 17, 2]
   HEAD_CONV: 256
+  INTERMEDIATE_CHANNEL: 256
   DOWN_RATIO: 4
   NUM_STACKS: 1
   INPUT_RES: 512

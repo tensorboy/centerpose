@@ -59,11 +59,10 @@ def test(cfg):
         img_id = dataset.images[ind]
         img_info = dataset.coco.loadImgs(ids=[img_id])[0]
         img_path = os.path.join(dataset.img_dir, img_info['file_name'])
-        print(img_path)
-
         ret = detector.run(img_path)
 
         results[img_id] = ret['results']
+        print(np.asarray(ret['results']).shape)
 
         Bar.suffix = '[{0}/{1}]|Tot: {total:} |ETA: {eta:} '.format(
                        ind, num_iters, total=bar.elapsed_td, eta=bar.eta_td)
