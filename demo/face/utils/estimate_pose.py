@@ -1,7 +1,8 @@
 # coding: UTF-8
 
+from math import asin, atan2, cos, sin
+
 import numpy as np
-from math import cos, sin, atan2, asin
 
 
 def isRotationMatrix(R):

@@ -1,6 +1,7 @@
-import torch
-import tensorrt as trt
 import atexit
+
+import tensorrt as trt
+import torch
 
 
 def torch_dtype_to_trt(dtype):

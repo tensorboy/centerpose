@@ -1,18 +1,18 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-import torch.utils.data as data
+import json
+import math
+import os
+
+import cv2
 import numpy as np
 import torch
-import json
-import cv2
-import os
-from utils.image import flip, color_aug
-from utils.image import get_affine_transform, affine_transform
-from utils.image import gaussian_radius, draw_umich_gaussian, draw_msra_gaussian
-from utils.image import draw_dense_reg
-import math
+import torch.utils.data as data
+
+from utils.image import (affine_transform, color_aug, draw_dense_reg,
+                         draw_msra_gaussian, draw_umich_gaussian, flip,
+                         gaussian_radius, get_affine_transform)
+
 
 class MultiPoseDataset(data.Dataset):
   def _coco_box_to_bbox(self, box):
@@ -26,12 +26,15 @@ class MultiPoseDataset(data.Dataset):
         i *= 2
     return border // i
 
+
   def __getitem__(self, index):
     img_id = self.images[index]
     file_name = self.coco.loadImgs(ids=[img_id])[0]['file_name']
     img_path = os.path.join(self.img_dir, file_name)
     ann_ids = self.coco.getAnnIds(imgIds=[img_id])
     anns = self.coco.loadAnns(ids=ann_ids)
+    
+    anns = list(filter(lambda x:x['category_id'] in self._valid_ids and x['iscrowd']!= 1 , anns))
     num_objs = min(len(anns), self.max_objs)
 
     img = cv2.imread(img_path)
@@ -80,7 +83,7 @@ class MultiPoseDataset(data.Dataset):
     num_joints = self.num_joints
     trans_output_rot = get_affine_transform(c, s, rot, [output_res, output_res])
     trans_output = get_affine_transform(c, s, 0, [output_res, output_res])
-
+    trans_seg_output = get_affine_transform(c, s, 0, [output_res, output_res])
     hm = np.zeros((self.num_classes, output_res, output_res), dtype=np.float32)
     hm_hp = np.zeros((num_joints, output_res, output_res), dtype=np.float32)
     dense_kps = np.zeros((num_joints, 2, output_res, output_res), 
@@ -90,6 +93,7 @@ class MultiPoseDataset(data.Dataset):
     wh = np.zeros((self.max_objs, 2), dtype=np.float32)
     kps = np.zeros((self.max_objs, num_joints * 2), dtype=np.float32)
     reg = np.zeros((self.max_objs, 2), dtype=np.float32)
+    seg = np.zeros((self.max_objs, output_res, output_res), dtype=np.float32)    
     ind = np.zeros((self.max_objs), dtype=np.int64)
     reg_mask = np.zeros((self.max_objs), dtype=np.uint8)
     kps_mask = np.zeros((self.max_objs, self.num_joints * 2), dtype=np.uint8)
@@ -106,14 +110,21 @@ class MultiPoseDataset(data.Dataset):
       bbox = self._coco_box_to_bbox(ann['bbox'])
       cls_id = int(ann['category_id']) - 1
       pts = np.array(ann['keypoints'], np.float32).reshape(num_joints, 3)
+      segment = self.coco.annToMask(ann)      
       if flipped:
         bbox[[0, 2]] = width - bbox[[2, 0]] - 1
         pts[:, 0] = width - pts[:, 0] - 1
         for e in self.flip_idx:
           pts[e[0]], pts[e[1]] = pts[e[1]].copy(), pts[e[0]].copy()
+        segment = segment[:, ::-1]     
+             
       bbox[:2] = affine_transform(bbox[:2], trans_output)
       bbox[2:] = affine_transform(bbox[2:], trans_output)
       bbox = np.clip(bbox, 0, output_res - 1)
+      segment= cv2.warpAffine(segment, trans_seg_output,
+                             (output_res, output_res),
+                             flags=cv2.INTER_LINEAR)
+      segment = segment.astype(np.float32)      
       h, w = bbox[3] - bbox[1], bbox[2] - bbox[0]
       if (h > 0 and w > 0) or (rot != 0):
         radius = gaussian_radius((math.ceil(h), math.ceil(w)))
@@ -125,6 +136,17 @@ class MultiPoseDataset(data.Dataset):
         ind[k] = ct_int[1] * output_res + ct_int[0]
         reg[k] = ct - ct_int
         reg_mask[k] = 1
+        
+        #mask
+        pad_rate = 0.3
+        segment_mask = np.ones_like(segment)
+        x,y = (np.clip([ct[0] - (1 + pad_rate)*w/2 ,ct[0] + (1 + pad_rate)*w/2 ],0,output_res - 1)*2).astype(np.int), \
+              (np.clip([ct[1] - (1 + pad_rate)*h/2 , ct[1] + (1 + pad_rate)*h/2],0,output_res - 1)*2).astype(np.int)
+        segment_mask[y[0]:y[1],x[0]:x[1]] = 0
+        segment[segment_mask == 1] = 255
+        seg[k] = segment
+                   
+        #keypoint     
         num_kpts = pts[:, 2].sum()
         if num_kpts == 0:
           hm[cls_id, ct_int[1], ct_int[0]] = 0.9999
@@ -159,7 +181,7 @@ class MultiPoseDataset(data.Dataset):
       reg_mask *= 0
       kps_mask *= 0
     ret = {'input': inp, 'hm': hm, 'reg_mask': reg_mask, 'ind': ind, 'wh': wh,
-           'hps': kps, 'hps_mask': kps_mask}
+           'hps': kps, 'hps_mask': kps_mask, 'seg':seg}
     if self.cfg.LOSS.DENSE_HP:
       dense_kps = dense_kps.reshape(num_joints * 2, output_res, output_res)
       dense_kps_mask = dense_kps_mask.reshape(

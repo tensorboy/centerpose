@@ -1,14 +1,14 @@
 SAMPLE_METHOD: 'coco_hp'
-DATA_DIR: '/data'
+DATA_DIR: '/home/tensorboy/data'
 EXP_ID: 'coco_pose_res_50'
 DEBUG: 0
 DEBUG_THEME: 'white'
 SEED: 317
-OUTPUT_DIR: '/data/centerpose/res50_3x'
+OUTPUT_DIR: '/home/tensorboy/data/centerpose/res50'
 LOG_DIR: ''
 EXPERIMENT_NAME: ''
 GPUS: [0, 1, 2, 3]
-WORKERS: 4
+WORKERS: 8
 PRINT_FREQ: 0
 PIN_MEMORY: true
 RANK: 0
@@ -19,13 +19,15 @@ CUDNN:
   BENCHMARK: true
 
 MODEL:
-  LOAD_MODEL: ''
+  INIT_WEIGHTS: false
+  PRETRAINED: ''
   CENTER_THRESH: 0.1
   NUM_CLASSES: 1
   NAME: 'res_50'
-  HEADS_NAME: ['hm', 'wh', 'hps', 'reg', 'hm_hp', 'hp_offset']
+  HEADS_NAME: 'keypoint'
   HEADS_NUM: [1, 2, 34, 2, 17, 2]
   HEAD_CONV: 256
+  INTERMEDIATE_CHANNEL: 256  
   DOWN_RATIO: 4
   NUM_STACKS: 1
   INPUT_RES: 512
@@ -84,6 +86,7 @@ DATASET:
   
 TRAIN:
   DISTRIBUTE: true
+  OPTIMIZER: 'sgd'  
   LOCAL_RANK: 0
   HIDE_DATA_TIME: false 
   SAVE_ALL_MODEL: false
@@ -92,9 +95,9 @@ TRAIN:
   LR_STEP: [270, 300]
   EPOCHS: 320
   NUM_ITERS: -1
-  LR: 2.5e-4
-  BATCH_SIZE: 64
-  MASTER_BATCH_SIZE: 16
+  LR: 2.1875e-4
+  BATCH_SIZE: 56
+  MASTER_BATCH_SIZE: 14
 
   MOMENTUM: 0.9
   WD: 0.0001
@@ -112,15 +115,15 @@ TRAIN:
  
 TEST:
   # Test Model Epoch
-  MODEL_PATH: '/data/centerpose/trained_best_model/res_50_1x.pth'
+  MODEL_PATH: '/home/tensorboy/data/centerpose/res50/model_best.pth'
   TASK: 'multi_pose'
-  FLIP_TEST: true
+  FLIP_TEST: false
 
   DEMO_FILE: '../images/33823288584_1d21cf0a26_k.jpg'
   MODEL_FILE: ''
   TEST_SCALES: [1]
   IMAGE_THRE: 0.1
-  TOPK: 100
+  TOPK: 32
   NMS: false
   NMS_THRE: 0.5
   NOT_PREFETCH_TEST: false

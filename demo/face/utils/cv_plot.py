@@ -3,8 +3,8 @@
     @func: draw landmark & mesh on image.
     @source: YadiraF/PRNet/utils/cv_plot.py
 """
-import numpy as np
 import cv2
+import numpy as np
 
 end_list = np.array([17, 22, 27, 42, 48, 31, 36, 68], dtype=np.int32) - 1
 

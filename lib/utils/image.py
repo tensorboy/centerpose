@@ -5,13 +5,13 @@
 # Modified by Xingyi Zhou
 # ------------------------------------------------------------------------------
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-import numpy as np
-import cv2
 import random
+
+import cv2
+import numpy as np
+
 
 def flip(img):
   return img[:, :, ::-1].copy()  

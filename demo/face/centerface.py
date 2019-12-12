@@ -1,6 +1,7 @@
-import numpy as np
-import cv2
 import datetime
+
+import cv2
+import numpy as np
 
 
 class CenterFace(object):

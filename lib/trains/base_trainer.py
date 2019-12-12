@@ -1,12 +1,11 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import time
+
 import torch
 import torch.nn as nn
 from progress.bar import Bar
-from models.data_parallel import DataParallel
+
 from utils.utils import AverageMeter
 
 
@@ -23,7 +22,7 @@ class BaseTrainer(object):
     
         if  self.cfg.TRAIN.DISTRIBUTE:
             self.model = self.model.to(device)
-            self.model = nn.parallel.DistributedDataParallel(self.model,
+            self.model = nn.parallel.DistributedDataParallel(self.model, find_unused_parameters=True,
                                                         device_ids=[self.local_rank, ],
                                                         output_device=self.local_rank)
         else:

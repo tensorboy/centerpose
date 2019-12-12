@@ -1,7 +1,9 @@
 *pyc
 *~
 *so
-lib/models/networks/DCNv2/build/*
-lib/models/networks/DCNv2/DCNv2.egg-info/*
+lib/models/backbones/DCNv2/build/*
+lib/models/backbones/DCNv2/DCNv2.egg-info/*
 *build/*
 */.vscode/*
+*__pycache__*
+

@@ -1,156 +1,148 @@
-# -*- coding: utf-8 -*-
-
-import os
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from torchvision.models import *
-
-import numpy as np
+from torch import nn
 
 
-def conv3x3(in_planes, out_planes, stride=1, dilation=1, padding='same'):
-    """3x3 convolution with padding"""
-    if padding == 'same':
-        return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
-                         padding=1, bias=False, dilation=dilation)
+def padding_same_conv2d(input_size, in_c, out_c, kernel_size=4, stride=1):
+    output_size = input_size // stride
+    padding_num = stride * (output_size - 1) - input_size + kernel_size
+    if padding_num % 2 == 0:
+        return nn.Sequential(nn.Conv2d(in_c, out_c, kernel_size=kernel_size, stride=stride, padding=padding_num // 2, bias=False))
+    else:
+        return nn.Sequential(
+            nn.ConstantPad2d((padding_num // 2, padding_num // 2 + 1, padding_num // 2, padding_num // 2 + 1), 0),
+            nn.Conv2d(in_c, out_c, kernel_size=kernel_size, stride=stride, padding=0, bias=False)
+        )
 
+class resBlock(nn.Module):
+    def __init__(self, in_c, out_c, kernel_size=4, stride=1, input_size=None):
+        super().__init__()
+        assert kernel_size == 4
+        self.shortcut = lambda x: x
+        if in_c != out_c:
+            self.shortcut = nn.Conv2d(in_c, out_c, kernel_size=1, stride=stride, bias=False)
 
-class ResBlock(nn.Module):
-    expansion = 1
+        main_layers = [
+            nn.Conv2d(in_c, out_c // 2, kernel_size=1, stride=1, padding=0, bias=False),
+            nn.BatchNorm2d(out_c // 2, eps=0.001, momentum=0.001),
+            nn.ReLU(inplace=True),
+        ]
 
-    def __init__(self, inplanes, planes, stride=1,
-                 kernel_size=3,
-                 norm_layer=None):
-        super(ResBlock, self).__init__()
-        if norm_layer is None:
-            norm_layer = nn.BatchNorm2d
+        main_layers.extend([
+            *padding_same_conv2d(input_size, out_c // 2, out_c // 2, kernel_size=kernel_size, stride=stride),
+            nn.BatchNorm2d(out_c // 2, eps=0.001, momentum=0.001),
+            nn.ReLU(inplace=True)])
 
-        self.shortcut_conv = nn.Conv2d(inplanes, planes, kernel_size=1, stride=stride)
-        self.conv1 = nn.Conv2d(inplanes, planes // 2, kernel_size=1, stride=1, padding=0)
-        self.conv2 = nn.Conv2d(planes // 2, planes // 2, kernel_size=kernel_size, stride=stride, padding=kernel_size // 2)
-        self.conv3 = nn.Conv2d(planes // 2, planes, kernel_size=1, stride=1, padding=0)
-
-        self.normalizer_fn = norm_layer(planes)
-        self.activation_fn = nn.ReLU(inplace=True)
-
-        self.stride = stride
-        self.out_planes = planes
+        main_layers.extend(
+            padding_same_conv2d(input_size, out_c // 2, out_c, kernel_size=1, stride=1)
+        )
+        self.main = nn.Sequential(*main_layers)
+        self.activate = nn.Sequential(
+            nn.BatchNorm2d(out_c, eps=0.001, momentum=0.001),
+            nn.ReLU(inplace=True)
+        )
 
     def forward(self, x):
-        shortcut = x
-        (_, _, _, x_planes) = x.size()
-
-        if self.stride != 1 or x_planes != self.out_planes:
-            shortcut = self.shortcut_conv(x)
-
-        x = self.conv1(x)
-        x = self.conv2(x)
-        x = self.conv3(x)
-
-        x += shortcut
-        x = self.normalizer_fn(x)
-        x = self.activation_fn(x)
-
+        shortcut_x = self.shortcut(x)
+        main_x = self.main(x)
+        x = self.activate(shortcut_x + main_x)
         return x
 
 
-class ResFCN256(nn.Module):
-    def __init__(self, resolution_input=256, resolution_output=256, channel=3, size=16):
+class upBlock(nn.Module):
+    def __init__(self, in_c, out_c, conv_num=2):
         super().__init__()
-        self.input_resolution = resolution_input
-        self.output_resolution = resolution_output
-        self.channel = channel
-        self.size = size
+        additional_conv = []
+        layer_length = 4
 
-        # Encoder
-        self.block0 = conv3x3(in_planes=3, out_planes=self.size, padding='same')
-        self.block1 = ResBlock(inplanes=self.size, planes=self.size * 2, stride=2)
-        self.block2 = ResBlock(inplanes=self.size * 2, planes=self.size * 2, stride=1)
-        self.block3 = ResBlock(inplanes=self.size * 2, planes=self.size * 4, stride=2)
-        self.block4 = ResBlock(inplanes=self.size * 4, planes=self.size * 4, stride=1)
-        self.block5 = ResBlock(inplanes=self.size * 4, planes=self.size * 8, stride=2)
-        self.block6 = ResBlock(inplanes=self.size * 8, planes=self.size * 8, stride=1)
-        self.block7 = ResBlock(inplanes=self.size * 8, planes=self.size * 16, stride=2)
-        self.block8 = ResBlock(inplanes=self.size * 16, planes=self.size * 16, stride=1)
-        self.block9 = ResBlock(inplanes=self.size * 16, planes=self.size * 32, stride=2)
-        self.block10 = ResBlock(inplanes=self.size * 32, planes=self.size * 32, stride=1)
-
-        # Decoder
-        self.upsample0 = nn.ConvTranspose2d(self.size * 32, self.size * 32, kernel_size=3, stride=1,
-                                            padding=1)  # keep shape invariant.
-        self.upsample1 = nn.ConvTranspose2d(self.size * 32, self.size * 16, kernel_size=4, stride=2,
-                                            padding=1)  # half downsample.
-        self.upsample2 = nn.ConvTranspose2d(self.size * 16, self.size * 16, kernel_size=3, stride=1,
-                                            padding=1)  # keep shape invariant.
-        self.upsample3 = nn.ConvTranspose2d(self.size * 16, self.size * 16, kernel_size=3, stride=1,
-                                            padding=1)  # keep shape invariant.
-
-        self.upsample4 = nn.ConvTranspose2d(self.size * 16, self.size * 8, kernel_size=4, stride=2,
-                                            padding=1)  # half downsample.
-        self.upsample5 = nn.ConvTranspose2d(self.size * 8, self.size * 8, kernel_size=3, stride=1,
-                                            padding=1)  # keep shape invariant.
-        self.upsample6 = nn.ConvTranspose2d(self.size * 8, self.size * 8, kernel_size=3, stride=1,
-                                            padding=1)  # keep shape invariant.
-
-        self.upsample7 = nn.ConvTranspose2d(self.size * 8, self.size * 4, kernel_size=4, stride=2,
-                                            padding=1)  # half downsample.
-        self.upsample8 = nn.ConvTranspose2d(self.size * 4, self.size * 4, kernel_size=3, stride=1,
-                                            padding=1)  # keep shape invariant.
-        self.upsample9 = nn.ConvTranspose2d(self.size * 4, self.size * 4, kernel_size=3, stride=1,
-                                            padding=1)  # keep shape invariant.
-
-        self.upsample10 = nn.ConvTranspose2d(self.size * 4, self.size * 2, kernel_size=4, stride=2,
-                                             padding=1)  # half downsample.
-        self.upsample11 = nn.ConvTranspose2d(self.size * 2, self.size * 2, kernel_size=3, stride=1,
-                                             padding=1)  # keep shape invariant.
-
-        self.upsample12 = nn.ConvTranspose2d(self.size * 2, self.size, kernel_size=4, stride=2,
-                                             padding=1)  # half downsample.
-        self.upsample13 = nn.ConvTranspose2d(self.size, self.size, kernel_size=3, stride=1,
-                                             padding=1)  # keep shape invariant.
-
-        self.upsample14 = nn.ConvTranspose2d(self.size, self.channel, kernel_size=3, stride=1,
-                                             padding=1)  # keep shape invariant.
-        self.upsample15 = nn.ConvTranspose2d(self.channel, self.channel, kernel_size=3, stride=1,
-                                             padding=1)  # keep shape invariant.
-        self.upsample16 = nn.ConvTranspose2d(self.channel, self.channel, kernel_size=3, stride=1,
-                                             padding=1)  # keep shape invariant.
-
-        # ACT
-        self.sigmoid = nn.Sigmoid()
+        for i in range(1, conv_num+1):
+            additional_conv += [
+                nn.ConstantPad2d((2, 1, 2, 1), 0),
+                nn.ConvTranspose2d(out_c, out_c, kernel_size=4, stride=1, padding=3, bias=False),
+                nn.BatchNorm2d(out_c, eps=0.001, momentum=0.001),
+                nn.ReLU(inplace=True)
+            ]
+        self.main = nn.Sequential(
+            # nn.ConstantPad2d((0, 1, 0, 1), 0),
+            nn.ConvTranspose2d(in_c, out_c, kernel_size=4, stride=2, padding=1, bias=False),
+            nn.BatchNorm2d(out_c, eps=0.001, momentum=0.001),
+            nn.ReLU(inplace=True),
+            *additional_conv
+            )
 
     def forward(self, x):
-        se = self.block0(x)  # 256 x 256 x 16
-        se = self.block1(se)  # 128 x 128 x 32
-        se = self.block2(se)  # 128 x 128 x 32
-        se = self.block3(se)  # 64 x 64 x 64
-        se = self.block4(se)  # 64 x 64 x 64
-        se = self.block5(se)  # 32 x 32 x 128
-        se = self.block6(se)  # 32 x 32 x 128
-        se = self.block7(se)  # 16 x 16 x 256
-        se = self.block8(se)  # 16 x 16 x 256
-        se = self.block9(se)  # 8 x 8 x 512
-        se = self.block10(se)  # 8 x 8 x 512
+        x = self.main(x)
+        return x
 
-        pd = self.upsample0(se)  # 8 x 8 x 512
-        pd = self.upsample1(pd)  # 16 x 16 x 256
-        pd = self.upsample2(pd)  # 16 x 16 x 256
-        pd = self.upsample3(pd)  # 16 x 16 x 256
-        pd = self.upsample4(pd)  # 32 x 32 x 128
-        pd = self.upsample5(pd)  # 32 x 32 x 128
-        pd = self.upsample6(pd)  # 32 x 32 x 128
-        pd = self.upsample7(pd)  # 64 x 64 x 64
-        pd = self.upsample8(pd)  # 64 x 64 x 64
-        pd = self.upsample9(pd)  # 64 x 64 x 64
+class PRNet(nn.Module):
+    def __init__(self, in_channel, out_channel=3):
+        super().__init__()
+        size = 16
+        self.input_conv = nn.Sequential( #*[
+            *padding_same_conv2d(256, in_channel, size, kernel_size=4, stride=1),  # 256x256x16
+            nn.BatchNorm2d(size, eps=0.001, momentum=0.001),
+            nn.ReLU(inplace=True)
+            # ]
+        ) 
+        self.down_conv_1 = resBlock(size, size * 2, kernel_size=4, stride=2, input_size=256)  # 128x128x32
+        self.down_conv_2 = resBlock(size * 2, size * 2, kernel_size=4, stride=1, input_size=128)  # 128x128x32
+        self.down_conv_3 = resBlock(size * 2, size * 4, kernel_size=4, stride=2, input_size=128)  # 64x64x64
+        self.down_conv_4 = resBlock(size * 4, size * 4, kernel_size=4, stride=1, input_size=64)  # 64x64x64
+        self.down_conv_5 = resBlock(size * 4, size * 8, kernel_size=4, stride=2, input_size=64)  # 32x32x128
+        self.down_conv_6 = resBlock(size * 8, size * 8, kernel_size=4, stride=1, input_size=32)  # 32x32x128
+        self.down_conv_7 = resBlock(size * 8, size * 16, kernel_size=4, stride=2, input_size=32)  # 16x16x256
+        self.down_conv_8 = resBlock(size * 16, size * 16, kernel_size=4, stride=1, input_size=16)  # 16x16x256
+        self.down_conv_9 = resBlock(size * 16, size * 32, kernel_size=4, stride=2, input_size=16)  # 8x8x512
+        self.down_conv_10 = resBlock(size * 32, size * 32, kernel_size=4, stride=1, input_size=8)  # 8x8x512
 
-        pd = self.upsample10(pd)  # 128 x 128 x 32
-        pd = self.upsample11(pd)  # 128 x 128 x 32
-        pd = self.upsample12(pd)  # 256 x 256 x 16
-        pd = self.upsample13(pd)  # 256 x 256 x 16
-        pd = self.upsample14(pd)  # 256 x 256 x 3
-        pd = self.upsample15(pd)  # 256 x 256 x 3
-        pos = self.upsample16(pd)  # 256 x 256 x 3
+        self.center_conv = nn.Sequential(
+            nn.ConstantPad2d((2, 1, 2, 1), 0),
+            nn.ConvTranspose2d(size * 32, size * 32, kernel_size=4, stride=1, padding=3, bias=False),  # 8x8x512
+            nn.BatchNorm2d(size * 32, eps=0.001, momentum=0.001),
+            nn.ReLU(inplace=True)
+        )
 
-        pos = self.sigmoid(pos)
-        return pos
+        self.up_conv_5 = upBlock(size * 32, size * 16)  # 16x16x256
+        self.up_conv_4 = upBlock(size * 16, size * 8)  # 32x32x128
+        self.up_conv_3 = upBlock(size * 8, size * 4)  # 64x64x64
+
+        self.up_conv_2 = upBlock(size * 4, size * 2, 1)  # 128x128x32
+        self.up_conv_1 = upBlock(size * 2, size, 1)  # 256x256x16
+
+        self.output_conv = nn.Sequential(
+            nn.ConstantPad2d((2, 1, 2, 1), 0),
+            nn.ConvTranspose2d(size, 3, kernel_size=4, stride=1, padding=3, bias=False),
+            nn.BatchNorm2d(3, eps=0.001, momentum=0.001),
+            nn.ReLU(inplace=True),
+
+            nn.ConstantPad2d((2, 1, 2, 1), 0),
+            nn.ConvTranspose2d(3, 3, kernel_size=4, stride=1, padding=3, bias=False),
+            nn.BatchNorm2d(3, eps=0.001, momentum=0.001),
+            nn.ReLU(inplace=True),
+
+            nn.ConstantPad2d((2, 1, 2, 1), 0),
+            nn.ConvTranspose2d(3, 3, kernel_size=4, stride=1, padding=3, bias=False),
+            nn.BatchNorm2d(3, eps=0.001, momentum=0.001),
+            nn.Sigmoid()
+        )
+
+    def forward(self, x):
+        x = self.input_conv(x)
+        x = self.down_conv_1(x)
+        x = self.down_conv_2(x)
+        x = self.down_conv_3(x)
+        x = self.down_conv_4(x)
+        x = self.down_conv_5(x)
+        x = self.down_conv_6(x)
+        x = self.down_conv_7(x)
+        x = self.down_conv_8(x)
+        x = self.down_conv_9(x)
+        x = self.down_conv_10(x)
+
+        x = self.center_conv(x)
+
+        x = self.up_conv_5(x)
+        x = self.up_conv_4(x)
+        x = self.up_conv_3(x)
+        x = self.up_conv_2(x)
+        x = self.up_conv_1(x)
+        x = self.output_conv(x)
+        return x

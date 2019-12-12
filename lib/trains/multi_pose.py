@@ -1,17 +1,17 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-import torch
 import numpy as np
+import torch
 
-from models.losses import FocalLoss, RegL1Loss, RegLoss, RegWeightedL1Loss
 from models.decode import multi_pose_decode
-from models.utils import _sigmoid, flip_tensor, flip_lr_off, flip_lr
+from models.losses import (FocalLoss, RegL1Loss, RegLoss, RegWeightedL1Loss)
+from models.utils import _sigmoid, flip_lr, flip_lr_off, flip_tensor
 from utils.debugger import Debugger
-from utils.post_process import multi_pose_post_process
 from utils.oracle_utils import gen_oracle_map
+from utils.post_process import multi_pose_post_process
+
 from .base_trainer import BaseTrainer
+
 
 class MultiPoseLoss(torch.nn.Module):
     def __init__(self, cfg, local_rank):
@@ -21,13 +21,13 @@ class MultiPoseLoss(torch.nn.Module):
         self.crit_kp = RegWeightedL1Loss() if not cfg.LOSS.DENSE_HP else \
                        torch.nn.L1Loss(reduction='sum')
         self.crit_reg = RegL1Loss() if cfg.LOSS.REG_LOSS == 'l1' else \
-                        RegLoss() if cfg.LOSS.REG_LOSS == 'sl1' else None
+                        RegLoss() if cfg.LOSS.REG_LOSS == 'sl1' else None                       
         self.cfg = cfg
         self.local_rank = local_rank
 
     def forward(self, outputs, batch):
         cfg = self.cfg
-        hm_loss, wh_loss, off_loss = 0, 0, 0
+        hm_loss, wh_loss, off_loss= 0, 0, 0
         hp_loss, off_loss, hm_hp_loss, hp_offset_loss = 0, 0, 0, 0
         hm, wh, hps, reg, hm_hp, hp_offset = outputs
 
@@ -77,6 +77,7 @@ class MultiPoseLoss(torch.nn.Module):
             if cfg.LOSS.HM_HP and cfg.LOSS.HM_HP_WEIGHT > 0:
                 hm_hp_loss += self.crit_hm_hp(
                 hm_hp, batch['hm_hp']) / cfg.MODEL.NUM_STACKS
+                              
         loss = cfg.LOSS.HM_WEIGHT * hm_loss + cfg.LOSS.WH_WEIGHT * wh_loss + \
                cfg.LOSS.OFF_WEIGHT * off_loss + cfg.LOSS.HP_WEIGHT * hp_loss + \
                cfg.LOSS.HM_HP_WEIGHT * hm_hp_loss + cfg.LOSS.OFF_WEIGHT * hp_offset_loss

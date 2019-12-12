@@ -5,13 +5,14 @@
     @func: style loss(ssim and its multiple variants.)
 """
 import os
-import cv2
-import torch
-from torch.autograd import Variable
-import torch.nn.functional as F
-from torch.nn import Conv2d
 from math import exp
+
+import cv2
 import numpy as np
+import torch
+import torch.nn.functional as F
+from torch.autograd import Variable
+from torch.nn import Conv2d
 
 from tools.prnet_loss import preprocess
 

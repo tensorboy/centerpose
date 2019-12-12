@@ -1,15 +1,12 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
+
+import argparse
+import os
+
+import cv2
 
 import _init_paths
-
-import os
-import cv2
-import argparse
-
-from config import cfg
-from config import update_config
+from config import cfg, update_config
 from detectors.detector_factory import detector_factory
 
 
@@ -33,7 +30,11 @@ def parse_args():
                               '1: only show the final detection results'
                               '2: show the network output features'
                               '3: use matplot to display' # useful when lunching training with ipython notebook
-                              '4: save all visualizations to disk')                                          
+                              '4: save all visualizations to disk')  
+    parser.add_argument('--NMS',
+                        help='whether to do NMS',
+                        type=bool,
+                        default=True)                                                                       
     args = parser.parse_args()
 
     return args
@@ -85,6 +86,7 @@ if __name__ == '__main__':
     cfg.defrost()
     cfg.TEST.MODEL_PATH = args.TESTMODEL
     cfg.TEST.DEMO_FILE = args.DEMOFILE
+    cfg.TEST.NMS = args.NMS
     cfg.DEBUG = args.DEBUG
     cfg.freeze()
     demo(cfg)

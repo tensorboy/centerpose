@@ -1,6 +1,8 @@
+import os
+
 import cv2
 import scipy.io as sio
-import os
+
 from centerface import CenterFace
 
 

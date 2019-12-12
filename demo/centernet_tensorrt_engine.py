@@ -1,18 +1,17 @@
-import os
-import cv2
-import sys
-import numpy as np
 import logging
+import os
+import sys
+
+import cv2
+import numpy as np
 import torch
 import torch.nn as nn
 
 import _init_paths
-from config import cfg
-from config import update_config
-from utils.image import get_affine_transform, transform_preds
-from models.utils import _gather_feat, _tranpose_and_gather_feat
-
+from config import cfg, update_config
+from models.utils import _gather_feat, _transpose_and_gather_feat
 from tensorrt_model import TRTModel
+from utils.image import get_affine_transform, transform_preds
 
 logger = logging.getLogger(__name__)
 def kp_connections(keypoints):
@@ -149,19 +148,19 @@ class CenterNetTensorRTEngine(object):
         heat = self._nms(heat)
         scores, inds, clses, ys, xs = self._topk(heat, K=K)
 
-        kps = _tranpose_and_gather_feat(kps, inds)
+        kps = _transpose_and_gather_feat(kps, inds)
         kps = kps.view(batch, K, num_joints * 2)
         kps[..., ::2] += xs.view(batch, K, 1).expand(batch, K, num_joints)
         kps[..., 1::2] += ys.view(batch, K, 1).expand(batch, K, num_joints)
         if reg is not None:
-            reg = _tranpose_and_gather_feat(reg, inds)
+            reg = _transpose_and_gather_feat(reg, inds)
             reg = reg.view(batch, K, 2)
             xs = xs.view(batch, K, 1) + reg[:, :, 0:1]
             ys = ys.view(batch, K, 1) + reg[:, :, 1:2]
         else:
             xs = xs.view(batch, K, 1) + 0.5
             ys = ys.view(batch, K, 1) + 0.5
-        wh = _tranpose_and_gather_feat(wh, inds)
+        wh = _transpose_and_gather_feat(wh, inds)
         wh = wh.view(batch, K, 2)
         clses  = clses.view(batch, K, 1).float()
         scores = scores.view(batch, K, 1)
@@ -178,7 +177,7 @@ class CenterNetTensorRTEngine(object):
             reg_kps = kps.unsqueeze(3).expand(batch, num_joints, K, K, 2)
             hm_score, hm_inds, hm_ys, hm_xs = self._topk_channel(hm_hp, K=K) # b x J x K
             if hp_offset is not None:
-                hp_offset = _tranpose_and_gather_feat(
+                hp_offset = _transpose_and_gather_feat(
                   hp_offset, hm_inds.view(batch, -1))
                 hp_offset = hp_offset.view(batch, num_joints, K, 2)
                 hm_xs = hm_xs + hp_offset[:, :, :, 0]

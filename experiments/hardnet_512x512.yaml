@@ -1,10 +1,10 @@
 SAMPLE_METHOD: 'coco_hp'
-DATA_DIR: '/home/tensorboy/data'
+DATA_DIR: '/data'
 EXP_ID: 'hardnet'
 DEBUG: 0
 DEBUG_THEME: 'white'
 SEED: 317
-OUTPUT_DIR: '/home/tensorboy/data/centerpose/hardnet'
+OUTPUT_DIR: '/data/centerpose/hardnet'
 LOG_DIR: ''
 EXPERIMENT_NAME: ''
 GPUS: [0, 1, 2, 3]
@@ -18,11 +18,13 @@ CUDNN:
   BENCHMARK: true
 
 MODEL:
-  LOAD_MODEL: ''
+  INIT_WEIGHTS: false
+  PRETRAINED: '/data/pretrained_models/imagenet/hrnet_w32-36af842e.pth'
   CENTER_THRESH: 0.1
+  INTERMEDIATE_CHANNEL: 48 
   NUM_CLASSES: 1
   NAME: 'hardnet'
-  HEADS_NAME: ['hm', 'wh', 'hps', 'reg', 'hm_hp', 'hp_offset']
+  HEADS_NAME: 'keypoint'
   HEADS_NUM: [1, 2, 34, 2, 17, 2]
   HEAD_CONV: 256
   DOWN_RATIO: 4
@@ -113,7 +115,7 @@ TRAIN:
  
 TEST:
   # Test Model Epoch
-  MODEL_PATH: '/home/tensorboy/data/centerpose/hardnet/model_best.pth'
+  MODEL_PATH: '/home/tensorboy/data/centerpose/model_zoo/hardnet_best.pth'
   TASK: 'multi_pose'
   FLIP_TEST: true
 

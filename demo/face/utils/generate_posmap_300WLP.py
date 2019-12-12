@@ -2,19 +2,22 @@
 '''
 Generate uv position map of 300W_LP.
 '''
-import os, sys
+import argparse
+import os
+import sys
+from time import time
+
+import matplotlib.pyplot as plt
 import numpy as np
 import scipy.io as sio
-from skimage import io
 import skimage.transform
-import argparse
-from time import time
-import matplotlib.pyplot as plt
+from skimage import io
 
-sys.path.append('..')
 import face3d
 from face3d import mesh
 from face3d.morphable_model import MorphabelModel
+
+sys.path.append('..')
 
 
 def process_uv(uv_coords, uv_h=256, uv_w=256):

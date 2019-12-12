@@ -1,16 +1,14 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-import pycocotools.coco as coco
-from pycocotools.cocoeval import COCOeval
-import numpy as np
-import time
 import json
 import os
+import time
 
-
+import numpy as np
+import pycocotools.coco as coco
 import torch.utils.data as data
+from pycocotools.cocoeval import COCOeval
+
 
 class COCOHP(data.Dataset):
     num_classes = 1
@@ -32,6 +30,8 @@ class COCOHP(data.Dataset):
             self.data_dir, 'annotations', 
             'person_keypoints_{}2017.json').format(split)
         self.max_objs = 32
+        self._valid_ids = [1]
+        self.class_name = ['__background__', 'person']        
         self._data_rng = np.random.RandomState(123)
         self._eig_val = np.array([0.2141788, 0.01817699, 0.00341571],
                                  dtype=np.float32)
@@ -45,17 +45,12 @@ class COCOHP(data.Dataset):
 
         print('==> initializing coco 2017 {} data.'.format(split))
         self.coco = coco.COCO(self.annot_path)
-        image_ids = self.coco.getImgIds()
-
-        if split == 'train':
-            self.images = []
-            for img_id in image_ids:
-                idxs = self.coco.getAnnIds(imgIds=[img_id])
-                if len(idxs) > 0:
-                    self.images.append(img_id)
-        else:
-            self.images = image_ids
+        images = self.coco.getImgIds()
+        catIds = self.coco.getCatIds(self.class_name[-1])
+        assert catIds == self._valid_ids
+        self.images = self.coco.getImgIds(images,catIds)
         self.num_samples = len(self.images)
+
         print('Loaded {} {} samples'.format(split, self.num_samples))
 
     def _to_float(self, x):
@@ -64,27 +59,29 @@ class COCOHP(data.Dataset):
     def convert_eval_format(self, all_bboxes):
         detections = []
         for image_id in all_bboxes:
-            for cls_ind in all_bboxes[image_id]:
-                category_id = 1
-                for dets in all_bboxes[image_id][cls_ind]:
-                    bbox = dets[:4]
-                    bbox[2] -= bbox[0]
-                    bbox[3] -= bbox[1]
-                    score = dets[4]
-                    bbox_out  = list(map(self._to_float, bbox))
-                    keypoints = np.concatenate([
-                    np.array(dets[5:39], dtype=np.float32).reshape(-1, 2), 
-                    np.ones((17, 1), dtype=np.float32)], axis=1).reshape(51).tolist()
-                    keypoints  = list(map(self._to_float, keypoints))
+            category_id = 1
+            for dets in all_bboxes[image_id]:
+                bbox = dets[:4]
+                bbox[2] -= bbox[0]
+                bbox[3] -= bbox[1]
+                score = dets[4]
+                keypoint_prob = np.array(np.array(dets[39:56])>0.1).astype(np.int32).reshape(17,1)
+                keypoints = np.array(dets[5:39], dtype=np.float32).reshape(-1, 2)
+                #keypoints[np.array(dets[39:56])<0.0]=np.array([0,0])
+                #print(keypoint_prob)
+                bbox_out  = list(map(self._to_float, bbox))
+                keypoints_pred = np.concatenate([
+                keypoints, keypoint_prob], axis=1).reshape(51).tolist()
+                keypoints_pred  = list(map(self._to_float, keypoints_pred))
 
-                    detection = {
-                      "image_id": int(image_id),
-                      "category_id": int(category_id),
-                      "bbox": bbox_out,
-                      "score": float("{:.2f}".format(score)),
-                      "keypoints": keypoints
-                    }
-                    detections.append(detection)
+                detection = {
+                  "image_id": int(image_id),
+                  "category_id": int(category_id),
+                  "bbox": bbox_out,
+                  "score": float("{:.2f}".format(score)),
+                  "keypoints": keypoints_pred
+                }
+                detections.append(detection)
         return detections
 
     def __len__(self):

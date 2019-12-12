@@ -1,22 +1,19 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-import _init_paths
-
-import os
 import argparse
+import os
 
 import torch
-import torch.utils.data
 import torch.distributed as dist
-from models.model import create_model, load_model, save_model
-from logger import Logger
+import torch.utils.data
+
+import _init_paths
+from config import cfg, update_config
 from datasets.dataset_factory import get_dataset
+from logger import Logger
+from models.model import create_model, load_model, save_model
 from trains.train_factory import train_factory
 
-from config import cfg
-from config import update_config
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train keypoints network')
@@ -60,9 +57,9 @@ def main(cfg, local_rank):
         NotImplementedError
         
     start_epoch = 0
-    if cfg.MODEL.LOAD_MODEL != '':
+    if cfg.MODEL.INIT_WEIGHTS:
         model, optimizer, start_epoch = load_model(
-          model, cfg.MODEL.LOAD_MODEL, optimizer, cfg.TRAIN.RESUME, cfg.TRAIN.LR, cfg.TRAIN.LR_STEP)
+          model, cfg.MODEL.PRETRAINED, optimizer, cfg.TRAIN.RESUME, cfg.TRAIN.LR, cfg.TRAIN.LR_STEP)
 
     Trainer = train_factory[cfg.TASK]
     trainer = Trainer(cfg, local_rank, model, optimizer)

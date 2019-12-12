@@ -4,7 +4,7 @@ EXP_ID: 'coco_pose_mobilenet'
 DEBUG: 0
 DEBUG_THEME: 'white'
 SEED: 317
-OUTPUT_DIR: '/data/centerpose/mobilenetv3_3x_sgd'
+OUTPUT_DIR: '/data/centerpose/mobilenetv3'
 LOG_DIR: ''
 EXPERIMENT_NAME: ''
 GPUS: [0, 1, 2, 3]
@@ -18,13 +18,15 @@ CUDNN:
   BENCHMARK: true
 
 MODEL:
-  LOAD_MODEL: ''
+  INIT_WEIGHTS: false
+  PRETRAINED: ''
   CENTER_THRESH: 0.1
   NUM_CLASSES: 1
   NAME: 'mobilenetv3'
-  HEADS_NAME: ['hm', 'wh', 'hps', 'reg', 'hm_hp', 'hp_offset']
+  HEADS_NAME: 'keypoint'
   HEADS_NUM: [1, 2, 34, 2, 17, 2]
   HEAD_CONV: 256
+  INTERMEDIATE_CHANNEL: 24
   DOWN_RATIO: 4
   NUM_STACKS: 1
   INPUT_RES: 512
@@ -113,7 +115,7 @@ TRAIN:
  
 TEST:
   # Test Model Epoch
-  MODEL_PATH: '/data/centerpose/trained_best_model/mobilenetV3_1x.pth'
+  MODEL_PATH: '/home/tensorboy/data/centerpose/model_zoo/mobilenetV3_1x.pth'
   TASK: 'multi_pose'
   FLIP_TEST: true
 
@@ -125,7 +127,7 @@ TEST:
   NMS: false
   NMS_THRE: 0.5
   NOT_PREFETCH_TEST: false
-  FIX_RES: true
+  FIX_RES: false
   KEEP_RES: false
 
   SOFT_NMS: false

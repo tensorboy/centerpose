@@ -1,23 +1,21 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
+
+import time
 
 import cv2
 import numpy as np
-from progress.bar import Bar
-import time
 import torch
+from progress.bar import Bar
 
 from models.model import create_model, load_model
-from utils.image import get_affine_transform
 from utils.debugger import Debugger
+from utils.image import get_affine_transform
 
 
 class BaseDetector(object):
     def __init__(self, cfg):
     
         print('Creating model...')
-        HEADS = dict(zip(cfg.MODEL.HEADS_NAME, cfg.MODEL.HEADS_NUM))
         self.model = create_model(cfg.MODEL.NAME, cfg.MODEL.HEAD_CONV, cfg)
         self.model = load_model(self.model, cfg.TEST.MODEL_PATH)
         self.model = self.model.to(torch.device('cuda'))
@@ -119,7 +117,7 @@ class BaseDetector(object):
             if self.cfg.DEBUG >= 2:
                 self.debug(debugger, images, dets, output, scale)
 
-            dets = self.post_process(dets, meta, scale)
+            dets= self.post_process(dets, meta, scale)
             torch.cuda.synchronize()
             post_process_time = time.time()
             post_time += post_process_time - decode_time
