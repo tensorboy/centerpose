@@ -32,9 +32,9 @@ fig.update_traces(mode='markers', marker=dict(sizemode='area',
                                               sizeref=sizeref, line_width=2))
 
 fig.update_layout(
-    title='mAP v.s. Runtime',
+    title='mAP v.s. FPS',
     xaxis=dict(
-        title='Run Time (ms)',
+        title='FPS (frames per second)',
         gridcolor='white',
         type='log',
         gridwidth=2,

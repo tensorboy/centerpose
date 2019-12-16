@@ -51,9 +51,7 @@ class BackBoneWithHead(nn.Module):
         self.head_model = head(cfg.MODEL.INTERMEDIATE_CHANNEL, cfg.MODEL.HEAD_CONV)
 
     def forward(self, x):
-        print(x.shape)
         x = self.backbone_model(x)
-        print(x.shape)
         return self.head_model(x)
 
 

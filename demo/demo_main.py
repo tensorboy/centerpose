@@ -14,6 +14,7 @@ from centernet_tensorrt_engine import CenterNetTensorRTEngine
 from face.centerface import CenterFace
 from face.prnet import PRN
 from face.utils.cv_plot import plot_kpt, plot_pose_box, plot_vertices
+from face.utils.render_app import get_visibility, get_uv_mask, get_depth_image
 from face.utils.estimate_pose import estimate_pose
 from tracking.deep_sort import DeepSort
 from tracking.util import COLORS_10, draw_bboxes
@@ -147,7 +148,7 @@ face_3d_model = PRN(face_3d_model_path, '/home/tensorboy/centerpose/demo/face')
 
 
 #video for the tracking
-video_name = '/home/tensorboy/data/demo/tic1.mp4'
+video_name = '/home/tensorboy/data/centerpose/demo_video/1.mp4'
 cap = cv2.VideoCapture(video_name)
 
 
@@ -157,8 +158,15 @@ if write_video:
     im_width = image.shape[1]
     im_height = image.shape[0]
     fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-    output_video = cv2.VideoWriter("/home/tensorboy/data/demo/result.avi", fourcc, 20, (im_width, im_height))
+    output_video = cv2.VideoWriter("/home/tensorboy/data/centerpose/demo_video/result_1.mp4", fourcc, 20, (im_width, im_height))
  
+save_images = True
+if save_images:
+    save_image_dir = '/home/tensorboy/data/centerpose/demo_video/results1'
+    if not os.path.isdir(save_image_dir):
+        os.makedirs(save_image_dir)
+ 
+image_count = 0
 while(True):
     # Capture frame-by-frame
     ret, image = cap.read()
@@ -166,6 +174,9 @@ while(True):
     rgb_img =  cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     detections = body_engine.run(image)[1]
 
+    face_engine.transform(image.shape[0], image.shape[1])
+    face_dets, lms = face_engine(image, threshold=0.35) 
+    
     bbox_xywh = []
     cls_conf = []
     for i, bbox in enumerate(detections):
@@ -182,6 +193,35 @@ while(True):
             keypoints = np.array(body_pose, dtype=np.int32).reshape(17, 2)
             center_of_the_face = np.mean(keypoints[:7,:], axis=0)
 
+            image = add_coco_hp(image, keypoints, color)
+            if len(face_dets)!=0: 
+                face_min_dis = np.argmin(np.sum(((face_dets[:,2:4]+face_dets[:,:2])/2.-center_of_the_face)**2,axis=1))
+                    
+                face_bbox = face_dets[face_min_dis][:4]
+                face_prob = face_dets[face_min_dis][4]
+                
+                face_image = rgb_img[int(face_bbox[1]): int(face_bbox[3]), int(face_bbox[0]): int(face_bbox[2])]
+                # the core: regress position map
+                #cv2.imwrite('face%d.jpg'%i, face_image)
+                [h, w, c] = face_image.shape          
+                  
+                box = np.array([0, face_image.shape[1]-1, 0, face_image.shape[0]-1]) # cropped with bounding box
+                pos = face_3d_model.process(face_image, box)    
+                
+                vertices = face_3d_model.get_vertices(pos)
+                save_vertices = vertices.copy()
+                save_vertices[:, 1] = h - 1 - save_vertices[:, 1]
+                
+                kpt = face_3d_model.get_landmarks(pos)
+                camera_matrix, pose = estimate_pose(vertices)
+                            
+                bgr_face_image = cv2.cvtColor(face_image, cv2.COLOR_BGR2RGB)
+                image_pose = plot_pose_box(bgr_face_image, camera_matrix, kpt)
+                sparse_face =  plot_kpt(bgr_face_image, kpt)
+
+                dense_face = plot_vertices(bgr_face_image, vertices)
+                image[int(face_bbox[1]): int(face_bbox[3]), int(face_bbox[0]): int(face_bbox[2])] = cv2.resize(sparse_face, (w,h))
+                
     outputs = tracking_engine.update(bbox_xywh, cls_conf, image)
     if len(outputs) > 0:
         bbox_xyxy = outputs[:, :4]
@@ -191,6 +231,10 @@ while(True):
     
     if write_video: 
         output_video.write(image)
+    if save_images:
+        image_save_path = os.path.join(save_image_dir, str(image_count)+'.png')
+        cv2.imwrite(image_save_path, image)
+    image_count+=1        
     #cv2.imshow('image result', image)
     # Display the resulting frame
     if cv2.waitKey(1) & 0xFF == ord('q'):
