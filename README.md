@@ -9,13 +9,13 @@ multi person pose estimation using center point detection:
 
 | Backbone     |  AP       |  FPS         | TensorRT Speed | Download |
 |--------------|-----------|--------------|----------|----------|
-|DLA-34        | 62.7      |    23      |  - |[model](https://drive.google.com/open?id=1OkHjjViB0dzbuicdtIam-YcoT0sYpmjP)  |
-|Resnet-50     | 54.5     |    28      |  33 |[model](https://drive.google.com/open?id=18ySqUkm_XLztDEMbmk4x65u03CIi47j7)  |
-|MobilenetV3   | 46.0      |    30      |  - |[model](https://drive.google.com/open?id=1VdBEh8XisujRZ4zvxLcvJ-R8dtY3CC-x)  |
-|ShuffleNetV2  | 40.7      |    25      |  - |[model](https://drive.google.com/open?id=1SQWo1iGxw5gUdhXH6rm16UxPxUHyp6l2)  |
-|[High Resolution](https://github.com/HRNet/Higher-HRNet-Human-Pose-Estimation)| 49.5     |    16      |  - |[model](https://drive.google.com/open?id=1gKcfMQx2_lRLTQhzvtRQKvJUkPLS2Lpn)  |
-|[HardNet]()| 45.6    |    30        | -  |[model](https://drive.google.com/open?id=12JezItTw5rXoQ9dwxRBf4mn8iqHYgNTd)  |
-|[Darknet53]()| 33.2    |    30        | -  |[model](https://drive.google.com/open?id=1fCcZLTSn_-Ssi1ZPT2ZuFtUitXDvSONt)  |
+|DLA-34        | 62.7      |    23      |  - |[model](https://drive.google.com/open?id=1IahJ3vpjTVu1p-Okf6lcn-bM7fVKNg6N)  |
+|Resnet-50     | 54.5     |    28      |  33 |[model](https://drive.google.com/open?id=1oBgWrfigo2fGtpQJXQ0stADTgVFxPWGq)  |
+|MobilenetV3   | 46.0      |    30      |  - |[model](https://drive.google.com/open?id=1snJnADAD1NUzyO1QXCftuZu1rsr8095G)  |
+|ShuffleNetV2  | 40.7      |    25      |  - |[model](https://drive.google.com/open?id=1FK7YQzCB6mLcb0v4SOmlqtRJfA-PQSvN)  |
+|[High Resolution](https://github.com/HRNet/Higher-HRNet-Human-Pose-Estimation)| 49.5     |    16      |  - |[model](https://drive.google.com/open?id=1X0yxGeeNsD4VwU2caDo-BaH_MoCAnU_J)  |
+|[HardNet]()| 45.6    |    30        | -  |[model](https://drive.google.com/open?id=1Y75bGuJyf1_Tr0ksoJ5Z7xaCp4v5DG2g)  |
+|[Darknet53]()| 33.2    |    30        | -  |[model](https://drive.google.com/open?id=1S8spP_QKHqIYmWpfF9Bb4-4OoUXIOnkh)  |
 
 
 ## Installation
@@ -47,6 +47,14 @@ We provide config files for all the experiments in the [experiments](experiments
 ```
 cd ./tools python -m torch.distributed.launch --nproc_per_node 4 train.py --cfg ../experiments/*yalm
 ```
+
+## Demo
+
+the demo files located in the `demo` directory, which is would be a very robust human detection+tracking+face reid system.
+
+<p align="left">
+<img src="./readme/demo.gif", width="720">
+</p>
 
 ## License
 

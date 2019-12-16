@@ -94,17 +94,14 @@ class MultiPoseDetector(BaseDetector):
             debugger.add_blend_img(img, pred, 'pred_hmhp')
   
     def show_results(self, debugger, image, results):
-        results, meta = results[0]   
-        trans = get_affine_transform(meta['c'], meta['s'], 0, ( meta['out_width'], meta['out_height']), inv=1)
         debugger.add_img(image, img_id='multi_pose')
-        for j in range(1, self.num_classes + 1):
-            for b_id, detection in enumerate(results[j]):        
-                bbox = detection[:4]
-                bbox_prob = detection[4]
-                keypoints = detection[5:39]
-                keypoints_prob = detection[39:]
-                if bbox_prob > self.cfg.TEST.VIS_THRESH:
-                    debugger.add_coco_bbox(bbox, 0, bbox_prob, img_id='multi_pose')              
-                    debugger.add_coco_hp(keypoints, keypoints_prob, img_id='multi_pose')  
+        for b_id, detection in enumerate(results):        
+            bbox = detection[:4]
+            bbox_prob = detection[4]
+            keypoints = detection[5:39]
+            keypoints_prob = detection[39:]
+            if bbox_prob > self.cfg.TEST.VIS_THRESH:
+                debugger.add_coco_bbox(bbox, 0, bbox_prob, img_id='multi_pose')              
+                debugger.add_coco_hp(keypoints, keypoints_prob, img_id='multi_pose')  
                     
         debugger.show_all_imgs(pause=self.pause)

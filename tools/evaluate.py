@@ -29,7 +29,11 @@ def parse_args():
     parser.add_argument('--NMS',
                         help='whether to do NMS',
                         type=bool,
-                        default=False)                            
+                        default=False)       
+    parser.add_argument('--TESTMODEL',
+                        help='model directory',
+                        type=str,
+                        default='')                                                
     parser.add_argument('--DEBUG', type=int, default=0,
                          help='level of visualization.'
                               '1: only show the final detection results'
@@ -59,6 +63,7 @@ def test(cfg):
         img_id = dataset.images[ind]
         img_info = dataset.coco.loadImgs(ids=[img_id])[0]
         img_path = os.path.join(dataset.img_dir, img_info['file_name'])
+        #img_path = '/home/tensorboy/data/coco/images/val2017/000000004134.jpg'
         ret = detector.run(img_path)
 
         results[img_id] = ret['results']
@@ -78,6 +83,7 @@ if __name__ == '__main__':
     update_config(cfg, args.cfg)
     cfg.defrost()
     cfg.DEBUG = args.DEBUG
+    cfg.TEST.MODEL_PATH = args.TESTMODEL    
     cfg.TEST.NMS = args.NMS    
     cfg.freeze()
     test(cfg)
