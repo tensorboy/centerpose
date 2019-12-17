@@ -16,13 +16,6 @@ import torch.nn as nn
 BN_MOMENTUM = 0.1
 logger = logging.getLogger(__name__)
 
-def fill_fc_weights(layers):
-  for m in layers.modules():
-    if isinstance(m, nn.Conv2d):
-      nn.init.normal_(m.weight, std=0.001)
-      if m.bias is not None:
-        nn.init.constant_(m.bias, 0)
-
 def conv3x3(in_planes, out_planes, stride=1):
     """3x3 convolution with padding"""
     return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
@@ -472,9 +465,7 @@ class PoseHigherResolutionNet(nn.Module):
         return nn.Sequential(*modules), num_inchannels
 
     def forward(self, x):
-        print('x', x.shape)
         x = self.conv1(x)
-        print('here')
         x = self.bn1(x)
         x = self.relu(x)
         x = self.conv2(x)
@@ -509,17 +500,6 @@ class PoseHigherResolutionNet(nn.Module):
 
         x = y_list[0]
         
-        #y = self.final_layers[0](x)
-        #final_outputs.append(y)
-
-        #print(self.num_deconvs)
-        #for i in range(self.num_deconvs):
-        #    if self.deconv_config.CAT_OUTPUT[i]:
-        #        x = torch.cat((x, y), 1)
-
-        #    x = self.deconv_layers[i](x)
-        #    y = self.final_layers[i+1](x)
-        #    final_outputs.append(y)
         return x
 
     def init_weights(self, pretrained='', verbose=True):
@@ -559,7 +539,7 @@ class PoseHigherResolutionNet(nn.Module):
                         logger.info( '=> init {} from {}'.format(name, pretrained))
                         need_init_state_dict[name] = m
             self.load_state_dict(need_init_state_dict, strict=False)
-
+        print('High Resolution Network Trained on ImageNet loaded')
 
 def get_hrpose_net(num_layers, cfg, **kwargs):
     model = PoseHigherResolutionNet(cfg, **kwargs)
