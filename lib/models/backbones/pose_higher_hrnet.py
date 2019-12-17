@@ -528,7 +528,7 @@ class PoseHigherResolutionNet(nn.Module):
             buffers_names.add(name)
 
         if os.path.isfile(pretrained):
-            pretrained_state_dict = torch.load(pretrained)
+            pretrained_state_dict = torch.load(pretrained, map_location=lambda storage, loc: storage)
             logger.info('=> loading pretrained model {}'.format(pretrained))
 
             need_init_state_dict = {}

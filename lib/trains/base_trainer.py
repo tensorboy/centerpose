@@ -36,7 +36,6 @@ class BaseTrainer(object):
     def run_epoch(self, phase, epoch, data_loader):
     
         model = self.model    
-        
         if phase == 'train':
             self.model.train()
         else:
