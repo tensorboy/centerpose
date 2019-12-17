@@ -1,10 +1,10 @@
 SAMPLE_METHOD: 'coco_hp'
-DATA_DIR: '/home/tensorboy/data'
+DATA_DIR: '/data'
 EXP_ID: 'coco_pose_hrnet'
 DEBUG: 0
 DEBUG_THEME: 'white'
 SEED: 317
-OUTPUT_DIR: '/home/tensorboy/data/centerpose/hrnet'
+OUTPUT_DIR: '/data/centerpose/hrnet'
 LOG_DIR: ''
 EXPERIMENT_NAME: ''
 GPUS: [0, 1, 2, 3]
@@ -17,7 +17,7 @@ CUDNN:
   DETERMINISTIC: false
   ENABLED: true
 DATASET:
-  ROOT: '/home/tensorboy/data/coco'
+  ROOT: '/data/coco'
   DATASET: 'coco_hp'
   TRAIN_SET: 'train'
   TEST_SET: 'valid'
@@ -129,7 +129,7 @@ MODEL:
       NUM_BASIC_BLOCKS: 4
       CAT_OUTPUT:
       - True
-  INIT_WEIGHTS: false
+  INIT_WEIGHTS: true
   PRETRAINED: '/data/pretrained_models/imagenet/hrnet_w32-36af842e.pth'
   TAG_PER_JOINT: true
 TEST:
@@ -175,8 +175,8 @@ TRAIN:
   EPOCHS: 320
   NUM_ITERS: -1
   LR: 1.71875e-4
-  BATCH_SIZE: 44
-  MASTER_BATCH_SIZE: 11
+  BATCH_SIZE: 32
+  MASTER_BATCH_SIZE: 12
 
   MOMENTUM: 0.9
   WD: 0.0001

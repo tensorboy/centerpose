@@ -34,13 +34,14 @@ class BaseTrainer(object):
                     state[k] = v.to(device=device, non_blocking=True)
 
     def run_epoch(self, phase, epoch, data_loader):
+    
+        model = self.model    
+        
         if phase == 'train':
-            model = self.model
             self.model.train()
-            
         else:
             if len(self.cfg.GPUS) > 1:
-                model = self.model.module        
+                model = model.module        
             model.eval()
             torch.cuda.empty_cache()
 
