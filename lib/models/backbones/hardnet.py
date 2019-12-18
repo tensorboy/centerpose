@@ -219,7 +219,6 @@ class hardnet(nn.Module):
             logger.info('=> loading pretrained model {}'.format(pretrained))
 
             need_init_state_dict = {}
-            print(pretrained_state_dict.keys())
             for name, m in pretrained_state_dict.items(): 
                 name = 'base.'+name              
                 if name in parameters_names or name in buffers_names:

@@ -17,7 +17,7 @@ from .backbones.pose_higher_hrnet import get_hrpose_net
 from .backbones.resnet_dcn import get_pose_net as get_pose_net_dcn
 from .backbones.shufflenetv2_dcn import get_shufflev2_net
 from .backbones.ghost_net import get_ghost_net
-from .heads.whole_body import WholeBodyHead
+from .backbones.efficientdet import get_efficientdet
 from .heads.keypoint import KeypointHead
 
 _backbone_factory = {
@@ -32,11 +32,11 @@ _backbone_factory = {
   'hardnet': get_hard_net,
   'darknet': darknet53,
   'ghostnet': get_ghost_net,
+  'efficientdet':get_efficientdet,
 }
 
 _head_factory = {
-  'keypoint': KeypointHead,
-  'wholebody': WholeBodyHead
+  'keypoint': KeypointHead
 }
 
 class BackBoneWithHead(nn.Module):
