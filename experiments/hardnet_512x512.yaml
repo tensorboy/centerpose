@@ -18,8 +18,8 @@ CUDNN:
   BENCHMARK: true
 
 MODEL:
-  INIT_WEIGHTS: false
-  PRETRAINED: '/data/pretrained_models/imagenet/hrnet_w32-36af842e.pth'
+  INIT_WEIGHTS: true
+  PRETRAINED: '/home/tensorboy/data/pretrained_models/imagenet/hardnet_petite_base.pth'
   CENTER_THRESH: 0.1
   INTERMEDIATE_CHANNEL: 48 
   NUM_CLASSES: 1

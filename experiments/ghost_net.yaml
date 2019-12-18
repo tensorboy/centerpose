@@ -1,32 +1,32 @@
 SAMPLE_METHOD: 'coco_hp'
-DATA_DIR: '/home/tensorboy/data'
-EXP_ID: 'darknet53'
+DATA_DIR: '/data'
+EXP_ID: 'ghostnet'
 DEBUG: 0
 DEBUG_THEME: 'white'
 SEED: 317
-OUTPUT_DIR: '/home/tensorboy/data/centerpose/darknet53'
+OUTPUT_DIR: '/data/centerpose/ghostnet'
 LOG_DIR: ''
 EXPERIMENT_NAME: ''
 GPUS: [0, 1, 2, 3]
-WORKERS: 4
+WORKERS: 8
 PRINT_FREQ: 0
 PIN_MEMORY: true
 RANK: 0
 SAVE_RESULTS: true
-TASK : 'multi_pose'
 
 CUDNN:
   BENCHMARK: true
 
 MODEL:
-
+  INIT_WEIGHTS: false
+  PRETRAINED: '/data/pretrained_models/imagenet/hrnet_w32-36af842e.pth'
   CENTER_THRESH: 0.1
   NUM_CLASSES: 1
-  NAME: 'darknet'
+  NAME: 'ghostnet'
   HEADS_NAME: 'keypoint'
   HEADS_NUM: [1, 2, 34, 2, 17, 2]
-  INTERMEDIATE_CHANNEL: 256  
   HEAD_CONV: 256
+  INTERMEDIATE_CHANNEL: 160
   DOWN_RATIO: 4
   NUM_STACKS: 1
   INPUT_RES: 512
@@ -56,8 +56,10 @@ LOSS:
   REG_OFFSET: true  
   OFF_WEIGHT: 1.
   REG_HP_OFFSET: true
+  HM_HP_WEIGHT: 1.
   
 DATASET:
+  ROOT: '/data/coco'
   DATASET: 'coco_hp'
   TRAIN_SET: 'train'
   TEST_SET: 'valid'
@@ -85,7 +87,7 @@ DATASET:
   
 TRAIN:
   DISTRIBUTE: true
-  LOCAL_RANK: 0
+  LOCAL_RANK: 0  
   HIDE_DATA_TIME: false 
   SAVE_ALL_MODEL: false
   RESUME: false
@@ -93,9 +95,9 @@ TRAIN:
   LR_STEP: [270, 300]
   EPOCHS: 320
   NUM_ITERS: -1
-  LR: 1.875e-4
-  BATCH_SIZE: 48
-  MASTER_BATCH_SIZE: 12
+  LR: 2.5e-4
+  BATCH_SIZE: 64
+  MASTER_BATCH_SIZE: 16
 
   MOMENTUM: 0.9
   WD: 0.0001
@@ -113,7 +115,7 @@ TRAIN:
  
 TEST:
   # Test Model Epoch
-  MODEL_PATH: '/home/tensorboy/data/centerpose/darknet53/model_best.pth'
+  MODEL_PATH: '/home/tensorboy/data/centerpose/model_zoo/mobilenetV3_1x.pth'
   TASK: 'multi_pose'
   FLIP_TEST: true
 
@@ -125,14 +127,15 @@ TEST:
   NMS: false
   NMS_THRE: 0.5
   NOT_PREFETCH_TEST: false
-  FIX_RES: true
+  FIX_RES: false
+  KEEP_RES: false
 
   SOFT_NMS: false
   OKS_THRE: 0.5
   VIS_THRESH: 0.3
   KEYPOINT_THRESH: 0.2
   NUM_MIN_KPT: 4
-  THRESH_HUMAN: 0.5
+  THRESH_HUMAN: 0.4
 
   EVAL_ORACLE_HM: false
   EVAL_ORACLE_WH: false

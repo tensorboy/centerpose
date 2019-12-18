@@ -8,6 +8,36 @@ from torch.nn import init
 
 from .DCNv2.dcn_v2 import DCN
 
+def load_model(model, model_path):
+  checkpoint = torch.load(model_path, map_location=lambda storage, loc: storage)
+  print('loaded {}, epoch {}'.format(model_path, checkpoint['epoch']))
+  state_dict_ = checkpoint['state_dict']
+  state_dict = {}
+  
+  # convert data_parallal to model
+  for k in state_dict_:
+    if k.startswith('module') and not k.startswith('module_list'):
+      state_dict[k[7:]] = state_dict_[k]
+    else:
+      state_dict[k] = state_dict_[k]
+  model_state_dict = model.state_dict()
+
+  # check loaded parameters and created model parameters
+  for k in state_dict:
+    if k in model_state_dict:
+      if state_dict[k].shape != model_state_dict[k].shape:
+        print('Skip loading parameter {}, required shape{}, '\
+              'loaded shape{}.'.format(
+          k, model_state_dict[k].shape, state_dict[k].shape))
+        state_dict[k] = model_state_dict[k]
+    else:
+      print('Drop parameter {}.'.format(k))
+  for k in model_state_dict:
+    if not (k in state_dict):
+      print('No param {}.'.format(k))
+      state_dict[k] = model_state_dict[k]
+  model.load_state_dict(state_dict, strict=False)
+  return model 
 
 class DeformConv(nn.Module):
     def __init__(self, chi, cho):
@@ -165,7 +195,7 @@ class MobileNetV3(nn.Module):
                             [2 ** i for i in range(4)])
 
         self.init_params()
-        
+          
     def init_params(self):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -194,10 +224,13 @@ class MobileNetV3(nn.Module):
         self.ida_up(y, 0, len(y))
 
         return y[-1]
-        
+
+       
     
 def get_mobile_pose_net(num_layers, cfg):
 
   model = MobileNetV3(final_kernel=1)
+  
+  #load_model(model, model_path)
   
   return model

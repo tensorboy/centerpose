@@ -115,7 +115,7 @@ TRAIN:
  
 TEST:
   # Test Model Epoch
-  MODEL_PATH: '/home/tensorboy/data/centerpose/dla34/model_90.pth'
+  MODEL_PATH: '/home/tensorboy/data/centerpose/model_zoo/dla34_best.pth'
   TASK: 'multi_pose'
   FLIP_TEST: true
 
@@ -124,7 +124,7 @@ TEST:
   TEST_SCALES: [1]
   IMAGE_THRE: 0.1
   TOPK: 100
-  NMS: false
+  NMS: true
   NMS_THRE: 0.5
   NOT_PREFETCH_TEST: false
   FIX_RES: false

@@ -4,12 +4,11 @@ from .coco_hp import COCOHP
 from .multi_pose import MultiPoseDataset
 
 dataset_factory = {
-  'coco_hp': COCOHP
+  'coco_hp': COCOHP,
 }
 
 _sample_factory = {
   'multi_pose': MultiPoseDataset,
-  'whole_body': MultiPoseDataset  
 }
 
 

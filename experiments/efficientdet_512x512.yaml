@@ -1,14 +1,14 @@
 SAMPLE_METHOD: 'coco_hp'
 DATA_DIR: '/home/tensorboy/data'
-EXP_ID: 'darknet53'
+EXP_ID: 'coco_pose_efficientdet'
 DEBUG: 0
 DEBUG_THEME: 'white'
 SEED: 317
-OUTPUT_DIR: '/home/tensorboy/data/centerpose/darknet53'
+OUTPUT_DIR: '/home/tensorboy/data/centerpose/efficientdet'
 LOG_DIR: ''
 EXPERIMENT_NAME: ''
 GPUS: [0, 1, 2, 3]
-WORKERS: 4
+WORKERS: 8
 PRINT_FREQ: 0
 PIN_MEMORY: true
 RANK: 0
@@ -19,14 +19,15 @@ CUDNN:
   BENCHMARK: true
 
 MODEL:
-
+  INIT_WEIGHTS: false
+  PRETRAINED: ''
   CENTER_THRESH: 0.1
   NUM_CLASSES: 1
-  NAME: 'darknet'
+  NAME: 'efficientdet'
   HEADS_NAME: 'keypoint'
   HEADS_NUM: [1, 2, 34, 2, 17, 2]
-  INTERMEDIATE_CHANNEL: 256  
-  HEAD_CONV: 256
+  HEAD_CONV: 64
+  INTERMEDIATE_CHANNEL: 172
   DOWN_RATIO: 4
   NUM_STACKS: 1
   INPUT_RES: 512
@@ -85,6 +86,7 @@ DATASET:
   
 TRAIN:
   DISTRIBUTE: true
+  OPTIMIZER: 'sgd'  
   LOCAL_RANK: 0
   HIDE_DATA_TIME: false 
   SAVE_ALL_MODEL: false
@@ -93,9 +95,9 @@ TRAIN:
   LR_STEP: [270, 300]
   EPOCHS: 320
   NUM_ITERS: -1
-  LR: 1.875e-4
-  BATCH_SIZE: 48
-  MASTER_BATCH_SIZE: 12
+  LR: 2.1875e-4
+  BATCH_SIZE: 56
+  MASTER_BATCH_SIZE: 14
 
   MOMENTUM: 0.9
   WD: 0.0001
@@ -105,7 +107,6 @@ TRAIN:
 
   # 'apply and reset gradients every n batches'
   STRIDE_APPLY: 1
-
   CHECKPOINT: ''
   SHUFFLE: true
   VAL_INTERVALS: 1
@@ -113,15 +114,15 @@ TRAIN:
  
 TEST:
   # Test Model Epoch
-  MODEL_PATH: '/home/tensorboy/data/centerpose/darknet53/model_best.pth'
+  MODEL_PATH: '/home/tensorboy/data/centerpose/res50/model_best.pth'
   TASK: 'multi_pose'
-  FLIP_TEST: true
+  FLIP_TEST: false
 
   DEMO_FILE: '../images/33823288584_1d21cf0a26_k.jpg'
   MODEL_FILE: ''
   TEST_SCALES: [1]
   IMAGE_THRE: 0.1
-  TOPK: 100
+  TOPK: 32
   NMS: false
   NMS_THRE: 0.5
   NOT_PREFETCH_TEST: false
