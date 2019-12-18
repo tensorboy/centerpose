@@ -6,5 +6,4 @@ from .whole_body import WholeBodyTrainer
 
 train_factory = {
   'multi_pose': MultiPoseTrainer, 
-  'whole_body': WholeBodyTrainer
 }

@@ -73,6 +73,8 @@ class MultiPoseDetector(BaseDetector):
     def merge_outputs(self, detections):
         results = np.concatenate(
             [detection[1] for detection in detections], axis=0).astype(np.float32)
+        print (self.cfg.TEST.NMS)
+        print (len(self.cfg.TEST.TEST_SCALES))            
         if self.cfg.TEST.NMS or len(self.cfg.TEST.TEST_SCALES) > 1:
             soft_nms_39(results, Nt=0.5, method=2)
         results = results.tolist()
