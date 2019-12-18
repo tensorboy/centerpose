@@ -3,6 +3,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+import os
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 class ConvLayer(nn.Sequential):
     def __init__(self, in_channels, out_channels, kernel=3, stride=1, dropout=0.1):
@@ -182,7 +187,51 @@ class hardnet(nn.Module):
         
         return out
 
+    def init_weights(self, pretrained='', verbose=True):
+        logger.info('=> init weights from normal distribution')
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.normal_(m.weight, std=0.001)
+                for name, _ in m.named_parameters():
+                    if name in ['bias']:
+                        nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.BatchNorm2d):
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.ConvTranspose2d):
+                nn.init.normal_(m.weight, std=0.001)
+                for name, _ in m.named_parameters():
+                    if name in ['bias']:
+                        nn.init.constant_(m.bias, 0)
 
+        parameters_names = set()
+        for name, _ in self.named_parameters():
+            parameters_names.add(name)
+
+        buffers_names = set()
+        for name, _ in self.named_buffers():
+            buffers_names.add(name)
+
+        ##print(buffers_names)
+        #print('buffer names', buffers_names)
+        if os.path.isfile(pretrained):
+            pretrained_state_dict = torch.load(pretrained, map_location=lambda storage, loc: storage)
+            logger.info('=> loading pretrained model {}'.format(pretrained))
+
+            need_init_state_dict = {}
+            print(pretrained_state_dict.keys())
+            for name, m in pretrained_state_dict.items(): 
+                name = 'base.'+name              
+                if name in parameters_names or name in buffers_names:
+                    logger.info( '=> init {} from {}'.format(name, pretrained))
+                    need_init_state_dict[name] = m
+            #print('the wegiht need init', need_init_state_dict.keys())
+            self.load_state_dict(need_init_state_dict, strict=False)
+        print('Hardnet Trained on ImageNet loaded')
+        
+        
 def get_hard_net(num_layers, cfg):
-  model = hardnet()
-  return model
+    model = hardnet()
+    if cfg.MODEL.INIT_WEIGHTS:
+        model.init_weights(cfg.MODEL.PRETRAINED)
+    return model

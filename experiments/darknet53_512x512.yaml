@@ -19,6 +19,7 @@ CUDNN:
   BENCHMARK: true
 
 MODEL:
+
   CENTER_THRESH: 0.1
   NUM_CLASSES: 1
   NAME: 'darknet'
