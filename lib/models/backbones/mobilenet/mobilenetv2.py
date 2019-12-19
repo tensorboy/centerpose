@@ -224,7 +224,6 @@ class MobileNetUp(nn.Module):
 class MobileNetSeg(nn.Module):
     def __init__(self, base_name, head_conv=24, pretrained = True):
         super(MobileNetSeg, self).__init__()
-        self.heads = heads
         self.base = globals()[base_name](
             pretrained=pretrained)
         channels = self.base.feat_channel
@@ -253,7 +252,7 @@ def mobilenetv2_5(pretrained=False, **kwargs):
 
 # num_layers  : [10 , 5]
 def get_mobile_pose_netv2(num_layers, cfg):
-  num_layers = 5
+  num_layers = 10
   model = MobileNetSeg('mobilenetv2_{}'.format(num_layers),
                  pretrained=True,
                  head_conv=cfg.MODEL.INTERMEDIATE_CHANNEL)

@@ -28,6 +28,7 @@ _backbone_factory = {
   'resdcn': get_pose_net_dcn,
   'hourglass': get_large_hourglass_net,
   'mobilenetv3': get_mobile_pose_netv3,
+  'mobilenetv2': get_mobile_pose_netv2,  
   'shufflenetV2': get_shufflev2_net,
   'hrnet': get_hrpose_net,
   'hardnet': get_hard_net,
