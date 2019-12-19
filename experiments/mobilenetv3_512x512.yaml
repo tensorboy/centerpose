@@ -86,6 +86,7 @@ DATASET:
   RANDOM_CROP: true 
   
 TRAIN:
+  OPTIMIZER: 'adam'
   DISTRIBUTE: true
   LOCAL_RANK: 0  
   HIDE_DATA_TIME: false 

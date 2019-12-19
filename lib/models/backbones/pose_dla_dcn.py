@@ -292,10 +292,10 @@ class DLA(nn.Module):
     def load_pretrained_model(self, data='imagenet', name='dla34', hash='ba72cf86'):
         # fc = self.fc
         if name.endswith('.pth'):
-            model_weights = torch.load(data + name)
+            model_weights = torch.load(data + name, map_location=lambda storage, loc: storage)
         else:
             model_url = get_model_url(data, name, hash)
-            model_weights = model_zoo.load_url(model_url)
+            model_weights = model_zoo.load_url(model_url, map_location=lambda storage, loc: storage)
         num_classes = len(model_weights[list(model_weights.keys())[-1]])
         self.fc = nn.Conv2d(
             self.channels[-1], num_classes,

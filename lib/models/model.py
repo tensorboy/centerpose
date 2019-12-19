@@ -10,7 +10,8 @@ from .backbones.darknet import darknet53
 from .backbones.dlav0 import get_pose_net as get_dlav0
 from .backbones.hardnet import get_hard_net
 from .backbones.large_hourglass import get_large_hourglass_net
-from .backbones.mobilenet import get_mobile_pose_net
+from .backbones.mobilenet.mobilenetv3 import get_mobile_pose_netv3
+from .backbones.mobilenet.mobilenetv2 import get_mobile_pose_netv2
 from .backbones.msra_resnet import get_resnet
 from .backbones.pose_dla_dcn import get_pose_net as get_dla_dcn
 from .backbones.pose_higher_hrnet import get_hrpose_net
@@ -26,7 +27,7 @@ _backbone_factory = {
   'dla': get_dla_dcn,
   'resdcn': get_pose_net_dcn,
   'hourglass': get_large_hourglass_net,
-  'mobilenetv3': get_mobile_pose_net,
+  'mobilenetv3': get_mobile_pose_netv3,
   'shufflenetV2': get_shufflev2_net,
   'hrnet': get_hrpose_net,
   'hardnet': get_hard_net,

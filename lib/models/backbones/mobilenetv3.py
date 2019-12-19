@@ -227,7 +227,7 @@ class MobileNetV3(nn.Module):
 
        
     
-def get_mobile_pose_net(num_layers, cfg):
+def get_mobile_pose_netv3(num_layers, cfg):
 
   model = MobileNetV3(final_kernel=1)
   
