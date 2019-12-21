@@ -67,7 +67,6 @@ def test(cfg):
         ret = detector.run(img_path)
 
         results[img_id] = ret['results']
-        print(np.asarray(ret['results']).shape)
 
         Bar.suffix = '[{0}/{1}]|Tot: {total:} |ETA: {eta:} '.format(
                        ind, num_iters, total=bar.elapsed_td, eta=bar.eta_td)

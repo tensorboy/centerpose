@@ -116,7 +116,7 @@ TRAIN:
  
 TEST:
   # Test Model Epoch
-  MODEL_PATH: '/home/tensorboy/data/centerpose/model_zoo/hardnet_best.pth'
+  MODEL_PATH: '/data/centerpose/hardnet/model_best.pth'
   TASK: 'multi_pose'
   FLIP_TEST: true
 
