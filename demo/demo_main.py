@@ -148,7 +148,7 @@ face_3d_model = PRN(face_3d_model_path, '/home/tensorboy/centerpose/demo/face')
 
 
 #video for the tracking
-video_name = '/home/tensorboy/data/centerpose/demo_video/1.mp4'
+video_name = '/home/tensorboy/data/centerpose/demo_video/Google_2019.mp4'
 cap = cv2.VideoCapture(video_name)
 
 
@@ -158,11 +158,11 @@ if write_video:
     im_width = image.shape[1]
     im_height = image.shape[0]
     fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-    output_video = cv2.VideoWriter("/home/tensorboy/data/centerpose/demo_video/result_1.mp4", fourcc, 20, (im_width, im_height))
+    output_video = cv2.VideoWriter("/home/tensorboy/data/centerpose/demo_video/Google_2019_result.mp4", fourcc, 20, (im_width, im_height))
  
 save_images = True
 if save_images:
-    save_image_dir = '/home/tensorboy/data/centerpose/demo_video/results1'
+    save_image_dir = '/home/tensorboy/data/centerpose/demo_video/Google_2019'
     if not os.path.isdir(save_image_dir):
         os.makedirs(save_image_dir)
  

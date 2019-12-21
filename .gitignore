@@ -6,4 +6,4 @@ lib/models/backbones/DCNv2/DCNv2.egg-info/*
 *build/*
 */.vscode/*
 *__pycache__*
-
+*.ipynb_checkpoints*

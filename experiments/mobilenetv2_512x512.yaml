@@ -1,10 +1,10 @@
 SAMPLE_METHOD: 'coco_hp'
-DATA_DIR: '/home/tensorboy/data'
+DATA_DIR: '/data'
 EXP_ID: 'coco_pose_mobilenetv2'
 DEBUG: 0
 DEBUG_THEME: 'white'
 SEED: 317
-OUTPUT_DIR: '/home/tensorboy/data/centerpose/mobilenetv2'
+OUTPUT_DIR: '/data/centerpose/mobilenetv2'
 LOG_DIR: ''
 EXPERIMENT_NAME: ''
 GPUS: [0, 1, 2, 3]
@@ -59,7 +59,7 @@ LOSS:
   HM_HP_WEIGHT: 1.
   
 DATASET:
-  ROOT: '/home/tensorboy/data/coco'
+  ROOT: '/data/coco'
   DATASET: 'coco_hp'
   TRAIN_SET: 'train'
   TEST_SET: 'valid'
@@ -96,9 +96,9 @@ TRAIN:
   LR_STEP: [270, 300]
   EPOCHS: 320
   NUM_ITERS: -1
-  LR: 3.359375e-4
-  BATCH_SIZE: 86
-  MASTER_BATCH_SIZE: 20
+  LR: 5.e-4
+  BATCH_SIZE: 128
+  MASTER_BATCH_SIZE: 32
 
   MOMENTUM: 0.9
   WD: 0.0001

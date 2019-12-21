@@ -6,7 +6,7 @@ import torch.nn.functional as F
 from torch import nn
 from torch.nn import init
 
-from .DCNv2.dcn_v2 import DCN
+from ..DCNv2.dcn_v2 import DCN
 
 def load_model(model, model_path):
   checkpoint = torch.load(model_path, map_location=lambda storage, loc: storage)

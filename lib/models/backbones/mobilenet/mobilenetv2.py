@@ -224,7 +224,6 @@ class MobileNetUp(nn.Module):
 class MobileNetSeg(nn.Module):
     def __init__(self, base_name, head_conv=24, pretrained = True):
         super(MobileNetSeg, self).__init__()
-        self.heads = heads
         self.base = globals()[base_name](
             pretrained=pretrained)
         channels = self.base.feat_channel
