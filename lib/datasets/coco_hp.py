@@ -60,7 +60,7 @@ class COCOHP(data.Dataset):
         detections = []
         for image_id in all_bboxes:
             category_id = 1
-            for dets in all_bboxes[image_id][category_id]:
+            for dets in all_bboxes[image_id]:
                 bbox = dets[:4]
                 bbox[2] -= bbox[0]
                 bbox[3] -= bbox[1]
