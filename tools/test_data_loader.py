@@ -8,6 +8,7 @@ import time
 import cv2
 import numpy as np
 import torch
+import random
 from progress.bar import Bar
 
 import _init_paths
@@ -21,24 +22,167 @@ from datasets.dataset_factory import get_dataset
 from utils.post_process import multi_pose_post_process, whole_body_post_process
 from models.decode import multi_pose_decode, whole_body_decode, _nms, _topk, _transpose_and_gather_feat, _topk_channel
 from utils.debugger import Debugger
+import pycocotools.coco as coco
+import torch.utils.data as data
+from pycocotools.cocoeval import COCOeval
 import ipdb
+import colorsys
+from utils.image import (affine_transform, color_aug, draw_dense_reg,
+                         draw_msra_gaussian, draw_umich_gaussian, flip,
+                         gaussian_radius, get_affine_transform)
 
 
+def _get_border(border, size):
+    i = 1
+    while size - border // i <= border // i:
+        i *= 2
+    return border // i
+      
+      
+def _coco_box_to_bbox(box):
+    bbox = np.array([box[0], box[1], box[0] + box[2], box[1] + box[3]],
+                    dtype=np.float32)
+    return bbox
+        
+def random_colors(N, bright=True):
+    """
+    Generate random colors.
+    To get visually distinct colors, generate them in HSV space then
+    convert to RGB.
+    """
+    brightness = 1.0 if bright else 0.7
+    hsv = [(i / N, 1, brightness) for i in range(N)]
+    colors = list(map(lambda c: colorsys.hsv_to_rgb(*c), hsv))
+    random.shuffle(colors)
+    return colors
+                
+def apply_mask(image, mask, color, alpha=0.5):
+    """Apply the given mask to the image.
+    """
+    for c in range(3):
+        image[:, :, c] = np.where(mask == 1,
+                                  image[:, :, c] *
+                                  (1 - alpha) + alpha * color[c] * 255,
+                                  image[:, :, c])
+    return image      
+                
 def parse_args():
     parser = argparse.ArgumentParser(description='Train keypoints network')
     # general
     parser.add_argument('--cfg',
                         help='experiment configure file name',
-                        required=True,
+                        default= '../experiments/res_50_512x512.yaml',
                         type=str)                          
     args = parser.parse_args()
 
     return args
     
     
+args = parse_args()
+update_config(cfg, args.cfg)
+    
+       
+img_dir= '/home/tensorboy/data/coco/images/val2017'
+anno_path = '/home/tensorboy/data/coco/annotations/person_keypoints_val2017.json'
 SAVE_DIR = '/home/tensorboy/data/coco/images/data_loader_vis'
 MEAN = np.array([0.408, 0.447, 0.470]).astype(np.float32)
 STD = np.array([0.289, 0.274, 0.278]).astype(np.float32)
+    
+max_objs = 32
+_valid_ids = [1]
+class_name = ['__background__', 'person']        
+_data_rng = np.random.RandomState(123)
+_eig_val = np.array([0.2141788, 0.01817699, 0.00341571], dtype=np.float32)
+
+_eig_vec = np.array([
+    [-0.58752847, -0.69563484, 0.41340352],
+    [-0.5832747, 0.00994535, -0.81221408],
+    [-0.56089297, 0.71832671, 0.41158938]
+], dtype=np.float32)
+
+
+coco = coco.COCO(anno_path)
+images = coco.getImgIds()
+catIds = coco.getCatIds(class_name[-1])
+assert catIds == _valid_ids
+images = coco.getImgIds(images,catIds)
+num_samples = len(images)  
+
+index = np.random.randint(num_samples)
+img_id = images[index]
+
+file_name = coco.loadImgs(ids=[img_id])[0]['file_name']
+img_path = os.path.join(img_dir, file_name)
+ann_ids = coco.getAnnIds(imgIds=[img_id])
+anns = coco.loadAnns(ids=ann_ids)
+
+ 
+anns = list(filter(lambda x:x['category_id'] in _valid_ids and x['iscrowd']!= 1 , anns))
+num_objs = min(len(anns), max_objs)
+
+img = cv2.imread(img_path)
+print(file_name)
+print(img.shape)
+
+height, width = img.shape[0], img.shape[1]
+c = np.array([img.shape[1] / 2., img.shape[0] / 2.], dtype=np.float32)
+s = max(img.shape[0], img.shape[1]) * 1.0
+rot = 0
+print(c)
+print(s)
+print(cfg.DATASET.RANDOM_CROP)
+
+
+num_joints = 17
+
+colors = random_colors(num_objs)
+
+for k in range(num_objs):
+    color = colors[k]
+    ann = anns[k]
+    bbox = _coco_box_to_bbox(ann['bbox']).astype(np.int)
+    cv2.rectangle(img, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (255,0,0), 2)
+    cls_id = int(ann['category_id']) - 1
+    pts = np.array(ann['keypoints'], np.float32).reshape(num_joints, 3)
+    segment = coco.annToMask(ann)  
+    polygons = ann['segmentation']  
+    
+    apply_mask(img, segment, color, alpha=0.5)
+    print(polygons)  
+    
+    
+save_path = os.path.join(SAVE_DIR, file_name)
+cv2.imwrite(save_path, img)
+
+    
+flipped = False
+
+s = s * np.random.choice(np.arange(0.6, 1.4, 0.1))
+w_border = _get_border(128, img.shape[1])
+h_border = _get_border(128, img.shape[0])
+c[0] = np.random.randint(low=w_border, high=img.shape[1] - w_border)
+c[1] = np.random.randint(low=h_border, high=img.shape[0] - h_border)
+    
+print(cfg.DATASET.AUG_ROT)
+if np.random.random() <cfg.DATASET.AUG_ROT:
+    rf = cfg.DATASET.ROTATE
+    rot = np.clip(np.random.randn()*rf, -rf*2, rf*2)
+
+if np.random.random() < cfg.DATASET.FLIP:
+    flipped = True
+    img = img[:, ::-1, :]
+    c[0] =  width - c[0] - 1
+        
+trans_input = get_affine_transform(
+  c, s, rot, [cfg.MODEL.INPUT_RES, cfg.MODEL.INPUT_RES])
+inp = cv2.warpAffine(img, trans_input, 
+                     (cfg.MODEL.INPUT_RES, cfg.MODEL.INPUT_RES),
+                     flags=cv2.INTER_LINEAR)    
+    
+
+    
+    
+    
     
 def test_loader(cfg):
 
@@ -203,7 +347,6 @@ def test_loader(cfg):
         save_path = os.path.join(SAVE_DIR, '{}.png'.format(i))
         cv2.imwrite(save_path, input_image)
 
-if __name__ == '__main__':
-    args = parse_args()
-    update_config(cfg, args.cfg)
-    test_loader(cfg)
+#if __name__ == '__main__':
+
+    #test_loader(cfg)

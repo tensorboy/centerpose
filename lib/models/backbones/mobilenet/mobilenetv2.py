@@ -252,7 +252,7 @@ def mobilenetv2_5(pretrained=False, **kwargs):
 
 # num_layers  : [10 , 5]
 def get_mobile_pose_netv2(num_layers, cfg):
-  num_layers = 10
+  num_layers = 5
   model = MobileNetSeg('mobilenetv2_{}'.format(num_layers),
                  pretrained=True,
                  head_conv=cfg.MODEL.INTERMEDIATE_CHANNEL)

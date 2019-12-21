@@ -93,7 +93,6 @@ class MultiPoseDataset(data.Dataset):
         wh = np.zeros((self.max_objs, 2), dtype=np.float32)
         kps = np.zeros((self.max_objs, num_joints * 2), dtype=np.float32)
         reg = np.zeros((self.max_objs, 2), dtype=np.float32)
-        seg = np.zeros((self.max_objs, output_res, output_res), dtype=np.float32)    
         ind = np.zeros((self.max_objs), dtype=np.int64)
         reg_mask = np.zeros((self.max_objs), dtype=np.uint8)
         kps_mask = np.zeros((self.max_objs, self.num_joints * 2), dtype=np.uint8)
@@ -136,15 +135,6 @@ class MultiPoseDataset(data.Dataset):
                 ind[k] = ct_int[1] * output_res + ct_int[0]
                 reg[k] = ct - ct_int
                 reg_mask[k] = 1
-
-                #mask
-                pad_rate = 0.3
-                segment_mask = np.ones_like(segment)
-                x,y = (np.clip([ct[0] - (1 + pad_rate)*w/2 ,ct[0] + (1 + pad_rate)*w/2 ],0,output_res - 1)*2).astype(np.int), \
-                      (np.clip([ct[1] - (1 + pad_rate)*h/2 , ct[1] + (1 + pad_rate)*h/2],0,output_res - 1)*2).astype(np.int)
-                segment_mask[y[0]:y[1],x[0]:x[1]] = 0
-                segment[segment_mask == 1] = 255
-                seg[k] = segment
                            
                 #keypoint     
                 num_kpts = pts[:, 2].sum()
@@ -181,7 +171,7 @@ class MultiPoseDataset(data.Dataset):
             reg_mask *= 0
             kps_mask *= 0
         ret = {'input': inp, 'hm': hm, 'reg_mask': reg_mask, 'ind': ind, 'wh': wh,
-               'hps': kps, 'hps_mask': kps_mask, 'seg':seg}
+               'hps': kps, 'hps_mask': kps_mask}
         if self.cfg.LOSS.DENSE_HP:
             dense_kps = dense_kps.reshape(num_joints * 2, output_res, output_res)
             dense_kps_mask = dense_kps_mask.reshape(
