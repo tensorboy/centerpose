@@ -14,7 +14,7 @@ multi person pose estimation using center point detection:
 |MobilenetV3   | 46.0      |    30      |  - |[model](https://drive.google.com/open?id=1snJnADAD1NUzyO1QXCftuZu1rsr8095G)  |
 |ShuffleNetV2  | 43.9      |    25      |  - |[model](https://drive.google.com/open?id=1FK7YQzCB6mLcb0v4SOmlqtRJfA-PQSvN)  |
 |[High Resolution](https://github.com/HRNet/Higher-HRNet-Human-Pose-Estimation)| 57.1    |    16      |  - |[model](https://drive.google.com/open?id=1X0yxGeeNsD4VwU2caDo-BaH_MoCAnU_J)  |
-|[HardNet](https://github.com/PingoLH/FCHarDNet)| 45.6    |    30        | -  |[model](https://drive.google.com/open?id=1Y75bGuJyf1_Tr0ksoJ5Z7xaCp4v5DG2g)  |
+|[HardNet](https://github.com/PingoLH/FCHarDNet)| 46.0    |    30        | -  |[model](https://drive.google.com/open?id=1CFc_qAAT4NFfrAG8JOxRVG8CAw9ySuYp)  |
 |[Darknet53]()| 34.2    |    30        | -  |[model](https://drive.google.com/open?id=1S8spP_QKHqIYmWpfF9Bb4-4OoUXIOnkh)  |
 
 
