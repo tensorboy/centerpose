@@ -7,3 +7,4 @@ easydict
 scipy
 pycocotools
 yacs
+pthflops
