@@ -13,7 +13,7 @@ multi person pose estimation using center point detection:
 |Resnet-50     | 54.5     |    28      |  33 |  - |[model](https://drive.google.com/open?id=1oBgWrfigo2fGtpQJXQ0stADTgVFxPWGq)  |
 |MobilenetV3   | 46.0      |    30      |  - |  - |[model](https://drive.google.com/open?id=1snJnADAD1NUzyO1QXCftuZu1rsr8095G)  |
 |ShuffleNetV2  | 43.9      |    25      |  - |  - |[model](https://drive.google.com/open?id=1FK7YQzCB6mLcb0v4SOmlqtRJfA-PQSvN)  |
-|[High Resolution](https://drive.google.com/open?id=1WJiHbFkIEPQigorJg8cw6p0Nps1enc-d)| 61.6 |    16      |  - |  - |[model](https://drive.google.com/open?id=1X0yxGeeNsD4VwU2caDo-BaH_MoCAnU_J)  |
+|[HRNet_W32](https://drive.google.com/open?id=1mJoK7KEx35Wgf6uAZ-Ez5IwAeOk1RYw0)| 63.8 |    16      |  - |  - |[model](https://drive.google.com/open?id=1X0yxGeeNsD4VwU2caDo-BaH_MoCAnU_J)  |
 |[HardNet](https://github.com/PingoLH/FCHarDNet)| 46.0    |    30        | -  |  - |[model](https://drive.google.com/open?id=1CFc_qAAT4NFfrAG8JOxRVG8CAw9ySuYp)  |
 |[Darknet53]()| 34.2    |    30        | -  |  - |[model](https://drive.google.com/open?id=1S8spP_QKHqIYmWpfF9Bb4-4OoUXIOnkh)  |
 |[EfficientDet]()| 34.2    |    30        | -  |  - |[model](https://drive.google.com/open?id=1S8spP_QKHqIYmWpfF9Bb4-4OoUXIOnkh)  |

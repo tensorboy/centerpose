@@ -63,7 +63,7 @@ LOSS:
   HM_HP_WEIGHT: 1.
 MODEL:
   HEADS_NAME: 'keypoint'
-  INTERMEDIATE_CHANNEL: 32 
+  INTERMEDIATE_CHANNEL: 48
   CENTER_THRESH: 0.1
   NUM_CLASSES: 1
   NAME: 'hrnet'
@@ -89,8 +89,8 @@ MODEL:
       - 4
       - 4
       NUM_CHANNELS:
-      - 32
-      - 64
+      - 48
+      - 96
       FUSE_METHOD: SUM
     STAGE3:
       NUM_MODULES: 4
@@ -101,9 +101,9 @@ MODEL:
       - 4
       - 4
       NUM_CHANNELS:
-      - 32
-      - 64
-      - 128
+      - 48
+      - 96
+      - 192
       FUSE_METHOD: SUM
     STAGE4:
       NUM_MODULES: 3
@@ -115,22 +115,22 @@ MODEL:
       - 4
       - 4
       NUM_CHANNELS:
-      - 32
-      - 64
-      - 128
-      - 256
+      - 48
+      - 96
+      - 192
+      - 384
       FUSE_METHOD: SUM
     DECONV:
-      NUM_DECONVS: 0
+      NUM_DECONVS: 1
       NUM_CHANNELS:
-      - 32
+      - 48
       KERNEL_SIZE:
       - 4
       NUM_BASIC_BLOCKS: 4
       CAT_OUTPUT:
       - True
   INIT_WEIGHTS: true
-  PRETRAINED: '/data/pretrained_models/imagenet/hrnet_w32-36af842e.pth'
+  PRETRAINED: '/home/tensorboy/data/pretrained_models/imagenet/hrnet_w48-8ef0771d.pth'
   TAG_PER_JOINT: true
 TEST:
   # Test Model Epoch
@@ -165,7 +165,7 @@ TEST:
   EVAL_ORACLE_DEP: false
 TRAIN:
   DISTRIBUTE: true
-  OPTIMIZER: 'sgd'   
+  OPTIMIZER: 'adam'   
   LOCAL_RANK: 0  
   HIDE_DATA_TIME: false 
   SAVE_ALL_MODEL: false
@@ -174,9 +174,9 @@ TRAIN:
   LR_STEP: [270, 300]
   EPOCHS: 320
   NUM_ITERS: -1
-  LR: 1.71875e-4
-  BATCH_SIZE: 44
-  MASTER_BATCH_SIZE: 11
+  LR: 1.25e-4
+  BATCH_SIZE: 32
+  MASTER_BATCH_SIZE: 8
 
   MOMENTUM: 0.9
   WD: 0.0001
