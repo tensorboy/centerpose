@@ -16,7 +16,7 @@ continent_data['MobileNetV3'] = {'map':[46.0], 'speed':[30], 'size':9.7/1.5}
 continent_data['ShuffleNetV2'] = {'map':[43.9], 'speed':[25], 'size':40./1.5}
 continent_data['HigherResolution'] = {'map':[63.8], 'speed':[16], 'size':115.2/1.5}
 continent_data['HardNet'] = {'map':[46.0], 'speed':[30], 'size':19.3/1.5}
-continent_data['Darknet53'] = {'map':[34.2], 'speed':[30], 'size':27.1/1.5}
+continent_data['Darknet53'] = {'map':[38.2], 'speed':[30], 'size':27.1/1.5}
 
 # Create figure
 fig = go.Figure()
