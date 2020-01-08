@@ -17,7 +17,6 @@ _C.SAVE_RESULTS = False
 _C.OUTPUT_DIR = ''
 _C.LOG_DIR = ''
 _C.EXPERIMENT_NAME = ''
-_C.DATA_DIR = ''
 _C.GPUS = [0, 1, 2, 3]
 _C.WORKERS = 4
 _C.PRINT_FREQ = 20
@@ -79,7 +78,6 @@ _C.LOSS.OFF_WEIGHT = 1.
 
 # DATASET related params
 _C.DATASET = CN()
-_C.DATASET.ROOT = '/data/coco'
 _C.DATASET.DATASET = 'coco_hp'
 _C.DATASET.TRAIN_SET = 'train'
 _C.DATASET.TEST_SET = 'valid'

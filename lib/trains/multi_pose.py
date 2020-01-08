@@ -161,4 +161,4 @@ class MultiPoseTrainer(BaseTrainer):
           dets.copy(), batch['meta']['c'].cpu().numpy(),
           batch['meta']['s'].cpu().numpy(),
           output[0].shape[2], output[0].shape[3])
-        results[batch['meta']['img_id'].cpu().numpy()[0]] = dets_out[0]
+        results[batch['meta']['img_id'].cpu().numpy()[0]] = {1: dets_out[0]}

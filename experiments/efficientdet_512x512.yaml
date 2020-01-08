@@ -59,7 +59,6 @@ LOSS:
   REG_HP_OFFSET: true
   
 DATASET:
-  ROOT: '/data/coco'
   DATASET: 'coco_hp'
   TRAIN_SET: 'train'
   TEST_SET: 'valid'
