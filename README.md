@@ -38,6 +38,11 @@ cd tools; python demo.py --cfg ../experiments/dla_34_512x512.yaml --TESTMODEL /y
 The result for the example images should look like:
 <p align="center"> <img src='readme/multi_pose_screenshot_27.11.2019.png' align="center" height="512px"></p>
 
+## Evaluation 
+~~~
+cd tools; python evaluate.py --cfg ../experiments/dla_34_512x512.yaml --TESTMODEL /your/model/path/dla34_best.pth --DEMOFILE --DEBUG 0
+~~~
+
 ## Training
 
 After [installation](readme/INSTALL.md), follow the instructions in [DATA.md](readme/DATA.md) to setup the datasets.
