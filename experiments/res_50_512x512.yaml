@@ -1,10 +1,10 @@
 SAMPLE_METHOD: 'coco_hp'
-DATA_DIR: '/home/tensorboy/data'
+DATA_DIR: '/data'
 EXP_ID: 'coco_pose_res_50'
 DEBUG: 0
 DEBUG_THEME: 'white'
 SEED: 317
-OUTPUT_DIR: '/home/tensorboy/data/centerpose/res50_lre2'
+OUTPUT_DIR: '/data/centerpose/res50_lre2'
 LOG_DIR: ''
 EXPERIMENT_NAME: ''
 GPUS: [0, 1, 2, 3]
@@ -92,10 +92,10 @@ TRAIN:
   SAVE_ALL_MODEL: false
   RESUME: false
   LR_FACTOR: 0.1
-  LR_STEP: [270, 300]
-  EPOCHS: 320
+  LR_STEP: [800, 900]
+  EPOCHS: 1000
   NUM_ITERS: -1
-  LR: 2.1875e-2
+  LR: 7.e-3
   BATCH_SIZE: 56
   MASTER_BATCH_SIZE: 14
 
@@ -117,13 +117,13 @@ TEST:
   # Test Model Epoch
   MODEL_PATH: '/home/tensorboy/data/centerpose/res50/model_best.pth'
   TASK: 'multi_pose'
-  FLIP_TEST: false
+  FLIP_TEST: true
 
   DEMO_FILE: '../images/33823288584_1d21cf0a26_k.jpg'
   MODEL_FILE: ''
   TEST_SCALES: [1]
   IMAGE_THRE: 0.1
-  TOPK: 32
+  TOPK: 100
   NMS: false
   NMS_THRE: 0.5
   NOT_PREFETCH_TEST: false

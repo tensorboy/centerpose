@@ -67,8 +67,6 @@ class COCOHP(data.Dataset):
                 score = dets[4]
                 keypoint_prob = np.array(np.array(dets[39:56])>0.1).astype(np.int32).reshape(17,1)
                 keypoints = np.array(dets[5:39], dtype=np.float32).reshape(-1, 2)
-                #keypoints[np.array(dets[39:56])<0.0]=np.array([0,0])
-                #print(keypoint_prob)
                 bbox_out  = list(map(self._to_float, bbox))
                 keypoints_pred = np.concatenate([
                 keypoints, keypoint_prob], axis=1).reshape(51).tolist()

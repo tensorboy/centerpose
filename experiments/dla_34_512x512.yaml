@@ -1,10 +1,10 @@
 SAMPLE_METHOD: 'coco_hp'
-DATA_DIR: '/home/tensorboy/data'
-EXP_ID: 'coco_pose_dla_34_sgd'
+DATA_DIR: '/data'
+EXP_ID: 'sgd_lr6e3'
 DEBUG: 0
 DEBUG_THEME: 'white'
 SEED: 317
-OUTPUT_DIR: '/home/tensorboy/data/centerpose/dla34'
+OUTPUT_DIR: '/data/centerpose/dla34_lr6e3'
 LOG_DIR: ''
 EXPERIMENT_NAME: ''
 GPUS: [0, 1, 2, 3]
@@ -86,7 +86,7 @@ DATASET:
   
 TRAIN:
   DISTRIBUTE: true
-  OPTIMIZER: 'sgd'
+  OPTIMIZER: 'adam'
   LOCAL_RANK: 0
   HIDE_DATA_TIME: false 
   SAVE_ALL_MODEL: false
@@ -95,7 +95,7 @@ TRAIN:
   LR_STEP: [270, 300]
   EPOCHS: 320
   NUM_ITERS: -1
-  LR: 2.8125e-4
+  LR: 2.8125e-3
   BATCH_SIZE: 72
   MASTER_BATCH_SIZE: 18
 
