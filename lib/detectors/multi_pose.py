@@ -78,7 +78,6 @@ class MultiPoseDetector(BaseDetector):
         results = results.tolist()
         return results
         
-
     def debug(self, debugger, images, dets, output, scale=1):
         dets = dets.detach().cpu().numpy().copy()
         dets[:, :, :4] *= self.cfg.MODEL.DOWN_RATIO
