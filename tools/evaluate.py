@@ -29,7 +29,7 @@ def parse_args():
     parser.add_argument('--NMS',
                         help='whether to do NMS',
                         type=bool,
-                        default=False)       
+                        default=True)       
     parser.add_argument('--TESTMODEL',
                         help='model directory',
                         type=str,
