@@ -29,54 +29,76 @@ class MultiPoseLoss(torch.nn.Module):
         cfg = self.cfg
         hm_loss, wh_loss, off_loss= 0, 0, 0
         hp_loss, off_loss, hm_hp_loss, hp_offset_loss = 0, 0, 0, 0
+        #The output format:
+        #hm:(1,1,128,128), wh:(1,2,128,128), hps:(1,34,128,128), 
+        #reg:(1,2,128,128), hm_hp:(1, 17, 128, 128), hp_offset:(1,2,128,128)
         hm, wh, hps, reg, hm_hp, hp_offset = outputs
-
-        for s in range(cfg.MODEL.NUM_STACKS):
-            hm = _sigmoid(hm)
-            if cfg.LOSS.HM_HP and not cfg.LOSS.MSE_LOSS:
-                hm_hp = _sigmoid(hm_hp)
-      
-            if cfg.TEST.EVAL_ORACLE_HMHP:
-                hm_hp = batch['hm_hp']
-            if cfg.TEST.EVAL_ORACLE_HM:
-                hm = batch['hm']
-            if cfg.TEST.EVAL_ORACLE_KPS:
-                if cfg.LOSS.DENSE_HP:
-                    hps = batch['dense_hps']
-                else:
-                    hps = torch.from_numpy(gen_oracle_map(
-                    batch['hps'].detach().cpu().numpy(), 
-                    batch['ind'].detach().cpu().numpy(), 
-                    cfg.MODEL.OUTPUT_RES, cfg.MODEL.OUTPUT_RES)).to(torch.device('cuda:%d'%self.local_rank))
-            if cfg.TEST.EVAL_ORACLE_HP_OFFSET:
-                hp_offset = torch.from_numpy(gen_oracle_map(
-                hp_offset.detach().cpu().numpy(), 
-                batch['hp_ind'].detach().cpu().numpy(), 
-                cfg.MODEL.OUTPUT_RES, cfg.MODEL.OUTPUT_RES)).to(torch.device('cuda:%d'%self.local_rank))
-
-
-            hm_loss += self.crit(hm, batch['hm']) / cfg.MODEL.NUM_STACKS
+        #The ground truth format:
+        #hm:(1,128,128)
+        #reg_mask: (maxobject, 2)
+        #ind: (maxobject)
+        #hps: (maxobject, 17*2)
+        #hp_ind: (maxobject*17)
+        #hp_mask: (maxobject*17)
+        #hm_hp:(17, 128, 128)
+        #wh:(maxobject, 2)        
+        hm = _sigmoid(hm)
+        if cfg.LOSS.HM_HP and not cfg.LOSS.MSE_LOSS:
+            hm_hp = _sigmoid(hm_hp)
+  
+        if cfg.TEST.EVAL_ORACLE_HMHP:
+            hm_hp = batch['hm_hp']
+        if cfg.TEST.EVAL_ORACLE_HM:
+            hm = batch['hm']
+        if cfg.TEST.EVAL_ORACLE_KPS:
             if cfg.LOSS.DENSE_HP:
-                mask_weight = batch['dense_hps_mask'].sum() + 1e-4
-                hp_loss += (self.crit_kp(hps * batch['dense_hps_mask'], 
-                                         batch['dense_hps'] * batch['dense_hps_mask']) / 
-                                         mask_weight) / cfg.MODEL.NUM_STACKS
+                hps = batch['dense_hps']
             else:
-                hp_loss += self.crit_kp(hps, batch['hps_mask'], 
-                                    batch['ind'], batch['hps']) / cfg.MODEL.NUM_STACKS
-            if cfg.LOSS.WH_WEIGHT > 0:
-                wh_loss += self.crit_reg(wh, batch['reg_mask'],
-                                     batch['ind'], batch['wh']) / cfg.MODEL.NUM_STACKS
-            if cfg.LOSS.REG_OFFSET and cfg.LOSS.OFF_WEIGHT > 0:
-                off_loss += self.crit_reg(reg, batch['reg_mask'],
-                                      batch['ind'], batch['reg']) / cfg.MODEL.NUM_STACKS
-            if cfg.LOSS.REG_HP_OFFSET and cfg.LOSS.OFF_WEIGHT > 0:
-                hp_offset_loss += self.crit_reg(
-                hp_offset, batch['hp_mask'],
-                batch['hp_ind'], batch['hp_offset']) / cfg.MODEL.NUM_STACKS
-            if cfg.LOSS.HM_HP and cfg.LOSS.HM_HP_WEIGHT > 0:
-                hm_hp_loss += self.crit_hm_hp(
-                hm_hp, batch['hm_hp']) / cfg.MODEL.NUM_STACKS
+                hps = torch.from_numpy(gen_oracle_map(
+                batch['hps'].detach().cpu().numpy(), 
+                batch['ind'].detach().cpu().numpy(), 
+                cfg.MODEL.OUTPUT_RES, cfg.MODEL.OUTPUT_RES)).to(torch.device('cuda:%d'%self.local_rank))
+        if cfg.TEST.EVAL_ORACLE_HP_OFFSET:
+            hp_offset = torch.from_numpy(gen_oracle_map(
+            hp_offset.detach().cpu().numpy(), 
+            batch['hp_ind'].detach().cpu().numpy(), 
+            cfg.MODEL.OUTPUT_RES, cfg.MODEL.OUTPUT_RES)).to(torch.device('cuda:%d'%self.local_rank))
+
+
+        hm_loss += self.crit(hm, batch['hm']) / cfg.MODEL.NUM_STACKS
+        if cfg.LOSS.DENSE_HP:
+            mask_weight = batch['dense_hps_mask'].sum() + 1e-4
+            hp_loss += (self.crit_kp(hps * batch['dense_hps_mask'], 
+                                     batch['dense_hps'] * batch['dense_hps_mask']) / 
+                                     mask_weight) / cfg.MODEL.NUM_STACKS
+        else:
+            #hps:(1,34,128,128), 
+            #hp_mask: (1, maxobject,17*),
+            #ind: (1, maxobject),
+            #hps: (1, maxobject, 17*2)      
+            hp_loss += self.crit_kp(hps, batch['hps_mask'], 
+                                batch['ind'], batch['hps']) / cfg.MODEL.NUM_STACKS
+        if cfg.LOSS.WH_WEIGHT > 0:
+            #wh:(1,2,128,128),
+            #reg_mask: (1, maxobject, 2),
+            #ind: (1, maxobject)
+            #batch['wh']: (1, maxobject, 2) 
+            wh_loss += self.crit_reg(wh, batch['reg_mask'],
+                                 batch['ind'], batch['wh']) / cfg.MODEL.NUM_STACKS
+        if cfg.LOSS.REG_OFFSET and cfg.LOSS.OFF_WEIGHT > 0:
+            #reg:(1,2,128,128),
+            #reg_mask: (1, maxobject, 2),
+            #ind: (1, maxobject)    
+            #batch['reg']: (1, maxobject, 2)      
+            off_loss += self.crit_reg(reg, batch['reg_mask'],
+                                  batch['ind'], batch['reg']) / cfg.MODEL.NUM_STACKS
+        if cfg.LOSS.REG_HP_OFFSET and cfg.LOSS.OFF_WEIGHT > 0:
+            hp_offset_loss += self.crit_reg(
+            hp_offset, batch['hp_mask'],
+            batch['hp_ind'], batch['hp_offset']) / cfg.MODEL.NUM_STACKS
+        if cfg.LOSS.HM_HP and cfg.LOSS.HM_HP_WEIGHT > 0:
+            hm_hp_loss += self.crit_hm_hp(
+            hm_hp, batch['hm_hp']) / cfg.MODEL.NUM_STACKS
                               
         loss = cfg.LOSS.HM_WEIGHT * hm_loss + cfg.LOSS.WH_WEIGHT * wh_loss + \
                cfg.LOSS.OFF_WEIGHT * off_loss + cfg.LOSS.HP_WEIGHT * hp_loss + \

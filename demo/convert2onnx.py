@@ -184,12 +184,12 @@ def main(cfg):
 
     weight_path = '/home/tensorboy/data/centerpose/trained_best_model/res_50_best_model.pth'
     state_dict = torch.load(weight_path, map_location=lambda storage, loc: storage)['state_dict']
-    model.load_state_dict(state_dict)
+    #model.load_state_dict(state_dict)
 
     onnx_file_path = "./model/resnet50.onnx"
     
     #img = cv2.imread('test_image.jpg')
-    image = cv2.imread('../images/image1.jpg')
+    image = cv2.imread('../images/image1.jpeg')
     images, meta = pre_process(image, cfg, scale=1)
 
     model.cuda()
@@ -198,6 +198,14 @@ def main(cfg):
     torch_input = images.cuda()
     print(torch_input.shape)
         
+    hm, wh, hps, reg, hm_hp, hp_offset = model(torch_input)
+    print('hm',hm.shape)
+    print('wh',wh.shape)
+    print('hps', hps.shape)
+    print('reg',reg.shape)
+    print('hm_hp',hm_hp.shape)
+    print('hp_offset',hp_offset.shape)
+            
     torch.onnx.export(model, torch_input, onnx_file_path, verbose=False)
     sess = nxrun.InferenceSession(onnx_file_path)
     
@@ -210,10 +218,14 @@ def main(cfg):
     print(sess.get_outputs()[2].name)
     output_onnx = sess.run(None, {input_name:  images.cpu().data.numpy()})
     hm, wh, hps, reg, hm_hp, hp_offset = output_onnx  
-    print(hm)
-    print(len(output_onnx))
+    print('hm',hm.shape)
+    print('wh',wh.shape)
+    print('hps', hps.shape)
+    print('reg',reg.shape)
+    print('hm_hp',hm_hp.shape)
+    print('hp_offset',hp_offset.shape)
   
 if __name__ == '__main__':
-    config_name = '../experiments/hrnet_w32_512.yaml'
+    config_name = '../experiments/res_50_512x512.yaml'
     update_config(cfg, config_name)
     main(cfg)

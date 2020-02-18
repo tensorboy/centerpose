@@ -4,7 +4,7 @@ EXP_ID: 'coco_pose_res_50'
 DEBUG: 0
 DEBUG_THEME: 'white'
 SEED: 317
-OUTPUT_DIR: '/data/centerpose/res50_lre2'
+OUTPUT_DIR: '/data/centerpose/res50'
 LOG_DIR: ''
 EXPERIMENT_NAME: ''
 GPUS: [0, 1, 2, 3]
@@ -86,7 +86,7 @@ DATASET:
   
 TRAIN:
   DISTRIBUTE: true
-  OPTIMIZER: 'sgd'  
+  OPTIMIZER: 'adam'  
   LOCAL_RANK: 0
   HIDE_DATA_TIME: false 
   SAVE_ALL_MODEL: false
@@ -95,7 +95,7 @@ TRAIN:
   LR_STEP: [800, 900]
   EPOCHS: 1000
   NUM_ITERS: -1
-  LR: 7.e-3
+  LR: 2.1875e-3
   BATCH_SIZE: 56
   MASTER_BATCH_SIZE: 14
 

@@ -56,6 +56,7 @@ cd ./tools python -m torch.distributed.launch --nproc_per_node 4 train.py --cfg 
 ## Demo
 
 the demo files located in the `demo` directory, which is would be a very robust human detection+tracking+face reid system.
+### Download the [prnet](https://drive.google.com/open?id=1Ct9__BUR39664ib0BtQSX3O6j0zO34XP) and [tracking model](https://drive.google.com/open?id=1zEDyPTKkyxDGOjmdvb2rn-Et9rm885nh). 
 
 <p align="left">
 <img src="./readme/demo.gif", width="720">

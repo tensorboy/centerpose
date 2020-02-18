@@ -152,9 +152,16 @@ class RegL1Loss(nn.Module):
         super(RegL1Loss, self).__init__()
 
     def forward(self, output, mask, ind, target):
+        '''Regression loss for an output tensor
+        Arguments:
+            output:(batch,2,128,128),
+            mask: (batch, maxobject, 2),
+            ind: (batch, maxobject)
+            target: (batch, maxobject, 2)  
+        '''  
+        #pred:[batch, maxobject, 2]
         pred = _transpose_and_gather_feat(output, ind)
         mask = mask.unsqueeze(2).expand_as(pred).float()
-        # loss = F.l1_loss(pred * mask, target * mask, reduction='elementwise_mean')
         loss = F.l1_loss(pred * mask, target * mask, size_average=False)
         loss = loss / (mask.sum() + 1e-4)
         return loss
@@ -180,9 +187,16 @@ class RegWeightedL1Loss(nn.Module):
         super(RegWeightedL1Loss, self).__init__()
 
     def forward(self, output, mask, ind, target):
+        '''Regression loss for an output tensor
+        Arguments:
+            output:(batch,34,128,128)
+            mask:(batch,maxobject,34)
+            ind:(batch,maxobject)
+            target: (bacth,maxobject,34)
+        '''      
+        #pred: (batch, maxobject,34)
         pred = _transpose_and_gather_feat(output, ind)
         mask = mask.float()
-        # loss = F.l1_loss(pred * mask, target * mask, reduction='elementwise_mean')
         loss = F.l1_loss(pred * mask, target * mask, size_average=False)
         loss = loss / (mask.sum() + 1e-4)
         return loss
